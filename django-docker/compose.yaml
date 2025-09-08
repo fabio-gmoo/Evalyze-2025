@@ -13,3 +13,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - '9000:9000'
+    environment:
+      PROVIDER_BASE_URL: 'https://api.openai.com'
+      PROVIDER_API_KEY: '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'
+      PROVIDER_MODEL: 'gpt-4o-mini'
