@@ -1,0 +1,14 @@
+{
+  "include": ["core"],
+  "venvPath": ".",
+  "venv": null,
+  "reportMissingImports": true,
+  "reportMissingModuleSource": true,
+  "pythonVersion": "3.13",
+  "executionEnvironments": [
+    {
+      "root": ".",
+      "pythonPath": "."
+    }
+  ]
+}
