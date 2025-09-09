@@ -23,7 +23,7 @@ export class HolaMundo {
 
     try {
       // Cambia la URL por la de tu API real
-      const resp = await fetch('https://jsonplaceholder.typicode.com/todos/1');
+      const resp = await fetch('https://localhost:9000');
       if (!resp.ok) throw new Error('Error en la respuesta del servidor');
       const data = await resp.json();
       this.ngZone.run(() => {
