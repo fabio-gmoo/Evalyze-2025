@@ -1,24 +1,40 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'app-hola-mundo',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, HttpClientModule],
   templateUrl: './hola-mundo.html',
-  styleUrl: './hola-mundo.scss'
+  styleUrls: ['./hola-mundo.scss']
 })
 export class HolaMundo {
   respuesta: string | null = null;
+  cargando = false;
+  error: string | null = null;
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(private ngZone: NgZone) {}
 
-  async conectarBackend() {
+  async conectarBackend(): Promise<void> {
+    this.cargando = true;
+    this.error = null;
     this.respuesta = null;
-    // Simulación de llamada a backend, reemplaza por tu lógica real
-    setTimeout(() => {
-      this.respuesta = '¡Respuesta recibida del backend!';
-      this.cdr.detectChanges();
-    }, 1500);
+
+    try {
+      // Cambia la URL por la de tu API real
+      const resp = await fetch('https://jsonplaceholder.typicode.com/todos/1');
+      if (!resp.ok) throw new Error('Error en la respuesta del servidor');
+      const data = await resp.json();
+      this.ngZone.run(() => {
+        this.respuesta = JSON.stringify(data);
+        this.cargando = false;
+      });
+    } catch (e: any) {
+      this.ngZone.run(() => {
+        this.error = e.message || 'Error desconocido';
+        this.cargando = false;
+      });
+    }
   }
 }
