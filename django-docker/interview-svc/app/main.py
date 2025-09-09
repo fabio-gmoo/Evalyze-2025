@@ -1,30 +1,24 @@
 from fastapi import FastAPI  # type: ignore
+from fastapi.middleware.cors import CORSMiddleware  # type: ignore
+from app.routers.health import router as health_router
+from app.routers.chat import router as chat_router
+from infrastructure.config.settings import settings
 
-<<<<<<< Updated upstream:django-docker/interview-svc/main.py
-app = FastAPI(title="FastAPI Hello")
-
-
-@app.get("/")
-def hello():
-    return {"message": "Hola desde FastAPI 🚀"}
-=======
 app = FastAPI(title="Evalyze Interview Service")
 
-# CORS: para desarrollo (en producción lista los dominios de tu front)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+app.include_router(health_router)
+app.include_router(chat_router)
 
 
-# /ai/health y /ai/chat
-app.include_router(ai_router)
->>>>>>> Stashed changes:django-docker/interview-svc/app/main.py
+@app.get("/")
+def root():
+    return {"service": "Evalyze Interview Service", "docs": "/docs"}
+

@@ -1,4 +1,8 @@
-
 fastapi
 uvicorn[standard]
+httpx
+pydantic>=2
+pydantic-settings>=2
+python-jose[cryptography]
+supabase>=2
 
