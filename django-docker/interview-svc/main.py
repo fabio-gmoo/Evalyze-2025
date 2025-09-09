@@ -7,7 +7,7 @@ app = FastAPI(title="Evalyze Interview Service")
 # CORS: agrega tu dominio de frontend (prod) y el de desarrollo
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:9000"],
+    allow_origins=["http://127.0.0.1:9000", "http://localhost:4200"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

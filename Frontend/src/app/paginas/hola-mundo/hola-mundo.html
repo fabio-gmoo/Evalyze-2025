@@ -1,12 +1,16 @@
-<button (click)="conectarBackend()" [disabled]="cargando">
-  {{ cargando ? 'Conectando…' : 'Conectar Backend' }}
-</button>
+<button (click)="conectarBackend()" [disabled]="cargando()">Probar /ai/health</button>
 
-<div style="margin-top: 1em; border: 1px solid #ccc; padding: 1em; min-height: 2em;">
-  @if (error) {
-    <strong style="color:#b00020">{{ error }}</strong>
-  } @else {
-    {{ respuesta || (cargando ? 'Contactando al servidor…' : 'Esperando respuesta...') }}
-  }
+<div style="margin-top: 1rem">
+  <input #msgInput type="text" placeholder="Escribe tu mensaje" />
+  <button (click)="enviarChatDemo(msgInput.value)" [disabled]="cargando()">
+    Demo /ai/demo-chat
+  </button>
 </div>
 
+@if (cargando()) {
+<p>Cargando...</p>
+} @if (respuesta()) {
+<pre>{{ respuesta() }}</pre>
+} @if (error()) {
+<p style="color: red">{{ error() }}</p>
+}
