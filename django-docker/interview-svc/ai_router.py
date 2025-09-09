@@ -1,8 +1,8 @@
 # ai_router.py
-from fastapi import APIRouter, Header, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, Header, HTTPException  # type: ignore
+from pydantic import BaseModel  # tupe: ignore
 import os
-import httpx
+import httpx  # type: ignore
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
