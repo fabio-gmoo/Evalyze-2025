@@ -5,13 +5,6 @@ import os
 import httpx
 
 router = APIRouter(prefix="/ai", tags=["ai"])
-
-# === Config obligatoria por variables de entorno ===
-# Ejemplos:
-#   PROVIDER_BASE_URL=https://api.openai.com
-#   PROVIDER_BASE_URL=https://openrouter.ai/api
-#   PROVIDER_BASE_URL=https://api.together.xyz
-#   PROVIDER_BASE_URL=https://api.groq.com/openai
 PROVIDER_BASE_URL = os.getenv("PROVIDER_BASE_URL", "").rstrip("/")
 PROVIDER_API_KEY = os.getenv("PROVIDER_API_KEY", "")
 PROVIDER_MODEL = os.getenv("PROVIDER_MODEL", "gpt-4o-mini")
@@ -110,7 +103,8 @@ def _call_llm(message: str) -> str:
         return text
     except httpx.HTTPStatusError as e:
         # Propaga el status del proveedor para facilitar debug
-        raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
+        raise HTTPException(
+            status_code=e.response.status_code, detail=e.response.text)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
