@@ -1,6 +1,6 @@
-from application.dto import ChatIn
-from application.ports.ai_llm_port import AiLlmPort
-from application.ports.message_repo_port import MessageRepoPort
+from application.dto import ChatIn  # type: ignore
+from application.ports.ai_llm_port import AiLlmPort  # type: ignore
+from application.ports.message_repo_port import MessageRepoPort  # type: ignore
 
 SYSTEM_PROMPT = "Eres un entrevistador amable y profesional."
 

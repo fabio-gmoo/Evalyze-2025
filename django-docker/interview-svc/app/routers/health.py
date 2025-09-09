@@ -1,5 +1,5 @@
 from fastapi import APIRouter  # type: ignore
-from infrastructure.config.settings import settings
+from infrastructure.config.settings import settings  # type: ignore
 
 router = APIRouter(prefix="", tags=["health"])
 

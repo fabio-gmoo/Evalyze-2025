@@ -22,7 +22,7 @@ services:
       JWT_SECRET: 'devsecret'
       #Supabase
       SUPABASE_URL: ''
-      SUPABASE_SERVICE_ROL_KEY: ''
+      SUPABASE_SERVICE_ROLE_KEY: ''
       SUPABASE_TABLE: 'messages'
       #Cors
-      CORS_ALLOW_ORIGINS: '*'
+      CORS_ALLOW_ORIGINS: '["http://localhost:9000","http://0.0.0.0:9000"]'
