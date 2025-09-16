@@ -1,0 +1,45 @@
+<div class="auth-wrap">
+  <div class="logo"><span class="brand__logo">🧠</span><span class="brand__name">Evalyze</span></div>
+  <h1>Únete a Evalyze</h1>
+  <p class="subtitle">Comienza a revolucionar tu proceso de reclutamiento hoy</p>
+
+  <div class="grid">
+    <form class="card form">
+      <h2>Crear Cuenta</h2>
+      <p class="muted">Completa la información para crear tu cuenta</p>
+
+      <div class="row"><label>Nombre Completo</label><input type="text" placeholder="Tu nombre" /></div>
+      <div class="row"><label>Email Corporativo</label><input type="email" placeholder="tu@empresa.com" /></div>
+      <div class="row"><label>Empresa</label><input type="text" placeholder="Nombre de tu empresa" /></div>
+      <div class="row"><label>Tamaño de Empresa</label>
+        <select><option>Selecciona tamaño</option><option>1-10</option><option>11-50</option><option>51-200</option><option>200+</option></select>
+      </div>
+      <div class="row"><label>Tu Rol</label>
+        <select><option>Selecciona tu rol</option><option>RRHH</option><option>Gerencia</option><option>Tech</option><option>Otro</option></select>
+      </div>
+
+      <div class="row two">
+        <div><label>Contraseña</label><input type="password" placeholder="Mínimo 6 caracteres" /></div>
+        <div><label>Confirmar Contraseña</label><input type="password" placeholder="Repite tu contraseña" /></div>
+      </div>
+
+      <label class="chk"><input type="checkbox" /> Acepto los <a>Términos de Servicio</a> y la <a>Política de Privacidad</a></label>
+      <button type="button" class="btn btn--dark btn--xl">Crear Cuenta y Comenzar</button>
+
+      <p class="hint">¿Ya tienes una cuenta? <a routerLink="/ver-demo">Inicia sesión</a></p>
+    </form>
+
+    <aside class="card aside">
+      <h3>¿Por qué Evalyze?</h3>
+      <ul>
+        <li>Configuración en menos de 5 minutos</li>
+        <li>Evaluaciones conversacionales con IA</li>
+        <li>Ranking objetivo y reportes claros</li>
+        <li>Soporte dedicado incluido</li>
+      </ul>
+      <div class="note"><strong>Sin riesgos:</strong> puedes cancelar cuando quieras desde tu panel.</div>
+    </aside>
+  </div>
+
+  <div class="back"><a routerLink="/hola-mundo">← Volver al inicio</a></div>
+</div>

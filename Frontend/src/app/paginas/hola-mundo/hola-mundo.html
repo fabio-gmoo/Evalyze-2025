@@ -1,12 +1,186 @@
-<button (click)="conectarBackend()" [disabled]="cargando">
-  {{ cargando ? 'Conectando…' : 'Conectar Backend' }}
-</button>
+<!-- NAVBAR fija -->
+<header class="nav">
+  <div class="nav__inner">
+    <a class="brand" href="#">
+      <span class="brand__logo">🧠</span>
+      <span class="brand__name">Evalyze</span>
+    </a>
 
-<div style="margin-top: 1em; border: 1px solid #ccc; padding: 1em; min-height: 2em;">
-  @if (error) {
-    <strong style="color:#b00020">{{ error }}</strong>
-  } @else {
-    {{ respuesta || (cargando ? 'Contactando al servidor…' : 'Esperando respuesta...') }}
-  }
+    <nav class="menu">
+      <a href="#caracteristicas" [class.active]="active==='caracteristicas'">Características</a>
+      <a href="#beneficios" [class.active]="active==='beneficios'">Beneficios</a>
+      <a href="#testimonios" [class.active]="active==='testimonios'">Testimonios</a>
+    </nav>
+
+    <div class="actions">
+      <a class="btn btn--ghost" routerLink="/ver-demo">Iniciar Sesión</a>
+      <a class="btn btn--primary" routerLink="/comenzar">Comenzar</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<main class="hero">
+  <div class="hero__inner">
+    <div class="badge"><span>✨ La nueva era del reclutamiento inteligente</span></div>
+    <h1 class="title">
+      Revoluciona tu proceso de<br />
+      <span class="title__gradient">selección con IA</span>
+    </h1>
+    <p class="subtitle">
+      Evalyze utiliza inteligencia artificial conversacional para automatizar entrevistas,
+      evaluar candidatos objetivamente y generar rankings precisos que te ayuden a tomar
+      las mejores decisiones de contratación.
+    </p>
+
+    <div class="cta">
+  <a class="cta-primary" routerLink="/comenzar">
+    Comenzar <span class="arrow">➜</span>
+  </a>
+  <a class="cta-secondary" routerLink="/ver-demo">Ver demo</a>
 </div>
 
+  </div>
+</main>
+
+
+<!-- CARACTERÍSTICAS -->
+<section id="caracteristicas" class="section section--light">
+  <div class="container">
+    <h2 class="section__title">Características que marcan la diferencia</h2>
+    <p class="section__subtitle">
+      Tecnología de vanguardia diseñada para optimizar cada etapa de tu proceso de selección
+    </p>
+
+    <div class="cards-4">
+      <article class="card">
+        <div class="card__icon">🧠</div>
+        <h3 class="card__title">IA Conversacional</h3>
+        <p class="card__text">Entrevistas automatizadas con IA que evalúa respuestas en tiempo real.</p>
+      </article>
+      <article class="card">
+        <div class="card__icon">👥</div>
+        <h3 class="card__title">Gestión de Candidatos</h3>
+        <p class="card__text">Plataforma centralizada para organizar y evaluar postulaciones.</p>
+      </article>
+      <article class="card">
+        <div class="card__icon">🏆</div>
+        <h3 class="card__title">Ranking Inteligente</h3>
+        <p class="card__text">Puntuación automática según criterios personalizables.</p>
+      </article>
+      <article class="card">
+        <div class="card__icon">📝</div>
+        <h3 class="card__title">Informes Detallados</h3>
+        <p class="card__text">Reportes de compatibilidad con recomendaciones claras.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- BENEFICIOS -->
+<section id="beneficios" class="section">
+  <div class="container benefits">
+    <div class="benefits__left">
+      <h2 class="section__title--lg">¿Por qué elegir Evalyze?</h2>
+      <p class="benefits__intro">Optimiza tu proceso de reclutamiento con tecnología que realmente funciona</p>
+      <ul class="checks">
+        <li>Reduce el tiempo de selección en un 70%</li>
+        <li>Elimina sesgos inconscientes en entrevistas</li>
+        <li>Evaluación objetiva y consistente</li>
+        <li>Análisis predictivo de desempeño</li>
+        <li>Integración con sistemas ATS existentes</li>
+        <li>Cumplimiento con regulaciones de privacidad</li>
+      </ul>
+    </div>
+
+    <aside class="benefits__panel">
+      <h3>Resultados Inmediatos</h3>
+      <p>Las empresas que usan Evalyze ven mejoras significativas desde el primer día.</p>
+
+      <div class="panel__kpis">
+        <div>
+          <div class="kpi kpi--light">3x</div>
+          <div class="kpi__label--light">Más candidatos evaluados</div>
+        </div>
+        <div>
+          <div class="kpi kpi--light">85%</div>
+          <div class="kpi__label--light">Mejor fit cultural</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- TESTIMONIOS -->
+<section id="testimonios" class="section section--light">
+  <div class="container">
+    <h2 class="section__title">Lo que dicen nuestros clientes</h2>
+    <p class="section__subtitle">Historias reales de empresas que transformaron su reclutamiento</p>
+
+    <div class="testimonials">
+      <article class="tcard">
+        <div class="stars">★★★★★</div>
+        <p class="quote">"Evalyze transformó nuestro proceso. Evaluamos 10× más candidatos con precisión."</p>
+        <div class="person"><div class="name">María González</div><div class="role">Directora de RRHH</div></div>
+      </article>
+      <article class="tcard">
+        <div class="stars">★★★★★</div>
+        <p class="quote">"La IA identificó talentos que habríamos pasado por alto. Se paga sola."</p>
+        <div class="person"><div class="name">Carlos Mendez</div><div class="role">CEO en StartupX</div></div>
+      </article>
+      <article class="tcard">
+        <div class="stars">★★★★★</div>
+        <p class="quote">"Informes de compatibilidad detallados. Decisiones mucho mejores."</p>
+        <div class="person"><div class="name">Ana Rodriguez</div><div class="role">TA Manager</div></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta" class="cta-band">
+  <div class="cta-band__inner">
+    <h2>¿Listo para revolucionar tu reclutamiento?</h2>
+    <p>Únete a cientos de empresas que ya están contratando mejor con Evalyze</p>
+    <div class="cta-band__actions">
+      <a class="btn btn--xl btn--dark" routerLink="/comenzar">Comenzar <span class="arrow">➜</span></a>
+      <a class="btn btn--xl btn--light" routerLink="/ver-demo">Ver demo</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container footer__grid">
+    <div class="fbrand">
+      <div class="brand__logo">🧠</div>
+      <div class="brand__name">Evalyze</div>
+      <p>La plataforma de reclutamiento con IA que transforma cómo encuentras talento.</p>
+    </div>
+    <div>
+      <h4>Producto</h4>
+      <a>Características</a><a>Precios</a><a>Integraciones</a><a>API</a>
+    </div>
+    <div>
+      <h4>Empresa</h4>
+      <a>Acerca de</a><a>Blog</a><a>Carreras</a><a>Contacto</a>
+    </div>
+    <div>
+      <h4>Soporte</h4>
+      <a>Centro de ayuda</a><a>Documentación</a><a>Estado del servicio</a><a>Seguridad</a>
+    </div>
+  </div>
+  <div class="footer__copy">© 2024 Evalyze. Todos los derechos reservados.</div>
+</footer>
+
+<!-- Verificación de backend -->
+<section class="backend-check">
+  <h2>Verificar conexión con el backend</h2>
+  <button (click)="conectarBackend()" [disabled]="cargando" class="btn btn--dark">
+    {{ cargando ? 'Conectando…' : 'Conectar Backend' }}
+  </button>
+  <div class="backend-check__out">
+    @if (error) { <strong class="err">{{ error }}</strong> }
+    @else { {{ respuesta || (cargando ? 'Contactando al servidor…' : 'Esperando respuesta...') }} }
+  </div>
+</section>
