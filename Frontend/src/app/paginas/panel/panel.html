@@ -184,57 +184,106 @@
 
   <!-- ================= ENTREVISTAS IA ================= -->
   <section *ngIf="view==='entrevistas'">
-    <!-- Si hay entrevista activa, muestro el flow -->
-    <ng-container *ngIf="activeInterview; else listadoEntrevistas">
+
+    <!-- ===== Resumen de entrevista completada ===== -->
+    <ng-container *ngIf="completedView && !activeInterview; else notCompletedBlock">
       <div class="card" style="margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
-            <div style="font-weight:700">Entrevista con {{ activeInterview?.candidate }}</div>
-            <div class="muted">{{ activeInterview?.position }}</div>
+            <div style="font-weight:700">Entrevista con {{ completedView.candidate }}</div>
+            <div class="muted">{{ completedView.position }}</div>
           </div>
-          <span class="chip">En Progreso</span>
+          <span class="chip chip--green">Completada</span>
         </div>
-        <div class="progress"><div [style.width.%]="interviewProgress"></div></div>
-        <div class="muted" style="text-align:right">{{ (activeInterview?.index||0)+1 }} de {{ activeInterview?.total }}</div>
+
+        <div class="progress"><div style="width:100%"></div></div>
+        <div class="muted" style="text-align:right">{{ completedView.totalQuestions }} de {{ completedView.totalQuestions }}</div>
       </div>
 
       <div class="card">
-        <div class="muted">Pregunta {{ (activeInterview?.index||0)+1 }} <span class="chip small">{{ activeInterview?.questions[activeInterview?.index||0].type }}</span></div>
-        <div class="question-bubble">{{ activeInterview?.questions[activeInterview?.index||0].text }}</div>
+        <div style="font-weight:700;margin-bottom:4px">Entrevista Completada</div>
+        <div class="muted">Puntuación general: <b>{{ completedView.totalScore }}/100</b></div>
+      </div>
 
-        <div class="mode">
-          <button class="btn btn--light" [class.btn--dark]="inputMode==='texto'" (click)="inputMode='texto'">📝 Texto</button>
-          <button class="btn btn--light" [disabled]="true">🎙️ Voz</button>
+      <div class="qcard card" *ngFor="let q of completedView.perQuestion; let i = index" style="margin-top:10px">
+        <div class="qcard__head">
+          <div class="qtitle">Pregunta {{ i + 1 }}</div>
+          <span class="pill-score">{{ q.score }}/100</span>
         </div>
+        <div class="muted">{{ q.question }}</div>
+        <div class="answer">{{ q.answer || '—' }}</div>
+      </div>
 
-        <textarea rows="4" [(ngModel)]="answerText" placeholder="Escribe tu respuesta aquí..." class="input-area"></textarea>
-
-        <div class="actions">
-          <button class="btn btn--dark" (click)="nextQuestion(entrevistasIA[0])">Siguiente Pregunta</button>
-        </div>
+      <div class="actions" style="margin-top:12px">
+        <button class="btn btn--light" (click)="volverListaEntrevistas()">Volver a Lista de Entrevistas</button>
       </div>
     </ng-container>
 
-    <ng-template #listadoEntrevistas>
-      <h2>Entrevistas Automatizadas con IA</h2>
-      <p class="muted">Realiza entrevistas inteligentes con evaluación automática</p>
+    <!-- ===== Entrevista en curso o listado ===== -->
+    <ng-template #notCompletedBlock>
 
-      <div class="card" *ngFor="let e of entrevistasIA" style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="display:flex;gap:10px;align-items:center">
-            <div class="avatar" style="width:40px;height:40px">👤</div>
+      <!-- ENTREVISTA ACTIVA -->
+      <ng-container *ngIf="activeInterview as ai; else listadoEntrevistas">
+        <div class="card" style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
-              <div style="font-weight:700">{{ e.nombre }} <span class="chip" *ngIf="e.estado!=='Pendiente'">{{e.estado}}</span></div>
-              <div class="muted">{{ e.posicion }}</div>
-              <div class="muted">Preguntas: {{ e.preguntas }} <span *ngIf="e.puntaje"> • Puntuación: {{e.puntaje}}</span> <span *ngIf="e.inicio"> • Iniciada: {{e.inicio}}</span></div>
+              <div style="font-weight:700">Entrevista con {{ ai.candidate }}</div>
+              <div class="muted">{{ ai.position }}</div>
             </div>
+            <span class="chip">En Progreso</span>
           </div>
-          <div>
-            <button *ngIf="e.estado==='Pendiente'" class="btn btn--dark" (click)="startInterview(e)">▶ Iniciar Entrevista</button>
-            <button *ngIf="e.estado!=='Pendiente'" class="btn btn--light" (click)="viewInforme()">Ver Resultados</button>
+          <div class="progress"><div [style.width.%]="interviewProgress"></div></div>
+          <div class="muted" style="text-align:right">{{ ai.index + 1 }} de {{ ai.total }}</div>
+        </div>
+
+        <div class="card">
+          <div class="muted">Pregunta {{ ai.index + 1 }}
+            <span class="chip small">{{ ai.questions[ai.index].type }}</span>
+          </div>
+          <div class="question-bubble">{{ ai.questions[ai.index].text }}</div>
+
+          <div class="mode">
+            <button class="btn btn--light" [class.btn--dark]="inputMode==='texto'" (click)="inputMode='texto'">📝 Texto</button>
+            <button class="btn btn--light" [disabled]="true">🎙️ Voz</button>
+          </div>
+
+          <textarea rows="4" [(ngModel)]="answerText" placeholder="Escribe tu respuesta aquí..." class="input-area"></textarea>
+
+          <div class="actions">
+            <button class="btn btn--dark" (click)="nextQuestion(activeItemRef)">Siguiente Pregunta</button>
           </div>
         </div>
-      </div>
+      </ng-container>
+
+      <!-- LISTADO DE ENTREVISTAS -->
+      <ng-template #listadoEntrevistas>
+        <h2>Entrevistas Automatizadas con IA</h2>
+        <p class="muted">Realiza entrevistas inteligentes con evaluación automática</p>
+
+        <div class="card" *ngFor="let e of entrevistasIA" style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="display:flex;gap:10px;align-items:center">
+              <div class="avatar" style="width:40px;height:40px">👤</div>
+              <div>
+                <div style="font-weight:700">{{ e.nombre }}
+                  <span class="chip" *ngIf="e.estado!=='Pendiente'">{{e.estado}}</span>
+                </div>
+                <div class="muted">{{ e.posicion }}</div>
+                <div class="muted">
+                  Preguntas: {{ e.preguntas }}
+                  <span *ngIf="e.puntaje"> • Puntuación: {{e.puntaje}}</span>
+                  <span *ngIf="e.inicio"> • Iniciada: {{e.inicio}}</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <button *ngIf="e.estado==='Pendiente'" class="btn btn--dark" (click)="startInterview(e)">▶ Iniciar Entrevista</button>
+              <button *ngIf="e.estado!=='Pendiente'" class="btn btn--light" (click)="openResults(e)">Ver Resultados</button>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+
     </ng-template>
   </section>
 
@@ -310,7 +359,7 @@
       </div>
     </div>
 
-    <!-- Informe Detallado -->
+    <!-- Informe Detallado (mock) -->
     <section *ngIf="showInformeDet" class="card" style="margin-top:12px">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
@@ -411,111 +460,6 @@
           </ul>
         </div>
       </div>
-      <!-- ================= ENTREVISTAS IA ================= -->
-<section *ngIf="view==='entrevistas'">
-
-  <!-- ===== Resumen de entrevista completada (como la imagen) ===== -->
-  <ng-container *ngIf="completedView && !activeInterview; else notCompletedBlock">
-    <div class="card" style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-weight:700">Entrevista con {{ completedView.candidate }}</div>
-          <div class="muted">{{ completedView.position }}</div>
-        </div>
-        <span class="chip chip--green">Completada</span>
-      </div>
-
-      <div class="progress"><div style="width:100%"></div></div>
-      <div class="muted" style="text-align:right">{{ completedView.totalQuestions }} de {{ completedView.totalQuestions }}</div>
-    </div>
-
-    <div class="card">
-      <div style="font-weight:700;margin-bottom:4px">Entrevista Completada</div>
-      <div class="muted">Puntuación general: <b>{{ completedView.totalScore }}/100</b></div>
-    </div>
-
-    <div class="qcard card" *ngFor="let q of completedView.perQuestion; let i = index" style="margin-top:10px">
-      <div class="qcard__head">
-        <div class="qtitle">Pregunta {{ i + 1 }}</div>
-        <span class="pill-score">{{ q.score }}/100</span>
-      </div>
-      <div class="muted">{{ q.question }}</div>
-      <div class="answer">{{ q.answer || '—' }}</div>
-    </div>
-
-    <div class="actions" style="margin-top:12px">
-      <button class="btn btn--light" (click)="volverListaEntrevistas()">Volver a Lista de Entrevistas</button>
-    </div>
-  </ng-container>
-
-  <!-- ===== Entrevista en curso o listado ===== -->
-  <ng-template #notCompletedBlock>
-
-    <!-- ENTREVISTA ACTIVA -->
-    <ng-container *ngIf="activeInterview; else listadoEntrevistas">
-      <div class="card" style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div style="font-weight:700">Entrevista con {{ activeInterview?.candidate }}</div>
-            <div class="muted">{{ activeInterview?.position }}</div>
-          </div>
-          <span class="chip">En Progreso</span>
-        </div>
-        <div class="progress"><div [style.width.%]="interviewProgress"></div></div>
-        <div class="muted" style="text-align:right">{{ (activeInterview?.index||0)+1 }} de {{ activeInterview?.total }}</div>
-      </div>
-
-      <div class="card">
-        <div class="muted">Pregunta {{ (activeInterview?.index||0)+1 }}
-          <span class="chip small">{{ activeInterview?.questions[activeInterview?.index||0].type }}</span>
-        </div>
-        <div class="question-bubble">{{ activeInterview?.questions[activeInterview?.index||0].text }}</div>
-
-        <div class="mode">
-          <button class="btn btn--light" [class.btn--dark]="inputMode==='texto'" (click)="inputMode='texto'">📝 Texto</button>
-          <button class="btn btn--light" [disabled]="true">🎙️ Voz</button>
-        </div>
-
-        <textarea rows="4" [(ngModel)]="answerText" placeholder="Escribe tu respuesta aquí..." class="input-area"></textarea>
-
-        <div class="actions">
-          <button class="btn btn--dark" (click)="nextQuestion(entrevistasIA[0])">Siguiente Pregunta</button>
-        </div>
-      </div>
-    </ng-container>
-
-    <!-- LISTADO -->
-    <ng-template #listadoEntrevistas>
-      <h2>Entrevistas Automatizadas con IA</h2>
-      <p class="muted">Realiza entrevistas inteligentes con evaluación automática</p>
-
-      <div class="card" *ngFor="let e of entrevistasIA" style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="display:flex;gap:10px;align-items:center">
-            <div class="avatar" style="width:40px;height:40px">👤</div>
-            <div>
-              <div style="font-weight:700">{{ e.nombre }}
-                <span class="chip" *ngIf="e.estado!=='Pendiente'">{{e.estado}}</span>
-              </div>
-              <div class="muted">{{ e.posicion }}</div>
-              <div class="muted">
-                Preguntas: {{ e.preguntas }}
-                <span *ngIf="e.puntaje"> • Puntuación: {{e.puntaje}}</span>
-                <span *ngIf="e.inicio"> • Iniciada: {{e.inicio}}</span>
-              </div>
-            </div>
-          </div>
-          <div>
-            <button *ngIf="e.estado==='Pendiente'" class="btn btn--dark" (click)="startInterview(e)">▶ Iniciar Entrevista</button>
-            <button *ngIf="e.estado!=='Pendiente'" class="btn btn--light" (click)="openResults(e)">Ver Resultados</button>
-          </div>
-        </div>
-      </div>
-    </ng-template>
-
-  </ng-template>
-</section>
-
     </section>
   </section>
 </main>

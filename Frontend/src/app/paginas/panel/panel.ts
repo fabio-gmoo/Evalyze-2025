@@ -1,3 +1,5 @@
+import { FormsModule } from '@angular/forms';
+
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -68,7 +70,7 @@ interface CompletedInterviewView {
 @Component({
   selector: 'app-panel',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, FormsModule],
   templateUrl: './panel.html',
   styleUrls: ['./panel.scss'],
 })
@@ -144,8 +146,40 @@ export class Panel {
     { nombre: 'Carlos López',  posicion: 'Data Scientist',         estado: 'Completada', preguntas: '5/5',             puntaje: '82/100', inicio: '15/1/2024, 10:00:00' },
   ];
 
-  ranking = [];
-  informes = [];
+  ranking: {
+  nombre: string;
+  badges: string[];
+  posicion: string;
+  fecha: string;
+  barras: { general: number; tecnica: number; conductual: number; experiencia: number; habilidades: number; };
+  fortalezas: string[];
+  mejoras: string[];
+}[] = [
+  {
+    nombre: 'Ana García',
+    badges: ['Evaluado', 'Altamente Recomendado'],
+    posicion: 'Desarrollador Frontend',
+    fecha: '14/1/2024',
+    barras: { general: 88, tecnica: 92, conductual: 85, experiencia: 87, habilidades: 90 },
+    fortalezas: ['Excelentes conocimientos en React', 'Buena comunicación', 'Proactiva'],
+    mejoras: ['Poca experiencia en testing', 'Podría mejorar en TypeScript'],
+  },
+  {
+    nombre: 'Carlos López',
+    badges: ['Aceptado', 'Recomendado'],
+    posicion: 'Data Scientist',
+    fecha: '11/1/2024',
+    barras: { general: 82, tecnica: 89, conductual: 78, experiencia: 85, habilidades: 76 },
+    fortalezas: ['Sólidos conocimientos en ML', 'Experiencia con Python', 'Analítico'],
+    mejoras: ['Comunicación podría mejorar', 'Menos experiencia en producción'],
+  },
+];
+
+informes: { nombre: string; compat: number; gen: string }[] = [
+  { nombre: 'Ana García', compat: 88, gen: '15/1/2024' },
+  { nombre: 'Carlos López', compat: 82, gen: '12/1/2024' },
+];
+
   showInformeDet = false;
 
   /* --- Estado Entrevistas --- */
@@ -153,6 +187,7 @@ export class Panel {
   completedView: CompletedInterviewView | null = null;
   answerText = '';
   inputMode: 'texto' | 'voz' = 'texto';
+activeItemRef: any = null;
 
   constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
@@ -245,6 +280,7 @@ export class Panel {
 
   /* ---------- ENTREVISTAS ---------- */
   startInterview(item: any) {
+    this.activeItemRef = item;
     const qs: InterviewQuestion[] = [
       { text: '¿Puedes contarme sobre tu experiencia con React y qué proyectos has desarrollado?', type: 'technical' },
       { text: 'Describe una situación donde tuviste que resolver un problema técnico complejo. ¿Cómo lo abordaste?', type: 'technical' },
