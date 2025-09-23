@@ -1,89 +1,70 @@
-import { Component, signal, effect } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
-import { AiService, Health, ChatResponse } from '../../services/ai-service';
+import {
+  Component, NgZone, HostListener, AfterViewInit,
+  Inject, PLATFORM_ID
+} from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { HttpClientModule } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-hola-mundo',
   standalone: true,
-  imports: [],
+  imports: [CommonModule, HttpClientModule, RouterLink],
   templateUrl: './hola-mundo.html',
-  styleUrls: ['./hola-mundo.scss'],
+  styleUrls: ['./hola-mundo.scss']
 })
-export class HolaMundo {
-  respuesta = signal<string | null>(null);
-  error = signal<string | null>(null);
-  cargando = signal(false);
+export class HolaMundo implements AfterViewInit {
+  respuesta: string | null = null;
+  cargando = false;
+  error: string | null = null;
 
-  constructor(private ai: AiService) {
-    effect(() => {});
+  private sectionIds = ['caracteristicas', 'beneficios', 'testimonios', 'cta'];
+  active: 'caracteristicas' | 'beneficios' | 'testimonios' | 'cta' | null = null;
+  private readonly isBrowser: boolean;
+
+  constructor(private ngZone: NgZone, @Inject(PLATFORM_ID) platformId: Object) {
+    this.isBrowser = isPlatformBrowser(platformId);
   }
 
-  private toErrorMessage(e: unknown): string {
-    // Narrowing: ¿es un HttpErrorResponse?
-    if (e instanceof HttpErrorResponse) {
-      const err = e.error as any; // backend puede devolver string u objeto
-      if (typeof err === 'string') return err;
+  ngAfterViewInit(): void {
+    if (!this.isBrowser) return;
+    this.onScroll();
+  }
 
-      const detail = err?.detail ?? err?.message ?? null;
-      if (detail) return String(detail);
+  @HostListener('window:scroll', [])
+  onScroll(): void {
+    if (!this.isBrowser) return;
+    const offset = 120;
+    const y = window.scrollY + offset;
 
-      return `HTTP ${e.status} ${e.statusText ?? ''}`.trim();
+    let current: typeof this.active = null;
+    for (const id of this.sectionIds) {
+      const el = document.getElementById(id);
+      if (!el) continue;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      if (y >= top) current = id as typeof this.active;
     }
+    this.active = current;
+  }
 
-    // ¿Es un Error normal?
-    if (e instanceof Error) return e.message;
+  async conectarBackend(): Promise<void> {
+    this.cargando = true;
+    this.error = null;
+    this.respuesta = null;
 
-    // Último recurso: serializar
     try {
-      return JSON.stringify(e);
-    } catch {
-      return String(e);
+      const resp = await fetch('https://localhost:9000'); // cambia por tu API
+      if (!resp.ok) throw new Error('Error en la respuesta del servidor');
+      const data = await resp.json();
+      this.ngZone.run(() => {
+        this.respuesta = JSON.stringify(data);
+        this.cargando = false;
+      });
+    } catch (e: any) {
+      this.ngZone.run(() => {
+        this.error = e?.message || 'Error desconocido';
+        this.cargando = false;
+      });
     }
-  }
-  conectarBackend(): void {
-    this.cargando.set(true);
-    this.error.set(null);
-    this.respuesta.set(null);
-    this.ai.health().subscribe({
-      next: (d: Health) => {
-        this.respuesta.set(JSON.stringify(d, null, 2));
-        this.cargando.set(false);
-      },
-      error: (e: unknown) => {
-        this.error.set(this.toErrorMessage(e));
-        this.cargando.set(false);
-      },
-    });
-  }
-  enviarChatDemo(mensaje: string): void {
-    this.cargando.set(true);
-    this.error.set(null);
-    this.respuesta.set(null);
-    this.ai.demoChat(mensaje).subscribe({
-      next: (d: ChatResponse) => {
-        this.respuesta.set(d.reply);
-        this.cargando.set(false);
-      },
-      error: (e: unknown) => {
-        this.error.set(this.toErrorMessage(e));
-        this.cargando.set(false);
-      },
-    });
-  }
-  enviarChat(mensaje: string): void {
-    this.cargando.set(true);
-    this.error.set(null);
-    this.respuesta.set(null);
-    const jwt = localStorage.getItem('access'); // por ejemplo, lo guardas tras login
-    this.ai.chat(mensaje, 'front-dev-1', jwt ?? undefined).subscribe({
-      next: (d) => {
-        this.respuesta.set(d.reply);
-        this.cargando.set(false);
-      },
-      error: (e) => {
-        this.error.set(e instanceof Error ? e.message : String(e));
-        this.cargando.set(false);
-      },
-    });
   }
 }

@@ -1,0 +1,68 @@
+<div class="auth-wrap">
+  <div class="logo"><span class="brand__logo">🧠</span><span class="brand__name">Evalyze</span></div>
+  <h1>Bienvenido de vuelta</h1>
+  <p class="subtitle">Inicia sesión en tu cuenta para continuar</p>
+
+  <div class="centered">
+    <!-- Usamos (ngSubmit) y type="submit" para evitar submit nativo -->
+    <form class="card form sm" #f="ngForm" (ngSubmit)="login(f)" novalidate>
+      <h2>Iniciar Sesión</h2>
+      <p class="muted">Ingresa tus credenciales para acceder a tu dashboard</p>
+
+      <div class="row">
+        <label>Email</label>
+        <input
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="tu@empresa.com"
+          required
+        />
+      </div>
+
+      <div class="row">
+        <label>Contraseña</label>
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          placeholder="••••••••"
+          required
+        />
+      </div>
+
+      <label class="chk">
+        <input type="checkbox" name="remember" [(ngModel)]="remember" />
+        Recordarme
+      </label>
+
+      <div class="actions-row">
+        <a class="link">¿Olvidaste tu contraseña?</a>
+      </div>
+
+      <button type="submit" class="btn btn--dark btn--xl" [disabled]="loading">
+        {{ loading ? 'Ingresando…' : 'Iniciar Sesión' }}
+      </button>
+
+      <div class="form-error" *ngIf="error">{{ error }}</div>
+
+      <p class="hint">
+        ¿No tienes una cuenta?
+        <a routerLink="/comenzar">Regístrate</a>
+      </p>
+    </form>
+
+    <div class="card info">
+      <strong>Demo – Credenciales de prueba:</strong>
+      <div><b>Email:</b> demo@evalyze.com</div>
+      <div><b>Contraseña:</b> demo123</div>
+    </div>
+
+    <!-- Link de diagnóstico (puedes borrarlo luego) -->
+    <div style="text-align:center;margin-top:10px;">
+      <a routerLink="/panel">Ir directo al panel (test)</a>
+    </div>
+  </div>
+
+  <div class="back"><a routerLink="/hola-mundo">← Volver al inicio</a></div>
+</div>
