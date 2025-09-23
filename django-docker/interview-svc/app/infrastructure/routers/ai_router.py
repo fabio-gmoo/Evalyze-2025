@@ -130,4 +130,41 @@ def get_ai_router(chat_service: ChatService) -> APIRouter:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
+    @router.post("/vacants/save", response_model=VacancyDraftOut)
+    async def save_vacant(
+        req: VacancyDraftIn, x_api_key: str | None = Header(default=None)
+    ):
+        """
+        Guarda una vacante editada y aprobada por el usuario en Django.
+        """
+        _check_public_key(x_api_key)
+
+        # Realizamos la llamada a Django para guardar los datos
+        django_url = "http://localhost:8000/vacantes/guardar/"
+        headers = {"Content-Type": "application/json"}
+
+        # Datos para guardar
+        data = {
+            "id": req.id,  # Asegúrate de pasar el ID de la vacante a guardar
+            "puesto": req.puesto,
+            "descripcion": req.descripcion_sugerida,
+            "requisitos": req.requisitos_sugeridos,
+            "ubicacion": req.ubicacion,
+            "salario": req.salario,
+            "tipo_contrato": req.tipo_contrato,
+        }
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(django_url, json=data, headers=headers)
+
+        if response.status_code == 201:
+            return {
+                "status": "Vacante guardada con éxito",
+                "id": response.json().get("id"),
+            }
+        else:
+            raise HTTPException(
+                status_code=400, detail="Error al guardar la vacante en Django"
+            )
+
     return router

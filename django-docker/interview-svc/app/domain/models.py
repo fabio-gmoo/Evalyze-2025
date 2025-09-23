@@ -17,7 +17,7 @@ class VacancyDraftIn(BaseModel):
 # ======= OUTPUT: propuesta de IA (usuario puede editar) =======
 class VacancyDraftOut(BaseModel):
     puesto: str
-    descripcion_sugerida: str
+    descripcion_sugerida: str | None = None
     requisitos_sugeridos: list[str]
 
     @field_validator("requisitos_sugeridos", mode="before")
