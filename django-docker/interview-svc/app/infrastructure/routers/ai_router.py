@@ -1,10 +1,13 @@
+import httpx  # type: ignore
+import json
+import os
 from fastapi import APIRouter, Header, HTTPException  # type: ignore
 from app.domain.models import ChatRequest, ChatResponse, VacancyDraftIn, VacancyDraftOut  # type: ignore
 from app.domain.services import ChatService  # type: ignore
 from app.infrastructure.ai_provider import HttpLLMAdapter  # type: ignore
-import os
-import json
-import httpx  # type: ignore
+from dotenv import load_dotenv  # type: ignore
+
+load_dotenv()  # Cargar variables de entorno desde el archivo .env
 
 # --- Configuración de seguridad ---
 PUBLIC_API_KEY = os.getenv("AI_PUBLIC_API_KEY", "")
@@ -108,7 +111,7 @@ def get_ai_router(chat_service: ChatService) -> APIRouter:
                 start = content.find("{")
                 end = content.rfind("}")
                 if start >= 0 and end > start:
-                    raw = json.loads(content[start: end + 1])
+                    raw = json.loads(content[start : end + 1])
                 else:
                     raise HTTPException(
                         status_code=502, detail="El modelo no devolvió JSON válido."
@@ -117,8 +120,7 @@ def get_ai_router(chat_service: ChatService) -> APIRouter:
             # Normalizar claves con defaults
             out = VacancyDraftOut(
                 puesto=raw.get("puesto", req.puesto),
-                descripcion_sugerida=raw.get(
-                    "descripcion_sugerida", req.descripcion),
+                descripcion_sugerida=raw.get("descripcion_sugerida", req.descripcion),
                 requisitos_sugeridos=raw.get("requisitos_sugeridos", []),
             )
             return out
