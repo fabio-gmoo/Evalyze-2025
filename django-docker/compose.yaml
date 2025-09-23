@@ -14,9 +14,5 @@ services:
     ports:
       - '9000:9000'
     environment:
-      PROVIDER_BASE_URL: 'https://api.openai.com'
-      PROVIDER_API_KEY: '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'
-      PROVIDER_MODEL: 'gpt-4o-mini'
-
       DEMO_MODE: true
       DEMO_API_KEY: evalyze-demo-123
