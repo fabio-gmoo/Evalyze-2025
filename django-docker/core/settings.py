@@ -23,9 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-$j$giv2eqwqm!6*rrhx*&8v0a_0vd+)g9irhir+a2hyr2-nsza"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["https://evalyze-production.up.railway.app/"]
 
 
 # Application definition
