@@ -1,9 +1,16 @@
-<app-navbar></app-navbar>
+<app-navbar (loginClick)="openAuth('login')" (signupClick)="openAuth('signup')"> </app-navbar>
 
 <app-hero></app-hero>
 <app-features></app-features>
 <app-benefits></app-benefits>
 <app-testimonials></app-testimonials>
 <app-cta></app-cta>
-
 <app-footer></app-footer>
+
+@if (showAuth()) {
+  <div class="modal__backdrop" (click)="closeAuth()"></div>
+  <div class="modal__panel" role="dialog" aria-modal="true">
+    <button class="modal__close" (click)="closeAuth()">✕</button>
+    <app-auth [startMode]="authMode()"></app-auth>
+  </div>
+}

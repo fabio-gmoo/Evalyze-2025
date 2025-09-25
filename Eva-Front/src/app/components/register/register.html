@@ -1,0 +1,31 @@
+<h1 class="title">Únete a Evalyze</h1>
+<p class="subtitle">Comienza a revolucionar tu proceso de reclutamiento hoy</p>
+
+<div class="signup">
+  <div class="card">
+    <h3 class="card-title">Crear Cuenta</h3>
+    <p class="card-sub">Completa la información para comenzar tu prueba gratuita</p>
+
+    <app-registerform />
+
+    <p class="swap">
+      ¿Ya tienes cuenta?
+      <a (click)="loginClick.emit()">Inicia sesión</a>
+    </p>
+  </div>
+
+  <aside class="why">
+    <h4>¿Por qué Evalyze?</h4>
+    <ul>
+      @for (r of reasons(); track r) {
+        <li>✔ {{ r }}</li>
+      }
+    </ul>
+    <div class="box">
+      <strong>Prueba sin riesgo</strong>
+      <p>
+        No necesitas tarjeta de crédito. Cancela en cualquier momento durante tu prueba gratuita.
+      </p>
+    </div>
+  </aside>
+</div>

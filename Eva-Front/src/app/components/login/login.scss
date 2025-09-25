@@ -1,0 +1,37 @@
+/* src/app/auth/login-card.component.css */
+.title {
+  margin: 8px 0 4px;
+  font-size: 26px;
+}
+.subtitle {
+  margin: 0 0 18px;
+  color: #7a8095;
+}
+.card {
+  width: min(520px, 92%);
+  background: #fff;
+  border: 1px solid #e7e8f3;
+  border-radius: 16px;
+  padding: 20px 20px 16px;
+  text-align: left;
+  box-shadow: 0 12px 30px rgba(40, 40, 90, 0.08);
+}
+.card-title {
+  margin: 0 0 4px;
+  text-align: center;
+}
+.card-sub {
+  margin: 0 0 16px;
+  text-align: center;
+  color: #7a8095;
+}
+.swap {
+  margin: 14px 0 0;
+  text-align: center;
+  color: #777;
+}
+.swap a {
+  color: #5b46ff;
+  cursor: pointer;
+  text-decoration: none;
+}

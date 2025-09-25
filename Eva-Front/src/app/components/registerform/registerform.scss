@@ -1,0 +1,62 @@
+.form {
+  display: grid;
+  gap: 12px;
+}
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 720px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+  color: #222;
+}
+input,
+select {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #e2e5f0;
+  background: #f9faff;
+}
+.pw {
+  position: relative;
+}
+.eye {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.tos {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  color: #4a4f63;
+}
+.tos a {
+  color: #5b46ff;
+}
+.btn {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 0;
+  cursor: pointer;
+}
+.btn--dark {
+  background: #0d0f1a;
+  color: #fff;
+}
+.error {
+  color: #e26d6d;
+  font-size: 13px;
+}

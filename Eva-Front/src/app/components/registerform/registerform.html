@@ -1,0 +1,90 @@
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate class="form">
+  <div class="grid2">
+    <label
+      >Nombre Completo
+      <input type="text" formControlName="name" placeholder="Tu nombre" />
+      @if (form.controls.name.touched && form.controls.name.invalid) {
+        <small class="error">Requerido</small>
+      }
+    </label>
+
+    <label
+      >Email Corporativo
+      <input type="email" formControlName="email" placeholder="tu@empresa.com" />
+      @if (form.controls.email.touched && form.controls.email.invalid) {
+        <small class="error">Email inválido</small>
+      }
+    </label>
+
+    <label
+      >Empresa
+      <input type="text" formControlName="company" placeholder="Nombre de tu empresa" />
+    </label>
+
+    <label
+      >Tamaño de Empresa
+      <select formControlName="size">
+        <option value="" disabled selected>Selecciona tamaño</option>
+        <option>1-10</option>
+        <option>11-50</option>
+        <option>51-200</option>
+        <option>201-1000</option>
+        <option>1000+</option>
+      </select>
+    </label>
+
+    <label
+      >Tu Rol
+      <select formControlName="role">
+        <option value="" disabled selected>Selecciona tu rol</option>
+        <option>Recruiter</option>
+        <option>HR Manager</option>
+        <option>Founder</option>
+        <option>Otro</option>
+      </select>
+    </label>
+
+    <label
+      >Contraseña
+      <div class="pw">
+        <input
+          [type]="showPw() ? 'text' : 'password'"
+          formControlName="password"
+          placeholder="Mínimo 6 caracteres"
+        />
+        <button type="button" class="eye" (click)="togglePw()">👁</button>
+      </div>
+      @if (form.controls.password.touched && form.controls.password.invalid) {
+        <small class="error">Mínimo 6 caracteres</small>
+      }
+    </label>
+
+    <label
+      >Confirmar Contraseña
+      <div class="pw">
+        <input
+          [type]="showCf() ? 'text' : 'password'"
+          formControlName="confirm"
+          placeholder="Repite tu contraseña"
+        />
+        <button type="button" class="eye" (click)="toggleCf()">👁</button>
+      </div>
+      @if (
+        form.errors?.['mismatch'] &&
+        (form.controls.confirm.touched || form.controls.password.touched)
+      ) {
+        <small class="error">Las contraseñas no coinciden</small>
+      }
+    </label>
+  </div>
+
+  <label class="tos">
+    <input type="checkbox" formControlName="tos" />
+    <span
+      >Acepto los <a href="#">Términos de Servicio</a> y la
+      <a href="#">Política de Privacidad</a></span
+    >
+  </label>
+
+  <button class="btn btn--dark" [disabled]="form.invalid">Crear Cuenta y Comenzar Prueba</button>
+</form>

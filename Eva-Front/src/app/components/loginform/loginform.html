@@ -1,0 +1,34 @@
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate class="form">
+  <label
+    >Email
+    <input type="email" formControlName="email" placeholder="tu@empresa.com" />
+    @if (form.controls.email.touched && form.controls.email.invalid) {
+      <small class="error">Email inválido</small>
+    }
+  </label>
+
+  <label
+    >Contraseña
+    <div class="pw">
+      <input
+        [type]="show() ? 'text' : 'password'"
+        formControlName="password"
+        placeholder="********"
+      />
+      <button type="button" class="eye" (click)="toggleShow()" aria-label="toggle">👁</button>
+    </div>
+    @if (form.controls.password.touched && form.controls.password.invalid) {
+      <small class="error">Mínimo 6 caracteres</small>
+    }
+  </label>
+
+  <div class="row">
+    <label class="check">
+      <input type="checkbox" formControlName="remember" />
+      <span>Recordarme</span>
+    </label>
+    <a class="link" href="#">¿Olvidaste tu contraseña?</a>
+  </div>
+
+  <button class="btn btn--dark" [disabled]="form.invalid">Iniciar Sesión</button>
+</form>

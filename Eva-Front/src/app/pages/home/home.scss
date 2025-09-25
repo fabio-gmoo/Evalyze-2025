@@ -1,0 +1,36 @@
+/* Modal base */
+.modal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 90;
+}
+.modal__panel {
+  position: fixed;
+  inset: 4% 50% auto 50%;
+  transform: translateX(-50%);
+  max-height: 92vh;
+  overflow: auto;
+  z-index: 91;
+  padding: 12px 0 20px;
+  /* ancho “grande” para signup con sidebar; se adapta en móvil */
+  width: min(1000px, 96%);
+}
+.modal__close {
+  position: absolute;
+  right: 14px;
+  top: 10px;
+  background: #1f1f2a;
+  color: #fff;
+  border: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+@media (max-width: 960px) {
+  .modal__panel {
+    width: min(640px, 96%);
+  }
+}

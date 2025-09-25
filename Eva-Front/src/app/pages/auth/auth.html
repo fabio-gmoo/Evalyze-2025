@@ -1,0 +1,12 @@
+<section class="shell">
+  <div class="brand">
+    <div class="logo">🤖</div>
+    <div class="name">Evalyze</div>
+  </div>
+
+  @if (mode() === 'login') {
+    <app-login (signupClick)="switchTo('signup')"></app-login>
+  } @else {
+    <app-register (loginClick)="switchTo('login')"></app-register>
+  }
+</section>

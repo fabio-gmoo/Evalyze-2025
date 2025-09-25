@@ -12,10 +12,9 @@
     </nav>
 
     <div class="nav__actions">
-      <button class="btn btn--ghost">Iniciar Sesión</button>
-      <button class="btn btn--primary">Comenzar Gratis</button>
+      <button class="btn btn--ghost" (click)="loginClick.emit()">Iniciar Sesión</button>
+      <button class="btn btn--primary" (click)="signupClick.emit()">Comenzar Gratis</button>
     </div>
-
     <button class="nav__burger" aria-label="Abrir menú" (click)="toggleMenu()">☰</button>
   </div>
 
