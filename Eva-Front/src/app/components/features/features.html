@@ -1,0 +1,40 @@
+<section id="caracteristicas" class="section">
+  <div class="container">
+    <h2 class="section__title">Características que marcan la diferencia</h2>
+    <p class="section__lead">Tecnología de vanguardia para cada etapa.</p>
+
+    <div class="grid">
+      @for (
+        f of [
+          {
+            icon: '🧠',
+            title: 'IA Conversacional',
+            desc: 'Entrevistas automatizadas con inteligencia artificial avanzada que evalúa respuestas en tiempo real.',
+          },
+          {
+            icon: '👤',
+            title: 'Evaluación Objetiva',
+            desc: 'Plataforma centralizada para recibir, organizar y evaluar todas las postulaciones de manera eficiente.',
+          },
+          {
+            icon: '🏆',
+            title: 'Rankings Precisos',
+            desc: 'Sistema de puntuación automático que rankea candidatos según criterios personalizables.',
+          },
+          {
+            icon: '📄',
+            title: 'Reportes Claros',
+            desc: 'Reportes de compatibilidad completos con análisis de habilidades y recomendaciones.',
+          },
+        ];
+        track f.title
+      ) {
+        <article class="card">
+          <div class="icon">{{ f.icon }}</div>
+          <h3>{{ f.title }}</h3>
+          <p class="desc">{{ f.desc }}</p>
+        </article>
+      }
+    </div>
+  </div>
+</section>

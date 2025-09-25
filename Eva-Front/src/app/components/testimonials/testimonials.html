@@ -1,0 +1,37 @@
+<section class="section section--alt">
+  <div class="container">
+    <h2 class="section__title">{{ title() }}</h2>
+    <p class="section__lead">{{ subtitle() }}</p>
+
+    @defer (on viewport) {
+      <div class="t-grid">
+        @for (t of items(); track t.name) {
+          <article class="t-card">
+            @if (t.rating) {
+              <div class="t-stars">
+                @for (_ of stars(t.rating); track $index) {
+                  <span class="star">★</span>
+                }
+              </div>
+            } @else {
+              <div class="t-stars t-stars--empty">Sin calificación</div>
+            }
+
+            <p class="t-quote">{{ t.quote }}</p>
+
+            <div class="t-author">
+              <div class="t-name">{{ t.name }}</div>
+              <div class="t-role">{{ t.role }}</div>
+            </div>
+          </article>
+        }
+      </div>
+    } @placeholder {
+      <div class="t-grid">
+        @for (_ of [0, 1, 2]; track $index) {
+          <div class="t-card skeleton"></div>
+        }
+      </div>
+    }
+  </div>
+</section>

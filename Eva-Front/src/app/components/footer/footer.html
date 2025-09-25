@@ -1,0 +1,53 @@
+<footer class="site-footer">
+  <div class="container footer__top">
+    <div class="footer__brand">
+      <div class="logo">🤖</div>
+      <p>
+        La plataforma de reclutamiento con IA que está transformando cómo las empresas encuentran
+        talento.
+      </p>
+    </div>
+
+    <div class="footer__cols">
+      <div class="col">
+        <h4>Producto</h4>
+        <ul>
+          @for (l of product(); track l.label) {
+            <li>
+              <a [href]="l.href">{{ l.label }}</a>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <div class="col">
+        <h4>Empresa</h4>
+        <ul>
+          @for (l of company(); track l.label) {
+            <li>
+              <a [href]="l.href">{{ l.label }}</a>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <div class="col">
+        <h4>Soporte</h4>
+        <ul>
+          @for (l of support(); track l.label) {
+            <li>
+              <a [href]="l.href">{{ l.label }}</a>
+            </li>
+          }
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="container footer__bottom">
+    <hr />
+    <div class="footer__copyright">
+      <small>© {{ year() }} Evalyze. Todos los derechos reservados.</small>
+    </div>
+  </div>
+</footer>
