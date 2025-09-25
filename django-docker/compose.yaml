@@ -1,6 +1,7 @@
 services:
   web:
-    build: .
+    image: davidzemap/evalyzebackend:latest
+    #build: .
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
@@ -8,6 +9,7 @@ services:
       - '8000:8000'
 
   interview:
+    image: davidzemap/evalyzebackend:latest
     build:
       context: ./interview-svc
       dockerfile: Dockerfile
