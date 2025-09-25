@@ -91,9 +91,14 @@
         </div>
 
         <div class="actions">
-          <button class="btn btn--dark" type="submit">Crear Vacante</button>
-          <button class="btn btn--light" type="button" (click)="showForm=false">Cancelar</button>
+          <button class="btn btn--dark" type="submit" [disabled]="enviando">
+            {{ enviando ? 'Enviando…' : 'Crear Vacante' }}
+          </button>
+          <button class="btn btn--light" type="button" (click)="showForm=false" [disabled]="enviando">Cancelar</button>
         </div>
+
+        <p *ngIf="apiOk" style="color:#16a34a;margin-top:8px">{{ apiOk }}</p>
+        <p *ngIf="apiError" class="muted" style="color:#b91c1c;margin-top:8px">{{ apiError }}</p>
       </form>
     </section>
 
@@ -185,7 +190,6 @@
   <!-- ================= ENTREVISTAS IA ================= -->
   <section *ngIf="view==='entrevistas'">
 
-    <!-- ===== Resumen de entrevista completada ===== -->
     <ng-container *ngIf="completedView && !activeInterview; else notCompletedBlock">
       <div class="card" style="margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:center">
@@ -219,10 +223,8 @@
       </div>
     </ng-container>
 
-    <!-- ===== Entrevista en curso o listado ===== -->
     <ng-template #notCompletedBlock>
 
-      <!-- ENTREVISTA ACTIVA -->
       <ng-container *ngIf="activeInterview as ai; else listadoEntrevistas">
         <div class="card" style="margin-bottom:12px">
           <div style="display:flex;justify-content:space-between;align-items:center">
@@ -255,7 +257,6 @@
         </div>
       </ng-container>
 
-      <!-- LISTADO DE ENTREVISTAS -->
       <ng-template #listadoEntrevistas>
         <h2>Entrevistas Automatizadas con IA</h2>
         <p class="muted">Realiza entrevistas inteligentes con evaluación automática</p>
@@ -424,7 +425,7 @@
         </div>
       </div>
 
-      <!-- Radar "soft skills" (SVG simple) -->
+      <!-- Radar soft skills (decorativo) -->
       <div class="card" style="margin-top:10px">
         <div class="muted">Perfil de Personalidad y Soft Skills</div>
         <div class="radar">
@@ -440,24 +441,6 @@
             <span style="top:90%;left:25%">Communication</span>
             <span style="top:45%;left:0">ProblemSolving</span>
           </div>
-        </div>
-      </div>
-
-      <div class="grid two" style="margin-top:10px">
-        <div class="card">
-          <div class="muted">Recomendaciones</div>
-          <ul class="muted">
-            <li>Excelente candidata con sólidos conocimientos técnicos</li>
-            <li>Buena adaptabilidad y capacidad de resolución de problemas</li>
-            <li>Recomendamos capacitación en testing para completar el perfil</li>
-          </ul>
-        </div>
-        <div class="card">
-          <div class="muted">Áreas de Atención</div>
-          <ul class="muted">
-            <li>Falta de experiencia en testing podría requerir formación adicional</li>
-            <li>Liderazgo podría desarrollarse más con el tiempo</li>
-          </ul>
         </div>
       </div>
     </section>

@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-export interface Vacante {
+// ✅ Renombrada: Evita chocar con tu interface Vacante del panel
+export interface VacanteDTO {
   titulo: string;
   departamento: string;
   ubicacion: string;
@@ -17,16 +18,13 @@ export interface Vacante {
   preguntas: { texto: string; tipo: string; peso: number; keywords: string }[];
 }
 
-@Injectable({
-  providedIn: 'root',
-})
-export class Vacante {
-  private apiUrl = 'http://localhost:8000/vacantes/guardar/'; // URL de la API donde se guardará la vacante
+@Injectable({ providedIn: 'root' })
+export class VacanteService {
+  private apiUrl = 'http://localhost:8000/vacantes/guardar/'; // ajusta si difiere
 
   constructor(private http: HttpClient) {}
 
-  // Método para guardar la vacante
-  crearVacante(vacante: Vacante): Observable<any> {
+  crearVacante(vacante: VacanteDTO): Observable<any> {
     return this.http.post(this.apiUrl, vacante);
   }
 }

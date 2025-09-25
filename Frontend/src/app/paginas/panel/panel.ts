@@ -11,6 +11,8 @@ import {
   Validators,
 } from '@angular/forms';
 
+// ⬇️ IMPORTA TU SERVICIO (ruta correcta desde /paginas/panel/)
+import { VacanteService, VacanteDTO } from '../../services/vacante';
 type EstadoVacante = 'Activa' | 'Borrador';
 
 interface Pregunta {
@@ -82,6 +84,11 @@ export class Panel {
   @ViewChild('formAnchor') formAnchor!: ElementRef<HTMLDivElement>;
   form: FormGroup;
 
+  // ⬇️ estados de envío / feedback API
+  enviando = false;
+  apiOk: string | null = null;
+  apiError: string | null = null;
+
   selectedVacante: Vacante | null = null;
 
   vacantes: Vacante[] = [
@@ -147,38 +154,38 @@ export class Panel {
   ];
 
   ranking: {
-  nombre: string;
-  badges: string[];
-  posicion: string;
-  fecha: string;
-  barras: { general: number; tecnica: number; conductual: number; experiencia: number; habilidades: number; };
-  fortalezas: string[];
-  mejoras: string[];
-}[] = [
-  {
-    nombre: 'Ana García',
-    badges: ['Evaluado', 'Altamente Recomendado'],
-    posicion: 'Desarrollador Frontend',
-    fecha: '14/1/2024',
-    barras: { general: 88, tecnica: 92, conductual: 85, experiencia: 87, habilidades: 90 },
-    fortalezas: ['Excelentes conocimientos en React', 'Buena comunicación', 'Proactiva'],
-    mejoras: ['Poca experiencia en testing', 'Podría mejorar en TypeScript'],
-  },
-  {
-    nombre: 'Carlos López',
-    badges: ['Aceptado', 'Recomendado'],
-    posicion: 'Data Scientist',
-    fecha: '11/1/2024',
-    barras: { general: 82, tecnica: 89, conductual: 78, experiencia: 85, habilidades: 76 },
-    fortalezas: ['Sólidos conocimientos en ML', 'Experiencia con Python', 'Analítico'],
-    mejoras: ['Comunicación podría mejorar', 'Menos experiencia en producción'],
-  },
-];
+    nombre: string;
+    badges: string[];
+    posicion: string;
+    fecha: string;
+    barras: { general: number; tecnica: number; conductual: number; experiencia: number; habilidades: number; };
+    fortalezas: string[];
+    mejoras: string[];
+  }[] = [
+    {
+      nombre: 'Ana García',
+      badges: ['Evaluado', 'Altamente Recomendado'],
+      posicion: 'Desarrollador Frontend',
+      fecha: '14/1/2024',
+      barras: { general: 88, tecnica: 92, conductual: 85, experiencia: 87, habilidades: 90 },
+      fortalezas: ['Excelentes conocimientos en React', 'Buena comunicación', 'Proactiva'],
+      mejoras: ['Poca experiencia en testing', 'Podría mejorar en TypeScript'],
+    },
+    {
+      nombre: 'Carlos López',
+      badges: ['Aceptado', 'Recomendado'],
+      posicion: 'Data Scientist',
+      fecha: '11/1/2024',
+      barras: { general: 82, tecnica: 89, conductual: 78, experiencia: 85, habilidades: 76 },
+      fortalezas: ['Sólidos conocimientos en ML', 'Experiencia con Python', 'Analítico'],
+      mejoras: ['Comunicación podría mejorar', 'Menos experiencia en producción'],
+    },
+  ];
 
-informes: { nombre: string; compat: number; gen: string }[] = [
-  { nombre: 'Ana García', compat: 88, gen: '15/1/2024' },
-  { nombre: 'Carlos López', compat: 82, gen: '12/1/2024' },
-];
+  informes: { nombre: string; compat: number; gen: string }[] = [
+    { nombre: 'Ana García', compat: 88, gen: '15/1/2024' },
+    { nombre: 'Carlos López', compat: 82, gen: '12/1/2024' },
+  ];
 
   showInformeDet = false;
 
@@ -187,9 +194,9 @@ informes: { nombre: string; compat: number; gen: string }[] = [
   completedView: CompletedInterviewView | null = null;
   answerText = '';
   inputMode: 'texto' | 'voz' = 'texto';
-activeItemRef: any = null;
+  activeItemRef: any = null;
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private vacantesSvc: VacanteService) {
     this.form = this.fb.group({
       titulo: ['', Validators.required],
       departamento: [''],
@@ -239,37 +246,75 @@ activeItemRef: any = null;
   agregarPregunta() { this.preguntas.push(this.nuevaPregunta()); }
   eliminarPregunta(i: number) { if (this.preguntas.length > 1) this.preguntas.removeAt(i); }
 
-  /* ---------- crear vacante --------- */
+  /* ---------- crear vacante (POST al backend) --------- */
   crearVacante() {
+    this.apiOk = this.apiError = null;
+
     if (this.form.invalid) {
       this.form.markAllAsTouched(); this.scrollToForm(); return;
     }
-    const v: Vacante = {
-      id: Date.now(),
-      titulo: this.form.value.titulo?.trim() || 'Nueva vacante',
-      empresa: this.form.value.departamento || '—',
-      departamento: this.form.value.departamento,
-      ubicacion: this.form.value.ubicacion,
+
+    this.enviando = true;
+
+    const dto: VacanteDTO = {
+      titulo: this.form.value.titulo?.trim() || '',
+      departamento: this.form.value.departamento || '',
+      ubicacion: this.form.value.ubicacion || '',
       contrato: this.form.value.contrato || 'Tiempo Completo',
-      salarioMin: Number(this.form.value.salarioMin) || undefined,
-      salarioMax: Number(this.form.value.salarioMax) || undefined,
-      descripcion: this.form.value.descripcion,
-      requisitos: this.form.value.requisitos,
-      responsabilidades: this.form.value.responsabilidades,
+      salarioMin: Number(this.form.value.salarioMin) || 0,
+      salarioMax: Number(this.form.value.salarioMax) || 0,
+      descripcion: this.form.value.descripcion || '',
+      requisitos: this.form.value.requisitos || '',
+      responsabilidades: this.form.value.responsabilidades || '',
       duracionMin: Number(this.form.value.duracionMin) || 45,
       puntajeMin: Number(this.form.value.puntajeMin) || 75,
       preguntas: (this.form.value.preguntas || []).map((p: any) => ({
-        texto: p.texto || '', tipo: p.tipo || 'Técnica', peso: Number(p.peso) || 20, keywords: p.keywords || '',
+        texto: p?.texto || '',
+        tipo: p?.tipo || 'Técnica',
+        peso: Number(p?.peso) || 20,
+        keywords: p?.keywords || '',
       })),
-      estado: 'Borrador',
-      candidatos: 0,
-      publicada: new Date().toLocaleDateString('es-ES'),
     };
-    this.vacantes = [v, ...this.vacantes];
-    this.form.reset({ contrato: 'Tiempo Completo', duracionMin: '45', puntajeMin: '75' });
-    this.preguntas.clear(); this.preguntas.push(this.nuevaPregunta());
-    this.showForm = false; this.view = 'vacantes';
-    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
+
+    this.vacantesSvc.crearVacante(dto).subscribe({
+      next: (resp: any) => {
+        const nuevoId = resp?.id ?? Date.now();
+
+        const nueva: Vacante = {
+          id: nuevoId,
+          titulo: dto.titulo,
+          empresa: dto.departamento || '—',
+          departamento: dto.departamento,
+          ubicacion: dto.ubicacion,
+          contrato: dto.contrato,
+          salarioMin: dto.salarioMin || undefined,
+          salarioMax: dto.salarioMax || undefined,
+          descripcion: dto.descripcion,
+          requisitos: dto.requisitos,
+          responsabilidades: dto.responsabilidades,
+          duracionMin: dto.duracionMin,
+          puntajeMin: dto.puntajeMin,
+          preguntas: dto.preguntas as any,
+          estado: 'Activa', // o 'Borrador' si prefieres
+          candidatos: 0,
+          publicada: new Date().toLocaleDateString('es-ES'),
+        };
+
+        this.vacantes = [nueva, ...this.vacantes];
+
+        this.apiOk = 'Vacante creada exitosamente';
+        this.enviando = false;
+
+        this.form.reset({ contrato: 'Tiempo Completo', duracionMin: '45', puntajeMin: '75' });
+        this.preguntas.clear(); this.preguntas.push(this.nuevaPregunta());
+        this.showForm = false; this.view = 'vacantes';
+        setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
+      },
+      error: (e) => {
+        this.apiError = e?.error?.detail || e?.message || 'No se pudo crear la vacante';
+        this.enviando = false;
+      }
+    });
   }
 
   verDetalles(v: Vacante) {
@@ -288,7 +333,7 @@ activeItemRef: any = null;
       { text: 'Explica la diferencia entre “var”, “let” y “const” en JavaScript.', type: 'technical' },
       { text: '¿Por qué estás interesado en esta posición y en nuestra empresa?', type: 'general' },
     ];
-    this.completedView = null; // limpio vista resumen
+    this.completedView = null;
     this.activeInterview = {
       candidate: item.nombre,
       position: item.posicion,
@@ -320,7 +365,6 @@ activeItemRef: any = null;
       return;
     }
 
-    // Finalizó: construir resumen (como la captura)
     const baseScores = [85, 78, 82, 92, 75];
     const perQuestion: QuestionResult[] = this.activeInterview.questions.map((q, idx) => ({
       question: q.text,
@@ -344,7 +388,6 @@ activeItemRef: any = null;
     this.view = 'entrevistas';
   }
 
-  /* abrir resumen para una entrevista ya completada desde el listado */
   openResults(item: any) {
     this.completedView = {
       candidate: item.nombre,
@@ -365,7 +408,7 @@ activeItemRef: any = null;
 
   volverListaEntrevistas() { this.completedView = null; }
 
-  /* ---------- INFORMES (se mantiene por si lo usas) ---------- */
+  /* ---------- INFORMES ---------- */
   viewInforme() { this.view = 'informes'; this.showInformeDet = true; }
   donutGradient(ok: number, bad: number, add: number): string {
     const t = ok + bad + add;
