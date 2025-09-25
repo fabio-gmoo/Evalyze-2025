@@ -20,11 +20,19 @@ export interface VacanteDTO {
 
 @Injectable({ providedIn: 'root' })
 export class VacanteService {
-  private apiUrl = 'http://localhost:8000/vacantes/guardar/'; // ajusta si difiere
+  private apiUrl = 'http://localhost:8000/vacantes/'; // ajusta si difiere
 
   constructor(private http: HttpClient) {}
 
-  crearVacante(vacante: VacanteDTO): Observable<any> {
-    return this.http.post(this.apiUrl, vacante);
+  guardarvacante(vacante: VacanteDTO): Observable<any> {
+    return this.http.post(`${this.apiUrl}/"guardar" `, vacante);
+  }
+
+  createVacante(vacante: VacanteDTO): Observable<any> {
+    return this.http.post(`${this.apiUrl}/crear`, vacante);
+  }
+
+  editVacante(id: string, vacante: VacanteDTO): Observable<any> {
+    return this.http.put(`${this.apiUrl}/editar/${id}`, vacante);
   }
 }

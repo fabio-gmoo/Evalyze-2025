@@ -3,13 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import {
-  ReactiveFormsModule,
-  FormBuilder,
-  FormGroup,
-  FormArray,
-  Validators,
-} from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 
 // ⬇️ IMPORTA TU SERVICIO (ruta correcta desde /paginas/panel/)
 import { VacanteService, VacanteDTO } from '../../services/vacante';
@@ -64,7 +58,7 @@ interface QuestionResult {
 interface CompletedInterviewView {
   candidate: string;
   position: string;
-  totalScore: number;         // promedio
+  totalScore: number; // promedio
   totalQuestions: number;
   perQuestion: QuestionResult[];
 }
@@ -77,7 +71,8 @@ interface CompletedInterviewView {
   styleUrls: ['./panel.scss'],
 })
 export class Panel {
-  view: 'vacantes' | 'postulaciones' | 'entrevistas' | 'ranking' | 'informes' | 'ver-vacante' = 'vacantes';
+  view: 'vacantes' | 'postulaciones' | 'entrevistas' | 'ranking' | 'informes' | 'ver-vacante' =
+    'vacantes';
   subVacTab: 'detalles' | 'entrevista' | 'candidatos' = 'detalles';
 
   showForm = false;
@@ -109,8 +104,18 @@ export class Panel {
       duracionMin: 45,
       puntajeMin: 75,
       preguntas: [
-        { texto: 'Explique el ciclo de vida en React', tipo: 'Técnica', peso: 20, keywords: 'ciclo, effect, render' },
-        { texto: 'Cuéntame un reto en equipo', tipo: 'Conductual', peso: 15, keywords: 'equipo, conflicto' },
+        {
+          texto: 'Explique el ciclo de vida en React',
+          tipo: 'Técnica',
+          peso: 20,
+          keywords: 'ciclo, effect, render',
+        },
+        {
+          texto: 'Cuéntame un reto en equipo',
+          tipo: 'Conductual',
+          peso: 15,
+          keywords: 'equipo, conflicto',
+        },
       ],
       estado: 'Activa',
       candidatos: 23,
@@ -129,12 +134,16 @@ export class Panel {
       descripcion:
         'Científico de datos para análisis predictivo y machine learning en el sector fintech.',
       requisitos: 'Python\nMachine Learning\nSQL',
-      responsabilidades:
-        'Modelos predictivos\nAnálisis de datos\nPresentación de insights',
+      responsabilidades: 'Modelos predictivos\nAnálisis de datos\nPresentación de insights',
       duracionMin: 60,
       puntajeMin: 75,
       preguntas: [
-        { texto: '¿Cómo evalúas un modelo?', tipo: 'Técnica', peso: 20, keywords: 'métricas, overfit' },
+        {
+          texto: '¿Cómo evalúas un modelo?',
+          tipo: 'Técnica',
+          peso: 20,
+          keywords: 'métricas, overfit',
+        },
       ],
       estado: 'Activa',
       candidatos: 18,
@@ -144,13 +153,46 @@ export class Panel {
   ];
 
   postulaciones = [
-    { nombre: 'Ana García', estado: 'Pendiente', email: 'ana.garcia@email.com', tel: '+34 612 345 678', posicion: 'Desarrollador Frontend', experiencia: '3 años', fecha: '14/1/2024', tags: ['React','TypeScript','Tailwind CSS'], carta: 'Soy una desarrolladora apasionada con experiencia en React y TypeScript...' },
-    { nombre: 'Carlos López', estado: 'En Revisión', email: 'carlos.lopez@email.com', tel: '+34 623 456 789', posicion: 'Data Scientist', experiencia: '5 años', fecha: '11/1/2024', tags: ['Python','Machine Learning','SQL'], carta: 'Mi experiencia en análisis de datos y machine learning me permite...' },
+    {
+      nombre: 'Ana García',
+      estado: 'Pendiente',
+      email: 'ana.garcia@email.com',
+      tel: '+34 612 345 678',
+      posicion: 'Desarrollador Frontend',
+      experiencia: '3 años',
+      fecha: '14/1/2024',
+      tags: ['React', 'TypeScript', 'Tailwind CSS'],
+      carta: 'Soy una desarrolladora apasionada con experiencia en React y TypeScript...',
+    },
+    {
+      nombre: 'Carlos López',
+      estado: 'En Revisión',
+      email: 'carlos.lopez@email.com',
+      tel: '+34 623 456 789',
+      posicion: 'Data Scientist',
+      experiencia: '5 años',
+      fecha: '11/1/2024',
+      tags: ['Python', 'Machine Learning', 'SQL'],
+      carta: 'Mi experiencia en análisis de datos y machine learning me permite...',
+    },
   ];
 
   entrevistasIA = [
-    { nombre: 'Ana García',    posicion: 'Desarrollador Frontend', estado: 'Pendiente',   preguntas: '0/5' as string, puntaje: '' },
-    { nombre: 'Carlos López',  posicion: 'Data Scientist',         estado: 'Completada', preguntas: '5/5',             puntaje: '82/100', inicio: '15/1/2024, 10:00:00' },
+    {
+      nombre: 'Ana García',
+      posicion: 'Desarrollador Frontend',
+      estado: 'Pendiente',
+      preguntas: '0/5' as string,
+      puntaje: '',
+    },
+    {
+      nombre: 'Carlos López',
+      posicion: 'Data Scientist',
+      estado: 'Completada',
+      preguntas: '5/5',
+      puntaje: '82/100',
+      inicio: '15/1/2024, 10:00:00',
+    },
   ];
 
   ranking: {
@@ -158,7 +200,13 @@ export class Panel {
     badges: string[];
     posicion: string;
     fecha: string;
-    barras: { general: number; tecnica: number; conductual: number; experiencia: number; habilidades: number; };
+    barras: {
+      general: number;
+      tecnica: number;
+      conductual: number;
+      experiencia: number;
+      habilidades: number;
+    };
     fortalezas: string[];
     mejoras: string[];
   }[] = [
@@ -196,7 +244,10 @@ export class Panel {
   inputMode: 'texto' | 'voz' = 'texto';
   activeItemRef: any = null;
 
-  constructor(private fb: FormBuilder, private vacantesSvc: VacanteService) {
+  constructor(
+    private fb: FormBuilder,
+    private vacantesSvc: VacanteService
+  ) {
     this.form = this.fb.group({
       titulo: ['', Validators.required],
       departamento: [''],
@@ -243,19 +294,26 @@ export class Panel {
       this.formAnchor.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
-  agregarPregunta() { this.preguntas.push(this.nuevaPregunta()); }
-  eliminarPregunta(i: number) { if (this.preguntas.length > 1) this.preguntas.removeAt(i); }
+  agregarPregunta() {
+    this.preguntas.push(this.nuevaPregunta());
+  }
+  eliminarPregunta(i: number) {
+    if (this.preguntas.length > 1) this.preguntas.removeAt(i);
+  }
 
   /* ---------- crear vacante (POST al backend) --------- */
   crearVacante() {
     this.apiOk = this.apiError = null;
 
     if (this.form.invalid) {
-      this.form.markAllAsTouched(); this.scrollToForm(); return;
+      this.form.markAllAsTouched();
+      this.scrollToForm();
+      return;
     }
 
     this.enviando = true;
 
+    // Crear el DTO directamente en el método crearVacante
     const dto: VacanteDTO = {
       titulo: this.form.value.titulo?.trim() || '',
       departamento: this.form.value.departamento || '',
@@ -276,7 +334,8 @@ export class Panel {
       })),
     };
 
-    this.vacantesSvc.crearVacante(dto).subscribe({
+    // Ahora llamamos al servicio para crear la vacante
+    this.vacantesSvc.createVacante(dto).subscribe({
       next: (resp: any) => {
         const nuevoId = resp?.id ?? Date.now();
 
@@ -295,28 +354,25 @@ export class Panel {
           duracionMin: dto.duracionMin,
           puntajeMin: dto.puntajeMin,
           preguntas: dto.preguntas as any,
-          estado: 'Activa', // o 'Borrador' si prefieres
+          estado: 'Activa',
           candidatos: 0,
           publicada: new Date().toLocaleDateString('es-ES'),
         };
 
+        // Añadir la vacante creada a la lista
         this.vacantes = [nueva, ...this.vacantes];
 
         this.apiOk = 'Vacante creada exitosamente';
         this.enviando = false;
 
-        this.form.reset({ contrato: 'Tiempo Completo', duracionMin: '45', puntajeMin: '75' });
-        this.preguntas.clear(); this.preguntas.push(this.nuevaPregunta());
-        this.showForm = false; this.view = 'vacantes';
-        setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
+        // Resetear formulario
       },
       error: (e) => {
         this.apiError = e?.error?.detail || e?.message || 'No se pudo crear la vacante';
         this.enviando = false;
-      }
+      },
     });
   }
-
   verDetalles(v: Vacante) {
     this.selectedVacante = v;
     this.subVacTab = 'detalles';
@@ -327,10 +383,22 @@ export class Panel {
   startInterview(item: any) {
     this.activeItemRef = item;
     const qs: InterviewQuestion[] = [
-      { text: '¿Puedes contarme sobre tu experiencia con React y qué proyectos has desarrollado?', type: 'technical' },
-      { text: 'Describe una situación donde tuviste que resolver un problema técnico complejo. ¿Cómo lo abordaste?', type: 'technical' },
-      { text: '¿Cómo manejarías una situación donde tienes que trabajar con tecnologías que no conoces bien?', type: 'behavioral' },
-      { text: 'Explica la diferencia entre “var”, “let” y “const” en JavaScript.', type: 'technical' },
+      {
+        text: '¿Puedes contarme sobre tu experiencia con React y qué proyectos has desarrollado?',
+        type: 'technical',
+      },
+      {
+        text: 'Describe una situación donde tuviste que resolver un problema técnico complejo. ¿Cómo lo abordaste?',
+        type: 'technical',
+      },
+      {
+        text: '¿Cómo manejarías una situación donde tienes que trabajar con tecnologías que no conoces bien?',
+        type: 'behavioral',
+      },
+      {
+        text: 'Explica la diferencia entre “var”, “let” y “const” en JavaScript.',
+        type: 'technical',
+      },
       { text: '¿Por qué estás interesado en esta posición y en nuestra empresa?', type: 'general' },
     ];
     this.completedView = null;
@@ -371,7 +439,9 @@ export class Panel {
       answer: this.activeInterview?.answers[idx] || '',
       score: baseScores[idx] ?? 80,
     }));
-    const totalScore = Math.round(perQuestion.reduce((a, b) => a + b.score, 0) / perQuestion.length);
+    const totalScore = Math.round(
+      perQuestion.reduce((a, b) => a + b.score, 0) / perQuestion.length
+    );
 
     this.completedView = {
       candidate: item.nombre,
@@ -395,21 +465,49 @@ export class Panel {
       totalScore: 82,
       totalQuestions: 5,
       perQuestion: [
-        { question: '¿Puedes contarme sobre tu experiencia con React y qué proyectos has desarrollado?', answer: 'Tengo 3 años de experiencia con React…', score: 85 },
-        { question: 'Describe una situación donde tuviste que resolver un problema técnico complejo. ¿Cómo lo abordaste?', answer: 'Una vez tuve que optimizar una aplicación…', score: 78 },
-        { question: '¿Cómo manejarías una situación donde tienes que trabajar con tecnologías que no conoces bien?', answer: 'Dedico tiempo a estudiar documentación…', score: 82 },
-        { question: 'Explica la diferencia entre “var”, “let” y “const” en JavaScript.', answer: 'var tiene function scope; let y const tienen block scope…', score: 92 },
-        { question: '¿Por qué estás interesado en esta posición y en nuestra empresa?', answer: 'Me interesa la empresa por su cultura de innovación…', score: 75 },
+        {
+          question:
+            '¿Puedes contarme sobre tu experiencia con React y qué proyectos has desarrollado?',
+          answer: 'Tengo 3 años de experiencia con React…',
+          score: 85,
+        },
+        {
+          question:
+            'Describe una situación donde tuviste que resolver un problema técnico complejo. ¿Cómo lo abordaste?',
+          answer: 'Una vez tuve que optimizar una aplicación…',
+          score: 78,
+        },
+        {
+          question:
+            '¿Cómo manejarías una situación donde tienes que trabajar con tecnologías que no conoces bien?',
+          answer: 'Dedico tiempo a estudiar documentación…',
+          score: 82,
+        },
+        {
+          question: 'Explica la diferencia entre “var”, “let” y “const” en JavaScript.',
+          answer: 'var tiene function scope; let y const tienen block scope…',
+          score: 92,
+        },
+        {
+          question: '¿Por qué estás interesado en esta posición y en nuestra empresa?',
+          answer: 'Me interesa la empresa por su cultura de innovación…',
+          score: 75,
+        },
       ],
     };
     this.activeInterview = null;
     this.view = 'entrevistas';
   }
 
-  volverListaEntrevistas() { this.completedView = null; }
+  volverListaEntrevistas() {
+    this.completedView = null;
+  }
 
   /* ---------- INFORMES ---------- */
-  viewInforme() { this.view = 'informes'; this.showInformeDet = true; }
+  viewInforme() {
+    this.view = 'informes';
+    this.showInformeDet = true;
+  }
   donutGradient(ok: number, bad: number, add: number): string {
     const t = ok + bad + add;
     const p1 = (ok / t) * 100;
