@@ -4,9 +4,10 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer  # ty
 class RoleTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
-        token = super().get_token(user)
-        token["role"] = user.role
-        # Si quieres company_id para empresas:
-        if hasattr(user, "company_profile"):
-            token["company_id"] = user.company_profile.id
-        return token
+        t = super().get_token(user)
+        t["sub"] = str(user.id)
+        t["email"] = user.email
+        t["role"] = getattr(user, "role", None)
+        # si aplica:
+        # t['company_id'] = user.companyprofile_id
+        return t

@@ -3,3 +3,5 @@ djangorestframework
 djangorestframework-simplejwt
 django-cors-headers
 django-extensions
+
+argon2-cffi>=23.1.0

@@ -17,19 +17,10 @@ Including another URLconf
 
 from django.contrib import admin  # type: ignore
 from django.urls import path, include  # type: ignore
-from rest_framework_simplejwt.views import (  # type: ignore
-    TokenRefreshView,
-    TokenBlacklistView,
-)
-from users.views_auth import RoleTokenObtainPairView  # type: ignore
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("vacantes/", include("jobs.urls")),
-    path("api/auth/", include("users.urls")),
-    path(
-        "api/auth/login/", RoleTokenObtainPairView.as_view(), name="token_obtain_pair"
-    ),
-    path("api/auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("api/auth/logout/", TokenBlacklistView.as_view(), name="token_blacklist"),
+    path("api/", include("users.urls")),
 ]

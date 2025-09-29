@@ -1,4 +1,4 @@
-from django.contrib.auth import get_user_model  # type: ignore
+from django.contrib.auth import get_user_model, authenticate  # type: ignore
 from django.contrib.auth.password_validation import validate_password  # type:ignore
 from rest_framework import serializers  # type: ignore
 
@@ -127,3 +127,18 @@ class RegisterCandidateSerializer(serializers.ModelSerializer):
             headline=headline,
         )
         return user
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
+
+    def validate(self, attrs):
+        # Si tu User usa `USERNAME_FIELD='email'`, esto funciona directo.
+        user = authenticate(username=attrs["email"], password=attrs["password"])
+        if not user:
+            raise serializers.ValidationError(
+                {"non_field_errors": ["Credenciales inválidas"]}
+            )
+        attrs["user"] = user
+        return attrs
