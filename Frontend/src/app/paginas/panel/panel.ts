@@ -7,6 +7,7 @@ import {
   FormGroup,
   FormArray,
   Validators,
+  FormsModule,
 } from '@angular/forms';
 
 type EstadoVacante = 'Activa' | 'Borrador';
@@ -65,10 +66,29 @@ interface CompletedInterviewView {
   perQuestion: QuestionResult[];
 }
 
+// New: tipos para ranking/informes usados en el template
+interface Bars { experiencia: number; habilidades: number; }
+interface RankingItem {
+  nombre: string;
+  compat: number;
+  gen: string; // fecha generado
+  barras: Bars;
+  fortalezas: string[];
+  mejoras: string[];
+}
+interface InformeItem {
+  nombre: string;
+  compat: number;
+  gen: string;
+  barras?: Bars;
+  fortalezas?: string[];
+  mejoras?: string[];
+}
+
 @Component({
   selector: 'app-panel',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, FormsModule],
   templateUrl: './panel.html',
   styleUrls: ['./panel.scss'],
 })
@@ -144,8 +164,36 @@ export class Panel {
     { nombre: 'Carlos López',  posicion: 'Data Scientist',         estado: 'Completada', preguntas: '5/5',             puntaje: '82/100', inicio: '15/1/2024, 10:00:00' },
   ];
 
-  ranking = [];
-  informes = [];
+  ranking: RankingItem[] = [
+    {
+      nombre: 'Ana García',
+      compat: 92,
+      gen: '16/1/2024',
+      barras: { experiencia: 80, habilidades: 70 },
+      fortalezas: ['Trabajo en equipo', 'Aprendizaje rápido'],
+      mejoras: ['Profundizar en testing'],
+    },
+    {
+      nombre: 'Carlos López',
+      compat: 85,
+      gen: '15/1/2024',
+      barras: { experiencia: 75, habilidades: 68 },
+      fortalezas: ['Análisis de datos', 'Comunicación'],
+      mejoras: ['Experiencia en frontend'],
+    },
+  ];
+
+  informes: InformeItem[] = [
+    {
+      nombre: 'Ana García',
+      compat: 92,
+      gen: '16/1/2024',
+      barras: { experiencia: 80, habilidades: 70 },
+      fortalezas: ['Trabajo en equipo', 'Aprendizaje rápido'],
+      mejoras: ['Profundizar en testing'],
+    },
+  ];
+
   showInformeDet = false;
 
   /* --- Estado Entrevistas --- */

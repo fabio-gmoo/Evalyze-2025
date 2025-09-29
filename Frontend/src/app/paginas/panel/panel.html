@@ -199,8 +199,8 @@
       </div>
 
       <div class="card">
-        <div class="muted">Pregunta {{ (activeInterview?.index||0)+1 }} <span class="chip small">{{ activeInterview?.questions[activeInterview?.index||0].type }}</span></div>
-        <div class="question-bubble">{{ activeInterview?.questions[activeInterview?.index||0].text }}</div>
+        <div class="muted">Pregunta {{ (activeInterview?.index||0)+1 }} <span class="chip small">{{ activeInterview.questions[activeInterview.index]?.type }}</span></div>
+        <div class="question-bubble">{{ activeInterview.questions[activeInterview.index]?.text }}</div>
 
         <div class="mode">
           <button class="btn btn--light" [class.btn--dark]="inputMode==='texto'" (click)="inputMode='texto'">📝 Texto</button>
@@ -224,9 +224,15 @@
           <div style="display:flex;gap:10px;align-items:center">
             <div class="avatar" style="width:40px;height:40px">👤</div>
             <div>
-              <div style="font-weight:700">{{ e.nombre }} <span class="chip" *ngIf="e.estado!=='Pendiente'">{{e.estado}}</span></div>
+              <div style="font-weight:700">{{ e.nombre }}
+                <span class="chip" *ngIf="e.estado!=='Pendiente'">{{e.estado}}</span>
+              </div>
               <div class="muted">{{ e.posicion }}</div>
-              <div class="muted">Preguntas: {{ e.preguntas }} <span *ngIf="e.puntaje"> • Puntuación: {{e.puntaje}}</span> <span *ngIf="e.inicio"> • Iniciada: {{e.inicio}}</span></div>
+              <div class="muted">
+                Preguntas: {{ e.preguntas }}
+                <span *ngIf="e.puntaje"> • Puntuación: {{e.puntaje}}</span>
+                <span *ngIf="e.inicio"> • Iniciada: {{e.inicio}}</span>
+              </div>
             </div>
           </div>
           <div>
@@ -255,30 +261,35 @@
         <div style="flex:1">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
-              <div style="font-weight:700">{{ r.nombre }}
-                <span class="chip" *ngFor="let b of r.badges" [class.chip--green]="b.includes('Recomendado')" style="margin-left:6px">{{ b }}</span>
-              </div>
-              <div class="muted">{{ r.posicion }} • Entrevistado el {{ r.fecha }}</div>
+              <div style="font-weight:700">{{ r.nombre }} <span class="chip chip--green">{{ r.compat }}% Compatibilidad</span></div>
+              <div class="muted">Generado: {{ r.gen }} • Habilidades: {{ r.barras.experiencia }}/5</div>
             </div>
-            <button class="btn btn--light">Ver Detalles</button>
+            <div style="text-align:right">
+              <div class="donut" [style.background]="donutGradient(r.barras.experiencia, 5 - r.barras.experiencia, r.barras.habilidades)"></div>
+            </div>
           </div>
 
-          <div class="bars" style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-top:10px">
-            <div><div class="muted">General</div><div class="bar"><div [style.width.%]="r.barras.general"></div></div><div class="score">{{r.barras.general}}</div></div>
-            <div><div class="muted">Técnica</div><div class="bar"><div [style.width.%]="r.barras.tecnica"></div></div><div class="score">{{r.barras.tecnica}}</div></div>
-            <div><div class="muted">Conductual</div><div class="bar"><div [style.width.%]="r.barras.conductual"></div></div><div class="score">{{r.barras.conductual}}</div></div>
-            <div><div class="muted">Experiencia</div><div class="bar"><div [style.width.%]="r.barras.experiencia"></div></div><div class="score">{{r.barras.experiencia}}</div></div>
-            <div><div class="muted">Habilidades</div><div class="bar"><div [style.width.%]="r.barras.habilidades"></div></div><div class="score">{{r.barras.habilidades}}</div></div>
+          <div style="display:flex;gap:10px;margin-top:8px;align-items:center">
+            <div style="flex:1">
+              <div class="bar"><div [style.width.%]="r.barras.experiencia"></div></div>
+            </div>
+            <div class="score">{{ r.barras.experiencia }}</div>
           </div>
 
-          <div class="grid two" style="margin-top:8px">
-            <div><div style="font-weight:700">Fortalezas:</div><ul class="muted"><li *ngFor="let f of r.fortalezas">• {{ f }}</li></ul></div>
-            <div><div style="font-weight:700;color:#b91c1c">Áreas de mejora:</div><ul class="muted"><li *ngFor="let m of r.mejoras">• {{ m }}</li></ul></div>
+          <div style="display:flex;gap:10px;margin-top:6px;align-items:center">
+            <div style="flex:1">
+              <div class="bar"><div [style.width.%]="r.barras.habilidades"></div></div>
+            </div>
+            <div class="score">{{ r.barras.habilidades }}</div>
           </div>
 
-          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-            <button class="btn btn--green">✔ Aceptar</button>
-            <button class="btn btn--red">✖ Rechazar</button>
+          <div style="margin-top:8px">
+            <ul>
+              <li *ngFor="let f of r.fortalezas">• {{ f }}</li>
+            </ul>
+            <ul class="muted">
+              <li *ngFor="let m of r.mejoras">• {{ m }}</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -301,7 +312,7 @@
         <div class="avatar" style="width:40px;height:40px">👤</div>
         <div>
           <div style="font-weight:700">{{ i.nombre }} <span class="chip chip--green">{{ i.compat }}% Compatibilidad</span></div>
-          <div class="muted">Generado: {{ i.gen }} • Habilidades: 3/5 coincidencias • Experiencia: 3 años</div>
+          <div class="muted">Generado: {{ i.gen }}</div>
         </div>
       </div>
       <div style="display:flex;gap:8px">
@@ -314,8 +325,8 @@
     <section *ngIf="showInformeDet" class="card" style="margin-top:12px">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
-          <b>Informe de Compatibilidad - Ana García</b>
-          <br /><span class="muted">Desarrollador Frontend • Generado el 15/1/2024, 14:30:00</span>
+          <div class="muted">Informe de Compatibilidad - Ana García</div>
+          <div class="muted">Desarrollador Frontend • Generado el 15/1/2024, 14:30:00</div>
         </div>
         <div>
           <button class="btn btn--light" (click)="showInformeDet=false">Volver</button>
@@ -411,111 +422,6 @@
           </ul>
         </div>
       </div>
-      <!-- ================= ENTREVISTAS IA ================= -->
-<section *ngIf="view==='entrevistas'">
-
-  <!-- ===== Resumen de entrevista completada (como la imagen) ===== -->
-  <ng-container *ngIf="completedView && !activeInterview; else notCompletedBlock">
-    <div class="card" style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="font-weight:700">Entrevista con {{ completedView.candidate }}</div>
-          <div class="muted">{{ completedView.position }}</div>
-        </div>
-        <span class="chip chip--green">Completada</span>
-      </div>
-
-      <div class="progress"><div style="width:100%"></div></div>
-      <div class="muted" style="text-align:right">{{ completedView.totalQuestions }} de {{ completedView.totalQuestions }}</div>
-    </div>
-
-    <div class="card">
-      <div style="font-weight:700;margin-bottom:4px">Entrevista Completada</div>
-      <div class="muted">Puntuación general: <b>{{ completedView.totalScore }}/100</b></div>
-    </div>
-
-    <div class="qcard card" *ngFor="let q of completedView.perQuestion; let i = index" style="margin-top:10px">
-      <div class="qcard__head">
-        <div class="qtitle">Pregunta {{ i + 1 }}</div>
-        <span class="pill-score">{{ q.score }}/100</span>
-      </div>
-      <div class="muted">{{ q.question }}</div>
-      <div class="answer">{{ q.answer || '—' }}</div>
-    </div>
-
-    <div class="actions" style="margin-top:12px">
-      <button class="btn btn--light" (click)="volverListaEntrevistas()">Volver a Lista de Entrevistas</button>
-    </div>
-  </ng-container>
-
-  <!-- ===== Entrevista en curso o listado ===== -->
-  <ng-template #notCompletedBlock>
-
-    <!-- ENTREVISTA ACTIVA -->
-    <ng-container *ngIf="activeInterview; else listadoEntrevistas">
-      <div class="card" style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div style="font-weight:700">Entrevista con {{ activeInterview?.candidate }}</div>
-            <div class="muted">{{ activeInterview?.position }}</div>
-          </div>
-          <span class="chip">En Progreso</span>
-        </div>
-        <div class="progress"><div [style.width.%]="interviewProgress"></div></div>
-        <div class="muted" style="text-align:right">{{ (activeInterview?.index||0)+1 }} de {{ activeInterview?.total }}</div>
-      </div>
-
-      <div class="card">
-        <div class="muted">Pregunta {{ (activeInterview?.index||0)+1 }}
-          <span class="chip small">{{ activeInterview?.questions[activeInterview?.index||0].type }}</span>
-        </div>
-        <div class="question-bubble">{{ activeInterview?.questions[activeInterview?.index||0].text }}</div>
-
-        <div class="mode">
-          <button class="btn btn--light" [class.btn--dark]="inputMode==='texto'" (click)="inputMode='texto'">📝 Texto</button>
-          <button class="btn btn--light" [disabled]="true">🎙️ Voz</button>
-        </div>
-
-        <textarea rows="4" [(ngModel)]="answerText" placeholder="Escribe tu respuesta aquí..." class="input-area"></textarea>
-
-        <div class="actions">
-          <button class="btn btn--dark" (click)="nextQuestion(entrevistasIA[0])">Siguiente Pregunta</button>
-        </div>
-      </div>
-    </ng-container>
-
-    <!-- LISTADO -->
-    <ng-template #listadoEntrevistas>
-      <h2>Entrevistas Automatizadas con IA</h2>
-      <p class="muted">Realiza entrevistas inteligentes con evaluación automática</p>
-
-      <div class="card" *ngFor="let e of entrevistasIA" style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="display:flex;gap:10px;align-items:center">
-            <div class="avatar" style="width:40px;height:40px">👤</div>
-            <div>
-              <div style="font-weight:700">{{ e.nombre }}
-                <span class="chip" *ngIf="e.estado!=='Pendiente'">{{e.estado}}</span>
-              </div>
-              <div class="muted">{{ e.posicion }}</div>
-              <div class="muted">
-                Preguntas: {{ e.preguntas }}
-                <span *ngIf="e.puntaje"> • Puntuación: {{e.puntaje}}</span>
-                <span *ngIf="e.inicio"> • Iniciada: {{e.inicio}}</span>
-              </div>
-            </div>
-          </div>
-          <div>
-            <button *ngIf="e.estado==='Pendiente'" class="btn btn--dark" (click)="startInterview(e)">▶ Iniciar Entrevista</button>
-            <button *ngIf="e.estado!=='Pendiente'" class="btn btn--light" (click)="openResults(e)">Ver Resultados</button>
-          </div>
-        </div>
-      </div>
-    </ng-template>
-
-  </ng-template>
-</section>
-
     </section>
   </section>
 </main>
