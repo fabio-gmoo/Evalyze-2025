@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Output } from '@angular/core';
-import { Loginform } from '@/components/loginform/loginform';
+import { Component, output } from '@angular/core';
+import { Loginform } from '@widgets/loginform/loginform';
 
 @Component({
   selector: 'app-login',
@@ -8,5 +8,10 @@ import { Loginform } from '@/components/loginform/loginform';
   styleUrl: './login.scss',
 })
 export class Login {
-  @Output() signupClick = new EventEmitter<void>();
+  signupClick = output<void>();
+  loginSuccess = output<void>(); // ✅ Agregar output para propagar el éxito
+
+  onLoginSuccess() {
+    this.loginSuccess.emit();
+  }
 }

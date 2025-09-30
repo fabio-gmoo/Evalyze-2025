@@ -1,16 +1,29 @@
+.segmented {
+  display: flex;
+  gap: 8px;
+  background: #171a27;
+  padding: 6px;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+.segmented button {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #bfc3d7;
+  cursor: pointer;
+}
+.segmented button.active {
+  background: #635bff;
+  color: #fff;
+  border-color: #6a62ff;
+}
+
 .form {
   display: grid;
   gap: 12px;
-}
-.grid2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-@media (max-width: 720px) {
-  .grid2 {
-    grid-template-columns: 1fr;
-  }
 }
 label {
   display: grid;
@@ -18,8 +31,7 @@ label {
   font-weight: 600;
   color: #222;
 }
-input,
-select {
+input {
   padding: 12px;
   border-radius: 10px;
   border: 1px solid #e2e5f0;
@@ -27,6 +39,9 @@ select {
 }
 .pw {
   position: relative;
+}
+.pw input {
+  width: 100%;
 }
 .eye {
   position: absolute;
@@ -37,14 +52,21 @@ select {
   background: transparent;
   cursor: pointer;
 }
-.tos {
+.row {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.check {
+  display: flex;
+  align-items: center;
   gap: 8px;
-  align-items: flex-start;
+  font-weight: 500;
   color: #4a4f63;
 }
-.tos a {
+.link {
   color: #5b46ff;
+  text-decoration: none;
 }
 .btn {
   padding: 12px 14px;

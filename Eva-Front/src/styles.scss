@@ -1,15 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --bg: #0b0b11;
-  --panel: #0f0f17;
-  --text: #e8e8f0;
-  --muted: #a9a9b8;
-  --brand: #6b4bff; /* morado */
-  --brand-2: #8a5bff; /* degradado */
-  --line: #1b1b27;
-  --card: #12121b;
-  --white: #ffffff;
+  --bg: #0b0d18;
+  --panel: #111425;
+  --panel-2: #0f1220;
+  --text: #dfe3ff;
+  --text-2: #b9c0dc;
+  --muted: #8f96b3;
+  --border: #262b3f;
+  --input-bg: #121425;
+  --input-border: #2b3042;
+  --placeholder: #6f7692;
+  --primary: #6a62ff; /* botón / active */
+  --primary-2: #7a73ff;
+  --danger: #ff9aa6;
+  --shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -30,7 +35,7 @@ body {
     Helvetica,
     sans-serif;
   color: var(--text);
-  background: linear-gradient(180deg, #0a0a10 0%, #0f0f17 100%);
+  background: radial-gradient(1200px 600px at 10% 0%, #121627 0%, var(--bg) 45%), var(--bg);
 }
 
 .container {

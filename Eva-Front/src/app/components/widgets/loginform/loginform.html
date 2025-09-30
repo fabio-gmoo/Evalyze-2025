@@ -1,4 +1,22 @@
 <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="form">
+  <label>Tipo de Cuenta</label>
+  <div class="segmented">
+    <button
+      type="button"
+      [class.active]="form.value.role === 'company'"
+      (click)="form.patchValue({ role: 'company' })"
+    >
+      🏢 Empresa
+    </button>
+    <button
+      type="button"
+      [class.active]="form.value.role === 'candidate'"
+      (click)="form.patchValue({ role: 'candidate' })"
+    >
+      👤 Candidato
+    </button>
+  </div>
+
   <label
     >Email
     <input type="email" formControlName="email" placeholder="tu@empresa.com" />
@@ -30,5 +48,7 @@
     <a class="link" href="#">¿Olvidaste tu contraseña?</a>
   </div>
 
-  <button class="btn btn--dark" [disabled]="form.invalid">Iniciar Sesión</button>
+  <button class="btn btn--dark" [disabled]="form.invalid" [routerLink]="['/vacantes']">
+    Iniciar Sesión
+  </button>
 </form>

@@ -1,0 +1,60 @@
+:host {
+  display: block;
+  padding: 24px;
+  color: #e8ecf3;
+}
+
+.header h1 {
+  font-size: 24px;
+  margin: 0 0 4px;
+}
+.header p {
+  opacity: 0.75;
+  margin: 0 0 18px;
+}
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 18px;
+}
+.tab {
+  background: #1e2230;
+  border: 1px solid #2a3042;
+  color: #cfd6e4;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.tab.active {
+  background: #242a3b;
+  border-color: #5161ff;
+  color: #fff;
+}
+.grow {
+  flex: 1;
+}
+.new {
+  background: #6c78ff;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.list {
+  display: grid;
+  gap: 14px;
+}
+.skeleton,
+.empty {
+  background: #1c2030;
+  border: 1px solid #2a3042;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  opacity: 0.85;
+}

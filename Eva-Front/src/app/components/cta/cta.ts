@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, Output, EventEmitter } from '@angular/core';
 
 @Component({
   selector: 'app-cta',
@@ -9,4 +9,6 @@ import { Component, signal } from '@angular/core';
 export class Cta {
   title = signal('¿Listo para revolucionar tu reclutamiento?');
   subtitle = signal('Únete a cientos de empresas que ya están contratando mejor con Evalyze');
+
+  @Output() openSignup = new EventEmitter<void>();
 }

@@ -9,12 +9,14 @@ import { Component, Output, EventEmitter } from '@angular/core';
 export class Navbar {
   menuOpen = false;
 
-  @Output() loginClick = new EventEmitter<void>();
-  @Output() signupClick = new EventEmitter<void>();
+  // Cambiar los nombres para que coincidan con home.html
+  @Output() openLogin = new EventEmitter<void>();
+  @Output() openSignup = new EventEmitter<void>();
 
   toggleMenu() {
     this.menuOpen = !this.menuOpen;
   }
+
   closeMenu() {
     this.menuOpen = false;
   }

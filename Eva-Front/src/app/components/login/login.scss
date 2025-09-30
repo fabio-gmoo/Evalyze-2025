@@ -8,13 +8,14 @@
   color: #7a8095;
 }
 .card {
+  color: var(--text);
   width: min(520px, 92%);
-  background: #fff;
-  border: 1px solid #e7e8f3;
+  background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 20px 20px 16px;
   text-align: left;
-  box-shadow: 0 12px 30px rgba(40, 40, 90, 0.08);
+  box-shadow: var(--shadow);
 }
 .card-title {
   margin: 0 0 4px;

@@ -13,7 +13,7 @@
   max-height: 92vh;
   overflow: auto;
   z-index: 91;
-  padding: 12px 0 20px;
+  padding: 1%;
   /* ancho “grande” para signup con sidebar; se adapta en móvil */
   width: min(1000px, 96%);
 }
@@ -21,6 +21,7 @@
   position: absolute;
   right: 14px;
   top: 10px;
+  margin: 2%;
   background: #1f1f2a;
   color: #fff;
   border: 0;
@@ -29,6 +30,11 @@
   border-radius: 10px;
   cursor: pointer;
 }
+
+.modal__close:hover {
+  background: red;
+}
+
 @media (max-width: 960px) {
   .modal__panel {
     width: min(640px, 96%);

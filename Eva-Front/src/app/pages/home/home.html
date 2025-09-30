@@ -1,16 +1,13 @@
-<app-navbar (loginClick)="openAuth('login')" (signupClick)="openAuth('signup')"> </app-navbar>
-
-<app-hero></app-hero>
+<app-navbar (openLogin)="openAuth('login')" (openSignup)="openAuth('signup')"></app-navbar>
+<app-hero (openSignup)="openAuth('signup')"></app-hero>
 <app-features></app-features>
 <app-benefits></app-benefits>
 <app-testimonials></app-testimonials>
-<app-cta></app-cta>
+<app-cta (openSignup)="openAuth('signup')"></app-cta>
 <app-footer></app-footer>
 
+<!-- Modal de autenticación -->
 @if (showAuth()) {
-  <div class="modal__backdrop" (click)="closeAuth()"></div>
-  <div class="modal__panel" role="dialog" aria-modal="true">
-    <button class="modal__close" (click)="closeAuth()">✕</button>
-    <app-auth [startMode]="authMode()"></app-auth>
-  </div>
+  <app-auth [startMode]="authMode()" (close)="closeAuth()" (loginSuccess)="onLoginSuccess()">
+  </app-auth>
 }

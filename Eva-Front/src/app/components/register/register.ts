@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Output, signal } from '@angular/core';
-import { Registerform } from '@/components/registerform/registerform';
+import { Registerform } from '@widgets/registerform/registerform';
 
 @Component({
   selector: 'app-register',

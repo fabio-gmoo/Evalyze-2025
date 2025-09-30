@@ -1,0 +1,51 @@
+<section class="header">
+  <h1>Bienvenido, {{ (store.me$ | async)?.full_name ?? 'Usuario' }}</h1>
+  <p>Panel de control para gestionar tu proceso de reclutamiento inteligente</p>
+</section>
+
+<app-stats-strip
+  [active]="stats().active"
+  [candidates]="stats().candidates"
+  [interviews]="stats().interviews"
+  [hires]="stats().hires"
+></app-stats-strip>
+
+<nav class="tabs">
+  <button class="tab" [class.active]="tab() === 'todas'" (click)="setTab('todas')">Vacantes</button>
+
+  <button
+    *appHasRole="'company'"
+    class="tab"
+    [class.active]="tab() === 'mias'"
+    (click)="setTab('mias')"
+  >
+    Mis Vacantes
+  </button>
+
+  <div class="grow"></div>
+
+  <button *appHasRole="'company'" class="new" [routerLink]="['/vacantes/nueva']">
+    + Nueva Vacante
+  </button>
+</nav>
+
+@if (!loading()) {
+  <section class="list">
+    @if (list().length) {
+      @for (v of list(); track v.id) {
+        <app-vacancy-card [vacancy]="v"></app-vacancy-card>
+      }
+    } @else {
+      <div class="empty">
+        @if (tab() === 'mias') {
+          <p>Aún no has creado vacantes.</p>
+        }
+        @if (tab() === 'todas') {
+          <p>No hay vacantes abiertas.</p>
+        }
+      </div>
+    }
+  </section>
+} @else {
+  <div class="skeleton">Cargando vacantes…</div>
+}

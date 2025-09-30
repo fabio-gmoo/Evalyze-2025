@@ -4,10 +4,19 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer  # ty
 class RoleTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
-        t = super().get_token(user)
-        t["sub"] = str(user.id)
-        t["email"] = user.email
-        t["role"] = getattr(user, "role", None)
-        # si aplica:
-        # t['company_id'] = user.companyprofile_id
-        return t
+        token = super().get_token(user)
+        # claims extra (útiles en el front)
+        token["email"] = user.email
+        token["role"] = getattr(user, "role", None)
+        return token
+
+    def validate(self, attrs):
+        # SUPER ya agrega 'access' y 'refresh'
+        data = super().validate(attrs)
+        # añade datos del usuario a la respuesta (opcional)
+        data["user"] = {
+            "id": self.user.id,
+            "email": self.user.email,
+            "role": getattr(self.user, "role", None),
+        }
+        return data

@@ -22,6 +22,16 @@ def _read(path: str) -> bytes:
 PRIVATE_KEY = _read("/run/secrets/jwt_private.pem")
 PUBLIC_KEY = _read("/run/secrets/jwt_public.pem")
 
+SIMPLE_JWT = {
+    "ALGORITHM": "RS256",
+    "SIGNING_KEY": PRIVATE_KEY,
+    "VERIFYING_KEY": PUBLIC_KEY,
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ISSUER": "https://auth.eva.local",
+    "AUDIENCE": "eva-api",
+}
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -74,6 +84,8 @@ CORS_ALLOW_ALL_ORIGINS = True
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    "http://loacalhost:4200",
+    "http://127.0.0.1:4200",
 ]
 
 TEMPLATES = [
@@ -119,15 +131,6 @@ REST_FRAMEWORK = {
     ],
 }
 
-SIMPLE_JWT = {
-    "ALGORITHM": "RS256",
-    "SIGNING_KEY": PRIVATE_KEY,
-    "VERIFYING_KEY": PUBLIC_KEY,
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-    "ISSUER": "https://auth.eva.local",
-    "AUDIENCE": "eva-api",
-}
 
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.Argon2PasswordHasher",  # primero

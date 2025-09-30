@@ -26,9 +26,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.scss"
-            ],
+            "styles": ["src/styles.scss"],
             "server": "src/main.server.ts",
             "outputMode": "server",
             "ssr": {
@@ -52,6 +50,12 @@
               "outputHashing": "all"
             },
             "development": {
+              "fileReplacements": [
+                {
+                  "replace": "src/app/environments/environment.ts",
+                  "with": "src/app/environments/environment-dev.ts"
+                }
+              ],
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
@@ -61,12 +65,33 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.json"
+          },
           "configurations": {
             "production": {
               "buildTarget": "Eva-Front:build:production"
             },
             "development": {
               "buildTarget": "Eva-Front:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+
+        "serve-ssr": {
+          "builder": "@angular/build:ssr-dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.json"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "Eva-Front:build:production",
+              "serverTarget": "Eva-Front:build:production"
+            },
+            "development": {
+              "browserTarget": "Eva-Front:build:development",
+              "serverTarget": "Eva-Front:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -85,9 +110,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.scss"
-            ]
+            "styles": ["src/styles.scss"]
           }
         }
       }

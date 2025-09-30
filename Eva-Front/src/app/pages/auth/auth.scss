@@ -1,13 +1,24 @@
-/* src/app/auth/auth-container.component.css */
+body.no-scroll {
+  overflow: hidden;
+  scrollbar-gutter: stable;
+}
+
 .shell {
-  min-height: 100vh;
+  min-height: 100dvh;
   padding: 36px 16px 28px;
-  background: linear-gradient(180deg, #f6f7ff 0%, #eef0ff 100%);
+  scrollbar-width: none;
   display: grid;
   place-items: start center;
   text-align: center;
-  color: #1b1b22;
+  border-radius: 2%;
+  /* Fondo oscuro con degradado + opacidad */
+  background: linear-gradient(180deg, rgba(20, 20, 30, 0.9) 0%, rgba(10, 10, 20, 0.85) 100%);
+
+  /* Efecto glass */
+  backdrop-filter: blur(40%);
+  color: #dfe3ff;
 }
+
 .brand {
   display: flex;
   gap: 8px;
@@ -21,11 +32,12 @@
   display: grid;
   place-items: center;
   border-radius: 12px;
-  background: linear-gradient(135deg, #6b4bff, #8a5bff);
+  background: linear-gradient(135deg, #6a62ff, #a442ff);
   color: #fff;
   font-size: 18px;
+  box-shadow: 0 4px 12px rgba(106, 98, 255, 0.35);
 }
 .name {
   font-weight: 800;
-  color: #5b46ff;
+  color: #7a73ff;
 }
