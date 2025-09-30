@@ -1,0 +1,29 @@
+<header class="nav">
+  <div class="container nav__inner">
+    <a class="brand" href="#">
+      <span class="brand__logo">🤖</span>
+      <span class="brand__name">Evalyze</span>
+    </a>
+    <nav class="nav__links">
+      <a href="#caracteristicas">Características</a>
+      <a href="#¿Por qué elegir Evalyze?">Beneficios</a>
+      <a href="#testimonios">Testimonios</a>
+    </nav>
+    <div class="nav__actions">
+      <button class="btn btn--ghost" (click)="openLogin.emit()">Iniciar Sesión</button>
+      <button class="btn btn--primary" (click)="openSignup.emit()">Comenzar Gratis</button>
+    </div>
+    <button class="nav__burger" aria-label="Abrir menú" (click)="toggleMenu()">☰</button>
+  </div>
+  <div class="nav__mobile" [class.open]="menuOpen">
+    <a href="#caracteristicas" (click)="closeMenu()">Características</a>
+    <a href="#beneficios" (click)="closeMenu()">Beneficios</a>
+    <a href="#testimonios" (click)="closeMenu()">Testimonios</a>
+    <button class="btn btn--ghost w-100" (click)="openLogin.emit(); closeMenu()">
+      Iniciar Sesión
+    </button>
+    <button class="btn btn--primary w-100" (click)="openSignup.emit(); closeMenu()">
+      Comenzar Gratis
+    </button>
+  </div>
+</header>

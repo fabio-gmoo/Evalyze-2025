@@ -1,11 +1,15 @@
 services:
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
       - '8000:8000'
+    secrets:
+      - source: jwt_key_private
+        target: jwt_private.pem
+      - source: jwt_key_public
+        target: jwt_public.pem
 
   interview:
     build:
@@ -13,6 +17,14 @@ services:
       dockerfile: Dockerfile
     ports:
       - '9000:9000'
+    env_file:
+      - ../django-docker/.env
     environment:
       DEMO_MODE: true
       DEMO_API_KEY: evalyze-demo-123
+
+secrets:
+  jwt_key_private:
+    file: ../secrets/jwtRS256.key
+  jwt_key_public:
+    file: ../secrets/jwtRS256.key.pub

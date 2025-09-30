@@ -1,0 +1,84 @@
+.segmented {
+  display: flex;
+  gap: 8px;
+  background: #171a27;
+  padding: 6px;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+.segmented button {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #bfc3d7;
+  cursor: pointer;
+}
+.segmented button.active {
+  background: #635bff;
+  color: #fff;
+  border-color: #6a62ff;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+}
+label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+  color: #222;
+}
+input {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #e2e5f0;
+  background: #f9faff;
+}
+.pw {
+  position: relative;
+}
+.pw input {
+  width: 100%;
+}
+.eye {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: #4a4f63;
+}
+.link {
+  color: #5b46ff;
+  text-decoration: none;
+}
+.btn {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 0;
+  cursor: pointer;
+}
+.btn--dark {
+  background: #0d0f1a;
+  color: #fff;
+}
+.error {
+  color: #e26d6d;
+  font-size: 13px;
+}

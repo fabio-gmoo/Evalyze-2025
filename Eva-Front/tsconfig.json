@@ -4,6 +4,17 @@
   "compileOnSave": false,
   "compilerOptions": {
     "strict": true,
+    "paths": {
+      "@pages/*": ["./src/app/pages/*"],
+      "@components/*": ["./src/app/components/*"],
+      "@widgets/*": ["./src/app/components/widgets/*"],
+      "@interfaces/*": ["./src/app/interfaces/*"],
+      "@environment": ["./src/app/environments/environment"],
+      "@environments/*": ["./src/environments/*"],
+      "@services/*": ["./src/app/services/*"],
+      "@assets/*": ["./src/assets/*"],
+      "@shared/*": ["./src/app/shared/*"]
+    },
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,

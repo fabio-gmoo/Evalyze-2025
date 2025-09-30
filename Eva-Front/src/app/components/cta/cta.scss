@@ -1,0 +1,42 @@
+.cta {
+  background: linear-gradient(90deg, #2b6bff 0%, #6b4bff 50%, #8a2be2 100%);
+  border-bottom: 1px solid var(--line);
+}
+.cta__inner {
+  text-align: center;
+  padding: 48px 0 56px;
+  color: white;
+}
+.cta__title {
+  font-size: 28px;
+  margin: 0 0 6px;
+}
+.cta__subtitle {
+  opacity: 0.9;
+  margin: 0 0 18px;
+}
+.cta__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.btn {
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn--primary {
+  background: white;
+  color: #1b1b22;
+}
+.btn--light {
+  background: transparent;
+  color: white;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.btn--light:hover {
+  border-color: #fff;
+}

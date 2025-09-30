@@ -1,0 +1,70 @@
+.container {
+  margin-bottom: 5%;
+  margin-top: 5%;
+}
+
+.t-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.t-card {
+  background: #12121b;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+  min-height: 160px;
+}
+.t-card.skeleton {
+  background: linear-gradient(90deg, #141421, #1a1a2a, #141421);
+  animation: sh 1.4s infinite;
+}
+@keyframes sh {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: 200px 0;
+  }
+}
+
+.t-stars {
+  margin-bottom: 8px;
+}
+.t-stars--empty {
+  color: #9aa0b0;
+  font-size: 12px;
+}
+.star {
+  color: #ffcc33;
+  font-size: 18px;
+  margin-right: 2px;
+}
+
+.t-quote {
+  color: var(--muted);
+  font-style: italic;
+  line-height: 1.6;
+  margin: 0 0 14px;
+}
+.t-name {
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.t-role {
+  color: #aeb0c6;
+  font-size: 13px;
+}
+
+@media (max-width: 1000px) {
+  .t-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 760px) {
+  .t-grid {
+    grid-template-columns: 1fr;
+  }
+}

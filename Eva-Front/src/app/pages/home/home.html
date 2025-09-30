@@ -1,0 +1,13 @@
+<app-navbar (openLogin)="openAuth('login')" (openSignup)="openAuth('signup')"></app-navbar>
+<app-hero (openSignup)="openAuth('signup')"></app-hero>
+<app-features></app-features>
+<app-benefits></app-benefits>
+<app-testimonials></app-testimonials>
+<app-cta (openSignup)="openAuth('signup')"></app-cta>
+<app-footer></app-footer>
+
+<!-- Modal de autenticación -->
+@if (showAuth()) {
+  <app-auth [startMode]="authMode()" (close)="closeAuth()" (loginSuccess)="onLoginSuccess()">
+  </app-auth>
+}
