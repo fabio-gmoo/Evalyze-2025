@@ -1,18 +1,23 @@
-from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from django.db.models import Count
+from rest_framework import viewsets, permissions, status  # type: ignore
+from rest_framework.decorators import action  # type: ignore
+from rest_framework.response import Response  # type: ignore
 from .models import Vacante
 from .serializers import VacanteSerializer
+import httpx  # type: ignore
+from asgiref.sync import async_to_sync  # type: ignore
+
 
 class VacanteViewSet(viewsets.ModelViewSet):
     queryset = Vacante.objects.all().order_by("-created_at")
     serializer_class = VacanteSerializer
-    permission_classes = [permissions.AllowAny]  # ajusta a tu auth si ya la tienes
+    # ajusta a tu auth si ya la tienes
+    permission_classes = [permissions.AllowAny]
 
     def perform_create(self, serializer):
         user = getattr(self.request, "user", None)
-        serializer.save(created_by=user if getattr(user, "is_authenticated", False) else None)
+        serializer.save(
+            created_by=user if getattr(user, "is_authenticated", False) else None
+        )
 
     @action(detail=False, methods=["get"], url_path="mine")
     def mine(self, request):
@@ -28,7 +33,7 @@ class VacanteViewSet(viewsets.ModelViewSet):
         qs = self.get_queryset()
         data = {
             "active": qs.filter(activa=True).count(),
-            "candidates": 247,     # si luego conectas con postulantes reales, reemplaza
+            "candidates": 247,  # si luego conectas con postulantes reales, reemplaza
             "interviews": 89,
             "hires": 23,
         }
@@ -64,27 +69,41 @@ class VacanteViewSet(viewsets.ModelViewSet):
         )
         return Response(self.get_serializer(dup).data, status=status.HTTP_201_CREATED)
 
-    @action(detail=False, methods=["post"], url_path="generate-ai")
+    @action(detail=False, methods=["post"], url_path="generateai")
     def generate_ai(self, request):
         title = (request.data or {}).get("puesto", "").strip()
         if not title:
             return Response({"detail": "Falta 'puesto'."}, status=400)
 
-        # Stub simple para que el front funcione ahora mismo
         payload = {
-            "descripcion": f"{title}: rol clave en el equipo. Trabajarás con buenas prácticas y colaboración.",
-            "requisitos": [
-                "3+ años de experiencia relevante",
-                "Conocimiento de patrones de diseño",
-                "Buenas prácticas de testing",
-            ],
-            "responsabilidades": [
-                "Diseñar, implementar y mantener funcionalidades",
-                "Colaborar con equipos multidisciplinarios",
-            ],
-            "preguntas": [
-                {"pregunta": "Cuéntame tu experiencia más reciente en el rol.", "tipo": "Conductual", "peso": 20, "palabras_clave": ["experiencia", "impacto"]},
-                {"pregunta": "¿Qué estrategia sigues para testear?", "tipo": "Técnica", "peso": 20, "palabras_clave": ["testing", "calidad"]},
-            ],
+            "puesto": title,
+            "descripcion": request.data.get("descripcion")
+            or "Descripción base para el puesto",
+            "ubicacion": request.data.get("ubicacion") or "A definir",
+            "salario": request.data.get("salario"),
+            "tipo_contrato": request.data.get("tipo_contrato"),
         }
-        return Response(payload, status=200)
+
+        try:
+            with httpx.Client(timeout=30.0) as client:
+                response = client.post(
+                    "http://interview:9000/ai/vacants/draft",
+                    json=payload,
+                )
+                response.raise_for_status()
+
+                # Transformar la respuesta de FastAPI al formato que espera el frontend
+                fastapi_data = response.json()
+                frontend_data = {
+                    "descripcion": fastapi_data.get("descripcion_sugerida", ""),
+                    "requisitos": fastapi_data.get("requisitos_sugeridos", []),
+                    "responsabilidades": [],  # FastAPI no devuelve esto
+                    "preguntas": [],  # FastAPI no devuelve esto
+                }
+
+                return Response(frontend_data, status=200)
+
+        except httpx.HTTPStatusError as e:
+            return Response(
+                {"detail": f"Error de FastAPI: {e.response.text}"}, status=502
+            )

@@ -14,8 +14,8 @@ type BackendVacante = {
   puesto: string;
   descripcion: string;
   requisitos?: string | string[];
-  ubicacion: string;                 // "Ciudad, País"
-  salario?: string | null;           // "45000 - 65000" | "A convenir" | null
+  ubicacion: string; // "Ciudad, País"
+  salario?: string | null; // "45000 - 65000" | "A convenir" | null
   tipo_contrato?: string | null;
   activa: boolean;
   departamento?: string;
@@ -45,11 +45,17 @@ function composeSalario(min?: number, max?: number) {
 function requisitosToArray(requisitos: BackendVacante['requisitos']): string[] {
   if (!requisitos) return [];
   if (Array.isArray(requisitos)) return requisitos;
-  return requisitos.split('\n').map(r => r.trim()).filter(Boolean);
+  return requisitos
+    .split('\n')
+    .map((r) => r.trim())
+    .filter(Boolean);
 }
 
 function requisitosToText(arr?: string[]): string {
-  return (arr ?? []).map(r => r.trim()).filter(Boolean).join('\n');
+  return (arr ?? [])
+    .map((r) => r.trim())
+    .filter(Boolean)
+    .join('\n');
 }
 
 /** ============
@@ -81,21 +87,22 @@ function mapFromApi(v: BackendVacante): Vacancy & {
     // extras para el formulario
     descripcion: v.descripcion,
     requisitos: requisitosToArray(v.requisitos),
-    tipo_contrato: v.tipo_contrato
+    tipo_contrato: v.tipo_contrato,
   };
 }
 
 /** ============
  *  Mapper UI → API
  *  ============ */
-function mapToApi(payload: Partial<Vacancy> & {
-  descripcion?: string;
-  requisitos?: string[];
-  tipo_contrato?: string | null;
-}): Partial<BackendVacante> {
+function mapToApi(
+  payload: Partial<Vacancy> & {
+    descripcion?: string;
+    requisitos?: string[];
+    tipo_contrato?: string | null;
+  },
+): Partial<BackendVacante> {
   const ubicacion =
-    [payload.city, payload.country].filter(Boolean).join(', ') ||
-    (payload.city || '');
+    [payload.city, payload.country].filter(Boolean).join(', ') || payload.city || '';
 
   return {
     id: payload.id!,
@@ -106,7 +113,7 @@ function mapToApi(payload: Partial<Vacancy> & {
     salario: composeSalario(payload.salaryMin, payload.salaryMax),
     tipo_contrato: payload.tipo_contrato ?? null,
     activa: payload.status ? payload.status === 'active' : true,
-    departamento: payload.area ?? ''
+    departamento: payload.area ?? '',
   };
 }
 
@@ -116,50 +123,45 @@ export class Vacancies {
   private base = `${environment.apiBase}/jobs`;
 
   listAll(): Observable<Vacancy[]> {
-    return this.http.get<BackendVacante[]>(`${this.base}/`).pipe(
-      map(arr => arr.map(mapFromApi))
-    );
+    return this.http.get<BackendVacante[]>(`${this.base}/`).pipe(map((arr) => arr.map(mapFromApi)));
   }
 
   listMine(): Observable<Vacancy[]> {
-    return this.http.get<BackendVacante[]>(`${this.base}/mine/`).pipe(
-      map(arr => arr.map(mapFromApi))
-    );
+    return this.http
+      .get<BackendVacante[]>(`${this.base}/mine/`)
+      .pipe(map((arr) => arr.map(mapFromApi)));
   }
 
   getById(id: number): Observable<Vacancy> {
-    return this.http.get<BackendVacante>(`${this.base}/${id}/`).pipe(
-      map(mapFromApi)
-    );
+    return this.http.get<BackendVacante>(`${this.base}/${id}/`).pipe(map(mapFromApi));
   }
 
-  create(payload: Partial<Vacancy> & {
-    descripcion?: string;
-    requisitos?: string[];
-    tipo_contrato?: string | null;
-  }): Observable<Vacancy> {
+  create(
+    payload: Partial<Vacancy> & {
+      descripcion?: string;
+      requisitos?: string[];
+      tipo_contrato?: string | null;
+    },
+  ): Observable<Vacancy> {
     const body = mapToApi(payload);
-    return this.http.post<BackendVacante>(`${this.base}/`, body).pipe(
-      map(mapFromApi)
-    );
+    return this.http.post<BackendVacante>(`${this.base}/`, body).pipe(map(mapFromApi));
   }
 
-  update(id: number, payload: Partial<Vacancy> & {
-    descripcion?: string;
-    requisitos?: string[];
-    tipo_contrato?: string | null;
-  }): Observable<Vacancy> {
+  update(
+    id: number,
+    payload: Partial<Vacancy> & {
+      descripcion?: string;
+      requisitos?: string[];
+      tipo_contrato?: string | null;
+    },
+  ): Observable<Vacancy> {
     const body = mapToApi({ ...payload, id });
-    return this.http.put<BackendVacante>(`${this.base}/${id}/`, body).pipe(
-      map(mapFromApi)
-    );
+    return this.http.put<BackendVacante>(`${this.base}/${id}/`, body).pipe(map(mapFromApi));
   }
 
   patch(id: number, payload: Partial<Vacancy>): Observable<Vacancy> {
     const partial = mapToApi({ ...payload, id });
-    return this.http.patch<BackendVacante>(`${this.base}/${id}/`, partial).pipe(
-      map(mapFromApi)
-    );
+    return this.http.patch<BackendVacante>(`${this.base}/${id}/`, partial).pipe(map(mapFromApi));
   }
 
   delete(id: number): Observable<void> {
@@ -167,20 +169,20 @@ export class Vacancies {
   }
 
   close(id: number): Observable<Vacancy> {
-    return this.http.patch<BackendVacante>(`${this.base}/${id}/close/`, { activa: false }).pipe(
-      map(mapFromApi)
-    );
+    return this.http
+      .patch<BackendVacante>(`${this.base}/${id}/close/`, { activa: false })
+      .pipe(map(mapFromApi));
   }
 
   reopen(id: number): Observable<Vacancy> {
-    return this.http.patch<BackendVacante>(`${this.base}/${id}/reopen/`, { activa: true }).pipe(
-      map(mapFromApi)
-    );
+    return this.http
+      .patch<BackendVacante>(`${this.base}/${id}/reopen/`, { activa: true })
+      .pipe(map(mapFromApi));
   }
 
-  stats(): Observable<{ active: number; candidates: number; interviews: number; hires: number; }> {
-    return this.http.get<{ active: number; candidates: number; interviews: number; hires: number; }>(
-      `${this.base}/stats/`
+  stats(): Observable<{ active: number; candidates: number; interviews: number; hires: number }> {
+    return this.http.get<{ active: number; candidates: number; interviews: number; hires: number }>(
+      `${this.base}/stats/`,
     );
   }
 
@@ -190,12 +192,12 @@ export class Vacancies {
     responsabilidades: string[];
     preguntas: any[];
   }> {
-    return this.http.post<any>(`${this.base}/generate-ai/`, { puesto: title });
+    return this.http.post<any>(`${this.base}/generateai/`, { puesto: title });
   }
 
   duplicate(id: number): Observable<Vacancy> {
-    return this.http.post<BackendVacante>(`${this.base}/${id}/duplicate/`, {}).pipe(
-      map(mapFromApi)
-    );
+    return this.http
+      .post<BackendVacante>(`${this.base}/${id}/duplicate/`, {})
+      .pipe(map(mapFromApi));
   }
 }

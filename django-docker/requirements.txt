@@ -5,4 +5,5 @@ django-cors-headers
 django-extensions
 argon2-cffi>=23.1.0
 PyJWT[crypto]>=2.8.0
+httpx>=0.27.0
 cryptography>=42.0.0

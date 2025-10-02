@@ -20,8 +20,8 @@ interface VacanteUI {
   puesto: string;
   descripcion: string;
   requisitos: string[];
-  ubicacion: string;                    // "Ciudad, País"
-  salario: string;                      // "45000 - 65000" | "A convenir"
+  ubicacion: string; // "Ciudad, País"
+  salario: string; // "45000 - 65000" | "A convenir"
   tipo_contrato: string | null | undefined;
   activa: boolean;
   departamento?: string;
@@ -51,7 +51,7 @@ interface FormData {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './vacantes.html',
-  styleUrls: ['./vacantes.scss']
+  styleUrls: ['./vacantes.scss'],
 })
 export class Vacantes implements OnInit {
   private vacanciesService = inject(Vacancies);
@@ -63,7 +63,7 @@ export class Vacantes implements OnInit {
   loading = signal<boolean>(false);
 
   preguntas = signal<Pregunta[]>([
-    { id: 1, pregunta: '', tipo: 'Técnica', peso: 20, palabrasClave: '' }
+    { id: 1, pregunta: '', tipo: 'Técnica', peso: 20, palabrasClave: '' },
   ]);
 
   formData = signal<FormData>({
@@ -77,22 +77,22 @@ export class Vacantes implements OnInit {
     requisitos: [''],
     responsabilidades: [''],
     duracion: 45,
-    puntuacionMinima: 75
+    puntuacionMinima: 75,
   });
 
   stats = signal([
-    { title: 'Vacantes Activas', value: 0, change: '+0 esta semana', color: 'blue'  as const },
-    { title: 'Candidatos',       value: 0, change: '+0 hoy',         color: 'green' as const },
-    { title: 'Entrevistas IA',   value: 0, change: '0 pendientes',   color: 'purple'as const },
-    { title: 'Contrataciones',   value: 0, change: 'Este mes',       color: 'yellow'as const }
+    { title: 'Vacantes Activas', value: 0, change: '+0 esta semana', color: 'blue' as const },
+    { title: 'Candidatos', value: 0, change: '+0 hoy', color: 'green' as const },
+    { title: 'Entrevistas IA', value: 0, change: '0 pendientes', color: 'purple' as const },
+    { title: 'Contrataciones', value: 0, change: 'Este mes', color: 'yellow' as const },
   ]);
 
   tabs = [
-    { id: 'vacantes',     label: 'Vacantes' },
-    { id: 'postulaciones',label: 'Postulaciones' },
-    { id: 'entrevistas',  label: 'Entrevistas IA' },
-    { id: 'ranking',      label: 'Ranking' },
-    { id: 'informes',     label: 'Informes' }
+    { id: 'vacantes', label: 'Vacantes' },
+    { id: 'postulaciones', label: 'Postulaciones' },
+    { id: 'entrevistas', label: 'Entrevistas IA' },
+    { id: 'ranking', label: 'Ranking' },
+    { id: 'informes', label: 'Informes' },
   ] as const;
 
   vacantes = signal<VacanteUI[]>([]);
@@ -133,7 +133,7 @@ export class Vacantes implements OnInit {
             cierra: v.closesAt
               ? new Date(v.closesAt).toLocaleDateString('es-ES')
               : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES'),
-            preguntasIA: 2
+            preguntasIA: 2,
           };
         });
         this.vacantes.set(mapped);
@@ -142,23 +142,33 @@ export class Vacantes implements OnInit {
       error: (error: HttpErrorResponse) => {
         console.error('Error cargando vacantes:', error);
         this.loading.set(false);
-      }
+      },
     });
   }
 
   loadStats(): void {
     this.vacanciesService.stats().subscribe({
-      next: (data: { active: number; candidates: number; interviews: number; hires: number; }) => {
+      next: (data: { active: number; candidates: number; interviews: number; hires: number }) => {
         this.stats.set([
-          { title: 'Vacantes Activas', value: data.active,     change: '+2 esta semana', color: 'blue'   },
-          { title: 'Candidatos',       value: data.candidates, change: '+18 hoy',        color: 'green'  },
-          { title: 'Entrevistas IA',   value: data.interviews, change: '15 pendientes',  color: 'purple' },
-          { title: 'Contrataciones',   value: data.hires,      change: 'Este mes',       color: 'yellow' }
+          {
+            title: 'Vacantes Activas',
+            value: data.active,
+            change: '+2 esta semana',
+            color: 'blue',
+          },
+          { title: 'Candidatos', value: data.candidates, change: '+18 hoy', color: 'green' },
+          {
+            title: 'Entrevistas IA',
+            value: data.interviews,
+            change: '15 pendientes',
+            color: 'purple',
+          },
+          { title: 'Contrataciones', value: data.hires, change: 'Este mes', color: 'yellow' },
         ]);
       },
       error: (error: HttpErrorResponse) => {
         console.error('Error cargando estadísticas:', error);
-      }
+      },
     });
   }
 
@@ -181,9 +191,12 @@ export class Vacantes implements OnInit {
             salarioMax: full.salaryMax?.toString() ?? '',
             descripcion: full.shortDescription ?? '',
             requisitos: [],
-            responsabilidades: ['Desarrollar interfaces de usuario', 'Colaborar con el equipo de diseño'],
+            responsabilidades: [
+              'Desarrollar interfaces de usuario',
+              'Colaborar con el equipo de diseño',
+            ],
             duracion: 45,
-            puntuacionMinima: 75
+            puntuacionMinima: 75,
           });
           this.showModal.set(true);
         },
@@ -200,12 +213,15 @@ export class Vacantes implements OnInit {
             salarioMax: max || '',
             descripcion: v.descripcion || '',
             requisitos: v.requisitos?.length ? v.requisitos : [''],
-            responsabilidades: ['Desarrollar interfaces de usuario', 'Colaborar con el equipo de diseño'],
+            responsabilidades: [
+              'Desarrollar interfaces de usuario',
+              'Colaborar con el equipo de diseño',
+            ],
             duracion: 45,
-            puntuacionMinima: 75
+            puntuacionMinima: 75,
           });
           this.showModal.set(true);
-        }
+        },
       });
     } else {
       this.editingVacante.set(null);
@@ -232,7 +248,7 @@ export class Vacantes implements OnInit {
       requisitos: [''],
       responsabilidades: [''],
       duracion: 45,
-      puntuacionMinima: 75
+      puntuacionMinima: 75,
     });
     this.preguntas.set([{ id: 1, pregunta: '', tipo: 'Técnica', peso: 20, palabrasClave: '' }]);
   }
@@ -270,13 +286,23 @@ export class Vacantes implements OnInit {
     }
     this.loading.set(true);
     this.vacanciesService.generateWithAI(form.puesto).subscribe({
-      next: (response: { descripcion: string; requisitos: string[]; responsabilidades: string[]; preguntas: Array<{ pregunta: string; tipo: string; peso?: number; palabras_clave?: string[]; }>; }) => {
+      next: (response: {
+        descripcion: string;
+        requisitos: string[];
+        responsabilidades: string[];
+        preguntas: Array<{
+          pregunta: string;
+          tipo: string;
+          peso?: number;
+          palabras_clave?: string[];
+        }>;
+      }) => {
         const current = this.formData();
         this.formData.set({
           ...current,
           descripcion: response.descripcion,
           requisitos: response.requisitos,
-          responsabilidades: response.responsabilidades
+          responsabilidades: response.responsabilidades,
         });
 
         if (response.preguntas?.length) {
@@ -286,8 +312,8 @@ export class Vacantes implements OnInit {
               pregunta: p.pregunta,
               tipo: p.tipo,
               peso: p.peso ?? 20,
-              palabrasClave: Array.isArray(p.palabras_clave) ? p.palabras_clave.join(', ') : ''
-            }))
+              palabrasClave: Array.isArray(p.palabras_clave) ? p.palabras_clave.join(', ') : '',
+            })),
           );
         }
         this.loading.set(false);
@@ -297,7 +323,7 @@ export class Vacantes implements OnInit {
         console.error('Error generando con IA:', error);
         this.loading.set(false);
         alert('Error al generar contenido con IA');
-      }
+      },
     });
   }
 
@@ -305,8 +331,14 @@ export class Vacantes implements OnInit {
     const form = this.formData();
     const editing = this.editingVacante();
 
-    if (!form.puesto.trim()) { alert('El título del puesto es requerido'); return; }
-    if (!form.descripcion.trim()) { alert('La descripción es requerida'); return; }
+    if (!form.puesto.trim()) {
+      alert('El título del puesto es requerido');
+      return;
+    }
+    if (!form.descripcion.trim()) {
+      alert('La descripción es requerida');
+      return;
+    }
 
     const city = form.ubicacion.split(',')[0]?.trim() || form.ubicacion.trim();
     const country = form.ubicacion.split(',')[1]?.trim() || '';
@@ -322,7 +354,7 @@ export class Vacantes implements OnInit {
       status: 'active' as const,
       descripcion: form.descripcion,
       requisitos: form.requisitos.filter((r: string) => r.trim() !== ''),
-      tipo_contrato: form.tipo_contrato
+      tipo_contrato: form.tipo_contrato,
     };
 
     this.loading.set(true);
@@ -341,31 +373,29 @@ export class Vacantes implements OnInit {
         console.error('Error guardando vacante:', error);
         this.loading.set(false);
         alert('Error al guardar la vacante');
-      }
+      },
     });
   }
 
-    /** ====== Preguntas IA (UI) ====== */
+  /** ====== Preguntas IA (UI) ====== */
   agregarPregunta(): void {
     const current = this.preguntas();
-    const nextId = current.length ? Math.max(...current.map(p => p.id)) + 1 : 1;
+    const nextId = current.length ? Math.max(...current.map((p) => p.id)) + 1 : 1;
     this.preguntas.set([
       ...current,
-      { id: nextId, pregunta: '', tipo: 'Técnica', peso: 20, palabrasClave: '' }
+      { id: nextId, pregunta: '', tipo: 'Técnica', peso: 20, palabrasClave: '' },
     ]);
   }
 
   actualizarPregunta(id: number, field: keyof Pregunta, value: string | number): void {
     const current = this.preguntas();
-    this.preguntas.set(
-      current.map(p => (p.id === id ? { ...p, [field]: value as never } : p))
-    );
+    this.preguntas.set(current.map((p) => (p.id === id ? { ...p, [field]: value as never } : p)));
   }
 
   eliminarPregunta(id: number): void {
     const current = this.preguntas();
     if (current.length > 1) {
-      this.preguntas.set(current.filter(p => p.id !== id));
+      this.preguntas.set(current.filter((p) => p.id !== id));
     }
   }
 
@@ -379,7 +409,7 @@ export class Vacantes implements OnInit {
         error: (error: HttpErrorResponse) => {
           console.error('Error eliminando vacante:', error);
           alert('Error al eliminar vacante');
-        }
+        },
       });
     }
   }
