@@ -10,6 +10,8 @@ services:
         target: jwt_private.pem
       - source: jwt_key_public
         target: jwt_public.pem
+    networks:
+      - app_network
 
   interview:
     build:
@@ -22,9 +24,15 @@ services:
     environment:
       DEMO_MODE: true
       DEMO_API_KEY: evalyze-demo-123
+    networks:
+      - app_network
 
 secrets:
   jwt_key_private:
     file: ../secrets/jwtRS256.key
   jwt_key_public:
     file: ../secrets/jwtRS256.key.pub
+
+networks:
+  app_network:
+    driver: bridge

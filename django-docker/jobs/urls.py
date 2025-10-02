@@ -1,9 +1,8 @@
-from django.urls import path  # type: ignore
-from . import views
+# jobs/urls.py
+from rest_framework.routers import DefaultRouter  # type: ignore
+from .views import VacanteViewSet
 
-urlpatterns = [
-    path("crear/", views.create_vacante, name="crear_vacante"),
-    path("editar/<int:vacante_id>/", views.edit_vacante, name="editar_vacante"),
-    path("cerrar/<int:vacante_id>/", views.close_vacante, name="cerrar_vacante"),
-    path("guardar/", views.save_vacante, name="guardar_vacante"),
-]
+router = DefaultRouter()
+router.register(r"jobs", VacanteViewSet, basename="jobs")
+
+urlpatterns = router.urls
