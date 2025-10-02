@@ -345,6 +345,30 @@ export class Vacantes implements OnInit {
     });
   }
 
+    /** ====== Preguntas IA (UI) ====== */
+  agregarPregunta(): void {
+    const current = this.preguntas();
+    const nextId = current.length ? Math.max(...current.map(p => p.id)) + 1 : 1;
+    this.preguntas.set([
+      ...current,
+      { id: nextId, pregunta: '', tipo: 'Técnica', peso: 20, palabrasClave: '' }
+    ]);
+  }
+
+  actualizarPregunta(id: number, field: keyof Pregunta, value: string | number): void {
+    const current = this.preguntas();
+    this.preguntas.set(
+      current.map(p => (p.id === id ? { ...p, [field]: value as never } : p))
+    );
+  }
+
+  eliminarPregunta(id: number): void {
+    const current = this.preguntas();
+    if (current.length > 1) {
+      this.preguntas.set(current.filter(p => p.id !== id));
+    }
+  }
+
   eliminarVacante(id: number): void {
     if (confirm('¿Estás seguro de eliminar esta vacante?')) {
       this.vacanciesService.delete(id).subscribe({
