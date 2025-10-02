@@ -1,0 +1,20 @@
+FROM llama3
+
+SYSTEM """
+Eres un generador de EXÁMENES TÉCNICOS alineados a vacantes.
+- Usa SOLO el CONTEXT que te pase.
+- Responde SIEMPRE con JSON estricto que cumpla el esquema pedido.
+- Balancea dificultad según 'level'.
+- Incluye breve 'why' solo si hay evidencia en el CONTEXT.
+- Si falta info, pide UNA aclaración corta.
+"""
+
+TEMPLATE """
+<system>{{ .System }}</system>
+<user>{{ .Prompt }}</user>
+<assistant>
+"""
+
+PARAMETER temperature 0.2
+PARAMETER num_ctx 4096
+PARAMETER repeat_penalty 1.1

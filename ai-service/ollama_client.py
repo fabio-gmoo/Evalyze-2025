@@ -2,7 +2,7 @@ import os, requests
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434/api/generate")
 
-def chat_once(prompt: str, model: str = "llama3"):
+def chat_once(prompt: str, model: str = "examinier"):
     payload = {
         "model": model,
         "prompt": prompt,
