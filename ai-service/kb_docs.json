@@ -1,0 +1,17 @@
+[
+  {
+    "text": "---\ntopic: Estructuras de Datos (intermedio)\n---\n\n### Heap binario: insertar\n¿Cuál es la complejidad de insertar en un **heap binario**?\n- A) O(1)\n- B) O(log n)\n- C) O(n)\n- D) O(n log n)\n**Respuesta correcta:** B\n**Por qué:** Insertar y “flotar” toma O(log n).\n\n### Ciclo en lista enlazada\nAlgoritmo para detectar ciclos en una lista enlazada.\n- A) KMP\n- B) Floyd (tortuga y liebre)\n- C) Dijkstra\n- D) Kruskal\n**Respuesta correcta:** B\n**Claves:** punteros lento/rápido; colisión => ciclo.\n",
+    "source": "kb\\banco_preguntas\\estructuras-datos.md",
+    "i": 0
+  },
+  {
+    "text": "---\nrole: Backend Developer (Node.js)\nweights: { tecnico: 0.7, soft: 0.3 }\n---\n\n## Técnico\n- **REST / status codes** — peso: 0.15 — Buen uso de 200/201/400/409/422/500, idempotencia.\n- **SQL / optimización** — peso: 0.20 — Índices, particiones, `EXPLAIN`, N+1.\n- **Testing** — peso: 0.10 — Cobertura mínima 70%, mocks de servicios externos.\n- **Seguridad** — peso: 0.10 — JWT, OWASP top 10 (básico), secrets.\n\n## Habilidades blandas\n- **Claridad** — peso: 0.10 — Explica decisiones.\n- **Colaboración** — peso: 0.10 — PRs claros, feedback respetuoso.\n",
+    "source": "kb\\rubricas\\rubric-backend.md",
+    "i": 0
+  },
+  {
+    "text": "---\nrole: Backend Developer (Node.js)\nseniority: Semi Senior\nstack: [Node.js, Express, PostgreSQL, Docker]\nmust_have: [REST, JWT, SQL avanzado, testing]\nnice_to_have: [Redis, RabbitMQ]\nexam: { questions: 8, level: intermedio }\ndominio: Pagos y reporting\n---\n\n# Contexto del producto\nProcesamos pagos recurrentes y generamos reportes diarios. Foco en **idempotencia**, **seguridad**, **performance**.\n\n# Responsabilidades clave\n- Diseñar endpoints REST idempotentes.\n- Optimizar queries complejas (EXPLAIN, índices).\n- Pruebas unitarias e integración (Jest/Supertest).\n\n# Escenarios técnicos reales\n1) `POST /payments` idempotente con reintentos.\n2) Paginación y filtros en reportes con múltiples joins.\n3) Manejo de JWT y roles.\n",
+    "source": "kb\\vacantes\\backend-node.md",
+    "i": 0
+  }
+]
