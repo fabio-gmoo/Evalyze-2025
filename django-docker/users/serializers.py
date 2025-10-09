@@ -127,18 +127,3 @@ class RegisterCandidateSerializer(serializers.ModelSerializer):
             headline=headline,
         )
         return user
-
-
-class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField()
-
-    def validate(self, attrs):
-        # Si tu User usa `USERNAME_FIELD='email'`, esto funciona directo.
-        user = authenticate(username=attrs["email"], password=attrs["password"])
-        if not user:
-            raise serializers.ValidationError(
-                {"non_field_errors": ["Credenciales inválidas"]}
-            )
-        attrs["user"] = user
-        return attrs

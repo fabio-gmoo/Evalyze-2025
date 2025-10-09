@@ -60,7 +60,20 @@ export class Loginform {
       },
       error: (err) => {
         console.error('Error en login:', err);
-        this.errorMsg.set(err?.error?.detail ?? 'No se pudo iniciar sesión');
+
+        // Extraer el mensaje de error
+        let errorMessage = 'No se pudo iniciar sesión';
+
+        if (err?.error?.role) {
+          // Error de validación de rol
+          errorMessage = err.error.role;
+        } else if (err?.error?.detail) {
+          errorMessage = err.error.detail;
+        } else if (err?.error?.non_field_errors) {
+          errorMessage = err.error.non_field_errors[0];
+        }
+
+        this.errorMsg.set(errorMessage);
         this.loading.set(false);
       },
       complete: () => {

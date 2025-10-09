@@ -20,4 +20,16 @@ export class Navbar {
   closeMenu() {
     this.menuOpen = false;
   }
+
+  handleLogin() {
+    this.openLogin.emit();
+
+    this.closeMenu();
+  }
+
+  handleSignup() {
+    this.openSignup.emit();
+
+    this.closeMenu();
+  }
 }

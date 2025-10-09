@@ -23,6 +23,7 @@ export class Home {
   openAuth(mode: Mode) {
     this.authMode.set(mode);
     this.showAuth.set(true);
+
     document.body.style.overflow = 'hidden';
   }
 
