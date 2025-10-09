@@ -1,5 +1,6 @@
-from rest_framework import serializers
+from rest_framework import serializers  # type: ignore
 from .models import Vacante
+
 
 class VacanteSerializer(serializers.ModelSerializer):
     requisitos = serializers.ListField(child=serializers.CharField(), allow_empty=True)
@@ -7,8 +8,15 @@ class VacanteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vacante
         fields = [
-            "id", "puesto", "descripcion", "requisitos", "ubicacion",
-            "salario", "tipo_contrato", "activa", "departamento",
+            "id",
+            "puesto",
+            "descripcion",
+            "requisitos",
+            "ubicacion",
+            "salario",
+            "tipo_contrato",
+            "activa",
+            "departamento",
         ]
 
     # -> Python model
@@ -23,7 +31,9 @@ class VacanteSerializer(serializers.ModelSerializer):
     # -> JSON
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        rep["requisitos"] = [r for r in (instance.requisitos or "").splitlines() if r.strip()]
+        rep["requisitos"] = [
+            r for r in (instance.requisitos or "").splitlines() if r.strip()
+        ]
         return rep
 
     def create(self, validated_data):

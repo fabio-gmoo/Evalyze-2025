@@ -11,8 +11,8 @@ type BackendVacante = {
   puesto: string;
   descripcion: string;
   requisitos?: string | string[];
-  ubicacion: string;                 // "Ciudad, País"
-  salario?: string | null;           // "45000 - 65000" | "A convenir" | null
+  ubicacion: string; // "Ciudad, País"
+  salario?: string | null; // "45000 - 65000" | "A convenir" | null
   tipo_contrato?: string | null;
   activa: boolean;
   departamento?: string;
@@ -36,10 +36,16 @@ function composeSalario(min?: number, max?: number) {
 function requisitosToArray(requisitos: BackendVacante['requisitos']): string[] {
   if (!requisitos) return [];
   if (Array.isArray(requisitos)) return requisitos;
-  return requisitos.split('\n').map((r) => r.trim()).filter(Boolean);
+  return requisitos
+    .split('\n')
+    .map((r) => r.trim())
+    .filter(Boolean);
 }
 function requisitosToText(arr?: string[]): string {
-  return (arr ?? []).map((r) => r.trim()).filter(Boolean).join('\n');
+  return (arr ?? [])
+    .map((r) => r.trim())
+    .filter(Boolean)
+    .join('\n');
 }
 
 function mapFromApi(v: BackendVacante): Vacancy & {

@@ -69,7 +69,7 @@ class VacanteViewSet(viewsets.ModelViewSet):
         )
         return Response(self.get_serializer(dup).data, status=status.HTTP_201_CREATED)
 
-    @action(detail=False, methods=["post"], url_path="generateai")
+    @action(detail=False, methods=["post"], url_path="generate-ai")
     def generate_ai(self, request):
         title = (request.data or {}).get("puesto", "").strip()
         if not title:

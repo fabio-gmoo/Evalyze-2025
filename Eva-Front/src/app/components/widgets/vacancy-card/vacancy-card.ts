@@ -7,8 +7,4 @@ import { Vacancy } from '@interfaces/vacancy';
   templateUrl: './vacancy-card.html',
   styleUrl: './vacancy-card.scss',
 })
-export class VacancyCard {
-  vacante = input.required<VacanteUI>();
-  edit = output<VacanteUI>();
-  deleteClick = output<number>();
-}
+export class VacancyCard {}
