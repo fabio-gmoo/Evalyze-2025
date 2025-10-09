@@ -1,615 +1,389 @@
-<!-- src/app/pages/vacantes/vacantes.html -->
+<!-- CONTENEDOR -->
 <div class="vacantes-container">
-  <!-- Header -->
-  <div class="header">
+  <!-- ======= HEADER ======= -->
+  <header class="header">
     <div class="header-content">
       <div class="header-icon">
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+        <!-- icono simple -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M4 7h16M4 12h16M4 17h10"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
         </svg>
       </div>
       <div>
-        <h1 *ngIf="viewMode() === 'company'">Bienvenido, Usuario Empresa</h1>
-        <h1 *ngIf="viewMode() === 'candidate'">Vacantes disponibles</h1>
-        <p *ngIf="viewMode() === 'company'">
-          Panel de control para gestionar tu proceso de reclutamiento inteligente
-        </p>
+        <h1>Vacantes</h1>
+        <p *ngIf="viewMode() === 'company'">Panel para gestionar posiciones con IA.</p>
         <p *ngIf="viewMode() === 'candidate'">
-          Explora oportunidades y postula conversando por chat
+          Explora vacantes y aplica con entrevistas asistidas por IA.
         </p>
       </div>
     </div>
-  </div>
+  </header>
 
-  <!-- Stats Cards (solo empresa) -->
-  <div class="stats-grid" *ngIf="viewMode() === 'company'">
-    <div *ngFor="let stat of stats()" [class]="'stat-card stat-' + stat.color">
-      <h3>{{ stat.title }}</h3>
-      <div class="stat-value">{{ stat.value }}</div>
-      <div class="stat-change">{{ stat.change }}</div>
+  <!-- ======= STATS (solo empresa) ======= -->
+  <section *ngIf="viewMode() === 'company'" class="stats-grid">
+    <div class="stat-card" [ngClass]="'stat-' + s.color" *ngFor="let s of stats()">
+      <h3>{{ s.title }}</h3>
+      <div class="stat-value">{{ s.value }}</div>
+      <div class="stat-change">{{ s.change }}</div>
     </div>
-  </div>
+  </section>
 
-  <!-- Tabs (solo empresa, placeholder futuro) -->
-  <div class="tabs" *ngIf="viewMode() === 'company'">
+  <!-- ======= TABS (solo empresa) ======= -->
+  <nav *ngIf="viewMode() === 'company'" class="tabs">
     <button
-      *ngFor="let tab of tabs"
-      [class.active]="activeTab() === tab.id"
-      (click)="setActiveTab(tab.id)"
+      *ngFor="let t of tabs"
       class="tab-button"
+      [class.active]="activeTab() === t.id"
+      (click)="setActiveTab(t.id)"
     >
-      {{ tab.label }}
+      {{ t.label }}
     </button>
-  </div>
+  </nav>
 
-  <!-- Vacantes Section -->
+  <!-- ======= ACCIONES / TÍTULO DE SECCIÓN ======= -->
   <div class="section-header">
     <div>
       <h2 *ngIf="viewMode() === 'company'">Gestión de Vacantes</h2>
-      <h2 *ngIf="viewMode() === 'candidate'">Vacantes</h2>
+      <h2 *ngIf="viewMode() === 'candidate'">Todas las Vacantes</h2>
       <p *ngIf="viewMode() === 'company'">
-        Crea y administra las posiciones abiertas con configuración de IA personalizada
+        Crea y administra posiciones abiertas con configuración de IA.
       </p>
-      <p *ngIf="viewMode() === 'candidate'">
-        Encuentra el puesto ideal y conversa por chat antes de postular
-      </p>
+      <p *ngIf="viewMode() === 'candidate'">Aplica a las oportunidades que más te interesen.</p>
     </div>
 
-    <button class="btn-primary" (click)="openModal(null)" *ngIf="viewMode() === 'company'">
-      <svg
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-      >
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-      </svg>
-      Nueva Vacante
-    </button>
-  </div>
-
-  <!-- Vacantes List with Scroll -->
-  <div class="vacantes-list">
-    <!-- Loading State -->
-    <div *ngIf="loading()" class="empty-state">
-      <div class="loading-spinner"></div>
-      <p class="mt-3">Cargando vacantes...</p>
-    </div>
-
-    <!-- Empty State -->
-    <div *ngIf="!loading() && vacantes().length === 0" class="empty-state">
-      <svg
-        width="80"
-        height="80"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.5"
-      >
-        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-      </svg>
-      <h3 *ngIf="viewMode() === 'company'">No hay vacantes activas</h3>
-      <h3 *ngIf="viewMode() === 'candidate'">No hay vacantes publicadas</h3>
-      <p *ngIf="viewMode() === 'company'">
-        Comienza creando tu primera vacante para atraer candidatos
-      </p>
-      <p *ngIf="viewMode() === 'candidate'">Vuelve más tarde o intenta con otro término</p>
-      <button class="btn-primary" (click)="openModal(null)" *ngIf="viewMode() === 'company'">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
+    <div *ngIf="viewMode() === 'company'">
+      <button class="btn-primary" (click)="openModal(null)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5v14M5 12h14" stroke="white" stroke-width="2" stroke-linecap="round" />
         </svg>
-        Crear Primera Vacante
+        Nueva Vacante
       </button>
     </div>
+  </div>
 
-    <!-- Vacantes Cards -->
-    <div *ngFor="let vacante of vacantes()" class="vacante-card">
+  <!-- ======= LISTA VACANTES ======= -->
+  <section class="vacantes-list" *ngIf="vacantes()?.length; else emptyList">
+    <article class="vacante-card" *ngFor="let v of vacantes()">
       <div class="vacante-header">
         <div class="vacante-title-section">
-          <h3>{{ vacante.puesto }}</h3>
-          <span class="badge-active" *ngIf="vacante.activa">Activa</span>
+          <h3>{{ v.puesto }}</h3>
+          <span *ngIf="v.activa" class="badge-active">Activa</span>
         </div>
 
-        <!-- Acciones para empresa -->
         <div class="vacante-actions" *ngIf="viewMode() === 'company'">
-          <button class="btn-icon" title="Ver Detalles">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-              <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-            Ver Detalles
-          </button>
-          <button class="btn-icon-only" (click)="openModal(vacante)" title="Editar">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-            </svg>
-          </button>
-          <button class="btn-icon-only" (click)="eliminarVacante(vacante.id!)" title="Eliminar">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <polyline points="3 6 5 6 21 6"></polyline>
-              <path
-                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-              ></path>
-            </svg>
-          </button>
+          <button class="btn-icon" (click)="openModal(v)">Editar</button>
+          <button class="btn-icon btn-delete" (click)="eliminarVacante(v.id!)">Eliminar</button>
         </div>
 
-        <!-- Acción para postulante -->
         <div class="vacante-actions" *ngIf="viewMode() === 'candidate'">
-          <button class="btn-primary" (click)="openChat(vacante)">
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
-            </svg>
-            Aplicar por chat
-          </button>
+          <button class="btn-primary" (click)="openChat(v)">Aplicar Ahora</button>
         </div>
       </div>
 
       <div class="vacante-info-grid">
-        <div class="info-item" *ngIf="vacante.departamento">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+        <div class="info-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2l7 7-7 7-7-7 7-7z" stroke="#6366f1" stroke-width="2" />
           </svg>
-          {{ vacante.departamento }}
+          {{ v.ubicacion }}
         </div>
         <div class="info-item">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M3 12h18" stroke="#6366f1" stroke-width="2" stroke-linecap="round" />
           </svg>
-          {{ vacante.ubicacion }}
+          {{ v.tipo_contrato || 'Tiempo Completo' }}
         </div>
-        <div class="info-item" *ngIf="vacante.salario">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <line x1="12" y1="1" x2="12" y2="23"></line>
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+        <div class="info-item">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M12 6v12M6 12h12" stroke="#6366f1" stroke-width="2" stroke-linecap="round" />
           </svg>
-          {{ vacante.salario }}
-        </div>
-
-        <!-- Solo empresa: KPIs mock -->
-        <div class="info-item" *ngIf="viewMode() === 'company'">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-          </svg>
-          {{ vacante.candidatos || 0 }} candidatos
+          {{ v.salario }} <span *ngIf="viewMode() === 'company'">&nbsp;EUR</span>
         </div>
         <div class="info-item" *ngIf="viewMode() === 'company'">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="#6366f1" stroke-width="2" />
           </svg>
-          {{ vacante.duracionIA }}
+          {{ v.candidatos || 0 }} candidatos
         </div>
       </div>
 
-      <p class="vacante-description">{{ vacante.descripcion }}</p>
-
-      <div class="vacante-footer" *ngIf="viewMode() === 'company'">
-        <span>Publicada: {{ vacante.publicada }}</span>
-        <span>Cierra: {{ vacante.cierra }}</span>
-        <span>{{ vacante.preguntasIA }} preguntas IA configuradas</span>
+      <div class="vacante-description">
+        {{ v.descripcion }}
       </div>
+
+      <footer class="vacante-footer">
+        <div>Publicada: {{ v.publicada }}</div>
+        <div>Cierra: {{ v.cierra }}</div>
+        <div *ngIf="v.preguntasIA">{{ v.preguntasIA }} preguntas IA</div>
+        <div *ngIf="v.duracionIA">{{ v.duracionIA }}</div>
+      </footer>
+    </article>
+  </section>
+
+  <ng-template #emptyList>
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24">
+        <path fill="currentColor" d="M12 2a10 10 0 100 20 10 10 0 000-20zM7 11h10v2H7z" />
+      </svg>
+      <h3>No hay vacantes</h3>
+      <p *ngIf="viewMode() === 'company'">Crea tu primera vacante para comenzar.</p>
+      <button *ngIf="viewMode() === 'company'" class="btn-primary" (click)="openModal(null)">
+        Nueva Vacante
+      </button>
     </div>
-  </div>
+  </ng-template>
 
-  <!-- Modal (CRUD empresa) -->
-  <div *ngIf="showModal()" class="modal-overlay" (click)="closeModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
+  <!-- ======= MODAL CREAR/EDITAR ======= -->
+  <div class="modal-overlay" *ngIf="showModal()">
+    <div class="modal-content">
       <div class="modal-header">
-        <h2>{{ editingVacante() ? 'Editar Vacante' : 'Crear Nueva Vacante' }}</h2>
+        <h2>{{ editingVacante() ? 'Editar Vacante' : 'Nueva Vacante' }}</h2>
         <button class="btn-close" (click)="closeModal()">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M6 6l12 12M18 6L6 18"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
           </svg>
         </button>
       </div>
 
       <div class="modal-body">
-        <p class="modal-subtitle">
-          Define la información del puesto y configura la entrevista con IA
-        </p>
-
-        <!-- Información del Puesto -->
+        <!-- Datos básicos -->
         <section class="form-section">
-          <h3>Información del Puesto</h3>
-
+          <h3>Datos del Puesto</h3>
           <div class="form-grid-2">
             <div class="form-group">
-              <label>Título del Puesto</label>
+              <label>Título del puesto</label>
               <input
-                type="text"
+                class="form-input"
                 [ngModel]="formData().puesto"
                 (ngModelChange)="updateFormField('puesto', $event)"
-                placeholder="ej. Desarrollador Frontend Senior"
-                class="form-input"
+                placeholder="Ej: Desarrollador Frontend Senior"
               />
             </div>
 
             <div class="form-group">
-              <label>Departamento</label>
+              <label>Departamento / Área</label>
               <input
-                type="text"
+                class="form-input"
                 [ngModel]="formData().departamento"
                 (ngModelChange)="updateFormField('departamento', $event)"
-                placeholder="ej. Tecnología"
-                class="form-input"
+                placeholder="Ej: Tecnología"
               />
             </div>
-          </div>
 
-          <div class="form-grid-2">
             <div class="form-group">
               <label>Ubicación</label>
               <input
-                type="text"
+                class="form-input"
                 [ngModel]="formData().ubicacion"
                 (ngModelChange)="updateFormField('ubicacion', $event)"
-                placeholder="ej. Madrid, España"
-                class="form-input"
+                placeholder="Ciudad, País"
               />
             </div>
 
             <div class="form-group">
-              <label>Tipo de Contrato</label>
+              <label>Tipo de contrato</label>
               <select
+                class="form-select"
                 [ngModel]="formData().tipo_contrato"
                 (ngModelChange)="updateFormField('tipo_contrato', $event)"
-                class="form-select"
               >
-                <option value="Tiempo Completo">Tiempo Completo</option>
-                <option value="Medio Tiempo">Medio Tiempo</option>
-                <option value="Contrato">Contrato</option>
-                <option value="Freelance">Freelance</option>
+                <option>Tiempo Completo</option>
+                <option>Medio Tiempo</option>
+                <option>Contrato</option>
+                <option>Prácticas</option>
               </select>
             </div>
-          </div>
 
-          <div class="form-grid-2">
             <div class="form-group">
-              <label>Salario Mínimo (EUR)</label>
+              <label>Salario Mínimo</label>
               <input
+                class="form-input"
                 type="number"
                 [ngModel]="formData().salarioMin"
                 (ngModelChange)="updateFormField('salarioMin', $event)"
                 placeholder="45000"
-                class="form-input"
               />
             </div>
 
             <div class="form-group">
-              <label>Salario Máximo (EUR)</label>
+              <label>Salario Máximo</label>
               <input
+                class="form-input"
                 type="number"
                 [ngModel]="formData().salarioMax"
                 (ngModelChange)="updateFormField('salarioMax', $event)"
                 placeholder="65000"
-                class="form-input"
               />
             </div>
-          </div>
 
-          <div class="form-group">
-            <div class="form-group-header">
-              <label>Generar Contenido con IA</label>
-              <button class="btn-generate-ia" (click)="generarConIA()">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
-                Generar Vacante
-              </button>
+            <div class="form-group" style="grid-column: 1 / -1">
+              <div class="form-group-header">
+                <label>Descripción</label>
+                <button class="btn-generate-ia" (click)="generarConIA()" [disabled]="loading()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 2l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1 3-6z"
+                      stroke="white"
+                      stroke-width="1.5"
+                    />
+                  </svg>
+                  Generar con IA
+                  <span
+                    *ngIf="loading()"
+                    class="loading-spinner"
+                    style="margin-left: 0.5rem"
+                  ></span>
+                </button>
+              </div>
+              <textarea
+                class="form-textarea"
+                rows="5"
+                [ngModel]="formData().descripcion"
+                (ngModelChange)="updateFormField('descripcion', $event)"
+                placeholder="Resumen del puesto, objetivos, etc."
+              ></textarea>
             </div>
-            <p class="form-help">
-              Crea automáticamente la descripción, requisitos y preguntas de entrevista basado en el
-              título del puesto
-            </p>
           </div>
         </section>
 
-        <!-- Descripción del Puesto -->
+        <!-- Requisitos / Responsabilidades -->
         <section class="form-section">
-          <h3>Descripción del Puesto</h3>
-
-          <div class="form-group">
-            <label>Descripción</label>
-            <textarea
-              [ngModel]="formData().descripcion"
-              (ngModelChange)="updateFormField('descripcion', $event)"
-              rows="4"
-              placeholder="Describe el puesto, la empresa y lo que buscan..."
-              class="form-textarea"
-            ></textarea>
-          </div>
-
-          <div class="form-group">
-            <label>Requisitos (uno por línea)</label>
-            <div *ngFor="let req of formData().requisitos; let i = index" class="array-input-group">
+          <h3>Requisitos</h3>
+          <div class="form-group" *ngFor="let r of formData().requisitos; let i = index">
+            <div class="array-input-group">
               <input
-                type="text"
-                [ngModel]="req"
+                class="form-input"
+                [ngModel]="r"
                 (ngModelChange)="updateArrayItem('requisitos', i, $event)"
-                placeholder="ej. 5+ años de experiencia en React"
-                class="form-input"
+                placeholder="Ej: 5+ años con React"
               />
-              <button
-                *ngIf="formData().requisitos.length > 1"
-                (click)="removeArrayItem('requisitos', i)"
-                class="btn-remove"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
+              <button class="btn-remove" (click)="removeArrayItem('requisitos', i)">Quitar</button>
             </div>
-            <button (click)="addArrayItem('requisitos')" class="btn-add-item">
-              + Agregar Requisito
-            </button>
           </div>
-
-          <div class="form-group">
-            <label>Responsabilidades (una por línea)</label>
-            <div
-              *ngFor="let resp of formData().responsabilidades; let i = index"
-              class="array-input-group"
-            >
-              <input
-                type="text"
-                [ngModel]="resp"
-                (ngModelChange)="updateArrayItem('responsabilidades', i, $event)"
-                placeholder="ej. Desarrollar interfaces de usuario"
-                class="form-input"
-              />
-              <button
-                *ngIf="formData().responsabilidades.length > 1"
-                (click)="removeArrayItem('responsabilidades', i)"
-                class="btn-remove"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-            <button (click)="addArrayItem('responsabilidades')" class="btn-add-item">
-              + Agregar Responsabilidad
-            </button>
-          </div>
+          <button class="btn-add-item" (click)="addArrayItem('requisitos')">
+            + Agregar requisito
+          </button>
         </section>
 
-        <!-- Configuración de Entrevista IA -->
+        <section class="form-section">
+          <h3>Responsabilidades</h3>
+          <div class="form-group" *ngFor="let r of formData().responsabilidades; let i = index">
+            <div class="array-input-group">
+              <input
+                class="form-input"
+                [ngModel]="r"
+                (ngModelChange)="updateArrayItem('responsabilidades', i, $event)"
+                placeholder="Ej: Optimizar rendimiento"
+              />
+              <button class="btn-remove" (click)="removeArrayItem('responsabilidades', i)">
+                Quitar
+              </button>
+            </div>
+          </div>
+          <button class="btn-add-item" (click)="addArrayItem('responsabilidades')">
+            + Agregar responsabilidad
+          </button>
+        </section>
+
+        <!-- Config de entrevista IA -->
         <section class="form-section">
           <h3>Configuración de Entrevista IA</h3>
-
           <div class="form-grid-2">
             <div class="form-group">
-              <label>Duración (minutos)</label>
+              <label>Duración (min)</label>
               <input
+                class="form-input"
                 type="number"
                 [ngModel]="formData().duracion"
                 (ngModelChange)="updateFormField('duracion', $event)"
-                class="form-input"
               />
             </div>
-
             <div class="form-group">
-              <label>Puntuación Mínima (%)</label>
+              <label>Puntuación mínima (%)</label>
               <input
+                class="form-input"
                 type="number"
                 [ngModel]="formData().puntuacionMinima"
                 (ngModelChange)="updateFormField('puntuacionMinima', $event)"
-                class="form-input"
               />
             </div>
           </div>
 
           <div class="form-group">
             <div class="form-group-header">
-              <label>Preguntas Personalizadas</label>
-              <button class="btn-add-question" (click)="agregarPregunta()">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                Agregar Pregunta
-              </button>
+              <label>Preguntas</label>
+              <button class="btn-add-question" (click)="addPregunta()">+ Añadir pregunta</button>
             </div>
 
-            <div *ngFor="let pregunta of preguntas(); let i = index" class="pregunta-card">
+            <div
+              class="pregunta-card"
+              *ngFor="let p of preguntas(); let i = index; trackBy: trackByPregunta"
+            >
               <div class="pregunta-header">
                 <h4>Pregunta {{ i + 1 }}</h4>
-                <button
-                  *ngIf="preguntas().length > 1"
-                  (click)="eliminarPregunta(pregunta.id)"
-                  class="btn-icon-only btn-delete"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <polyline points="3 6 5 6 21 6"></polyline>
+                <button class="btn-icon-only btn-delete" (click)="removePregunta(i)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                     <path
-                      d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-                    ></path>
+                      d="M6 6l12 12M18 6L6 18"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </button>
               </div>
 
               <div class="form-group">
-                <label>Pregunta</label>
-                <textarea
-                  [ngModel]="pregunta.pregunta"
-                  (ngModelChange)="actualizarPregunta(pregunta.id, 'pregunta', $event)"
-                  rows="2"
-                  placeholder="Escribe la pregunta de la entrevista..."
-                  class="form-textarea"
-                ></textarea>
+                <label>Enunciado</label>
+                <input
+                  class="form-input"
+                  [ngModel]="p.pregunta"
+                  (ngModelChange)="updatePregunta(i, { pregunta: $event })"
+                  placeholder="Escribe la pregunta"
+                />
               </div>
 
               <div class="form-grid-2">
                 <div class="form-group">
                   <label>Tipo</label>
                   <select
-                    [ngModel]="pregunta.tipo"
-                    (ngModelChange)="actualizarPregunta(pregunta.id, 'tipo', $event)"
                     class="form-select"
+                    [ngModel]="p.tipo"
+                    (ngModelChange)="updatePregunta(i, { tipo: $event })"
                   >
-                    <option value="Técnica">Técnica</option>
-                    <option value="Conductual">Conductual</option>
-                    <option value="Situacional">Situacional</option>
-                    <option value="Cultural">Cultural</option>
+                    <option>Técnica</option>
+                    <option>Conductual</option>
+                    <option>Situacional</option>
                   </select>
                 </div>
-
                 <div class="form-group">
                   <label>Peso (%)</label>
                   <input
-                    type="number"
-                    [ngModel]="pregunta.peso"
-                    (ngModelChange)="actualizarPregunta(pregunta.id, 'peso', $event)"
-                    min="0"
-                    max="100"
                     class="form-input"
+                    type="number"
+                    [ngModel]="p.peso"
+                    (ngModelChange)="updatePregunta(i, { peso: +$event })"
                   />
                 </div>
               </div>
 
               <div class="form-group">
-                <label>Palabras Clave Esperadas (separadas por comas)</label>
+                <label>Palabras clave esperadas (separadas por coma)</label>
                 <input
-                  type="text"
-                  [ngModel]="pregunta.palabrasClave"
-                  (ngModelChange)="actualizarPregunta(pregunta.id, 'palabrasClave', $event)"
-                  placeholder="react, componentes, hooks, estado"
                   class="form-input"
+                  [ngModel]="p.palabrasClave"
+                  (ngModelChange)="updatePregunta(i, { palabrasClave: $event })"
+                  placeholder="hooks, estado, renders..."
                 />
               </div>
             </div>
@@ -618,47 +392,53 @@
       </div>
 
       <div class="modal-footer">
-        <button (click)="closeModal()" class="btn-secondary">Cancelar</button>
-        <button (click)="guardarVacante()" class="btn-primary" [disabled]="loading()">
-          <span *ngIf="loading()" class="loading-spinner"></span>
-          <span *ngIf="!loading()">{{
-            editingVacante() ? 'Actualizar Vacante' : 'Crear Vacante'
-          }}</span>
+        <button class="btn-secondary" (click)="closeModal()">Cancelar</button>
+        <button class="btn-primary" (click)="guardarVacante()" [disabled]="loading()">
+          Guardar
+          <span *ngIf="loading()" class="loading-spinner" style="margin-left: 0.5rem"></span>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Drawer Chat (postulante) -->
+  <!-- ======= CHAT DRAWER (postulante) ======= -->
   <div class="chat-overlay" *ngIf="chatOpen()" (click)="closeChat()"></div>
-  <div class="chat-drawer" [class.open]="chatOpen()">
+  <aside class="chat-drawer" [class.open]="chatOpen()">
     <div class="chat-header">
       <div class="chat-title">
-        <strong>Chat de postulación</strong>
-        <span *ngIf="chatVacante()"> • {{ chatVacante()?.puesto }}</span>
+        <strong>Entrevista IA</strong>
+        <div *ngIf="chatVacante()">— {{ chatVacante()?.puesto }}</div>
       </div>
-      <button class="btn-icon-only" (click)="closeChat()">✕</button>
+      <button class="btn-close" (click)="closeChat()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M6 6l12 12M18 6L6 18"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+      </button>
     </div>
 
     <div class="chat-body" #chatScroll>
       <div
         *ngFor="let m of chatMessages()"
-        [class]="m.from === 'user' ? 'bubble bubble-user' : 'bubble bubble-bot'"
+        [ngClass]="m.from === 'user' ? 'bubble bubble-user' : 'bubble bubble-bot'"
       >
-        <div class="bubble-text">{{ m.text }}</div>
+        <div>{{ m.text }}</div>
         <div class="bubble-time">{{ m.time }}</div>
       </div>
     </div>
 
     <form class="chat-input" (submit)="sendMessage($event)">
       <input
-        type="text"
+        class="form-input"
+        placeholder="Escribe tu respuesta..."
         [(ngModel)]="chatDraft"
         name="chatDraft"
-        placeholder="Escribe tu mensaje..."
-        class="form-input"
       />
       <button class="btn-primary" type="submit">Enviar</button>
     </form>
-  </div>
+  </aside>
 </div>
