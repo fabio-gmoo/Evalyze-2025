@@ -1,0 +1,7 @@
+﻿{
+  "files.exclude": {
+    "**/.venv": true,              // oculta .venv en cualquier subcarpeta (ej: ai-service/.venv)
+    "**/__pycache__": true,
+    "**/node_modules": true
+  }
+}
