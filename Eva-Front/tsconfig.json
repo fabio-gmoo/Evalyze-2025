@@ -1,20 +1,27 @@
-/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
-/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
 {
   "compileOnSave": false,
   "compilerOptions": {
     "strict": true,
+    "baseUrl": "./",
     "paths": {
-      "@pages/*": ["./src/app/pages/*"],
-      "@components/*": ["./src/app/components/*"],
-      "@widgets/*": ["./src/app/components/widgets/*"],
-      "@interfaces/*": ["./src/app/interfaces/*"],
-      "@environment": ["./src/app/environments/environment"],
-      "@environments/*": ["./src/environments/*"],
-      "@services/*": ["./src/app/services/*"],
-      "@assets/*": ["./src/assets/*"],
-      "@shared/*": ["./src/app/shared/*"]
+      "@pages/*":        ["src/app/pages/*"],
+      "@components/*":   ["src/app/components/*"],
+      "@widgets/*":      ["src/app/components/widgets/*"],
+      "@interfaces/*":   ["src/app/interfaces/*"],
+      "@environment":    ["src/app/environments/environment"],
+      "@environments/*": ["src/app/environments/*"],
+
+      /* === NUEVO: alias para /core === */
+      "@core/*":              ["src/app/core/*"],
+      "@core/services/*":     ["src/app/core/services/*"],
+
+      /* (si quieres mantener @services como sinónimo de @core/services) */
+      "@services/*":          ["src/app/core/services/*"],
+
+      "@assets/*":       ["src/assets/*"],
+      "@shared/*":       ["src/app/shared/*"]
     },
+
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
@@ -24,7 +31,10 @@
     "experimentalDecorators": true,
     "importHelpers": true,
     "target": "ES2022",
-    "module": "preserve"
+    "module": "preserve",
+
+    /* Evita los ts2571 si tienes algún catch sin tipar en el proyecto */
+    "useUnknownInCatchVariables": false
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
@@ -35,11 +45,7 @@
   },
   "files": [],
   "references": [
-    {
-      "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
-    }
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.spec.json" }
   ]
 }
