@@ -6,61 +6,42 @@ import { environment } from '@environment';
 import { Vacancy } from '@interfaces/vacancy';
 import { map } from 'rxjs/operators';
 
-/** ============
- *  Backend types (Django)
- *  ============ */
 type BackendVacante = {
   id: number;
   puesto: string;
   descripcion: string;
   requisitos?: string | string[];
-  ubicacion: string; // "Ciudad, País"
-  salario?: string | null; // "45000 - 65000" | "A convenir" | null
+  ubicacion: string;                 // "Ciudad, País"
+  salario?: string | null;           // "45000 - 65000" | "A convenir" | null
   tipo_contrato?: string | null;
   activa: boolean;
   departamento?: string;
 };
 
-/** ============
- *  Helpers parse/compose
- *  ============ */
 function parseUbicacion(ubicacion: string | undefined) {
   if (!ubicacion) return { city: '', country: '' };
   const [city, ...rest] = ubicacion.split(',');
   return { city: city?.trim() || '', country: rest.join(',').trim() || '' };
 }
-
 function parseSalario(s: string | null | undefined) {
   if (!s) return { salaryMin: undefined, salaryMax: undefined, currency: undefined };
   const match = s.match(/(\d+)\s*-\s*(\d+)/);
   if (!match) return { salaryMin: undefined, salaryMax: undefined, currency: undefined };
   return { salaryMin: Number(match[1]), salaryMax: Number(match[2]), currency: 'EUR' as const };
 }
-
 function composeSalario(min?: number, max?: number) {
   if (typeof min === 'number' && typeof max === 'number') return `${min} - ${max}`;
   return 'A convenir';
 }
-
 function requisitosToArray(requisitos: BackendVacante['requisitos']): string[] {
   if (!requisitos) return [];
   if (Array.isArray(requisitos)) return requisitos;
-  return requisitos
-    .split('\n')
-    .map((r) => r.trim())
-    .filter(Boolean);
+  return requisitos.split('\n').map((r) => r.trim()).filter(Boolean);
 }
-
 function requisitosToText(arr?: string[]): string {
-  return (arr ?? [])
-    .map((r) => r.trim())
-    .filter(Boolean)
-    .join('\n');
+  return (arr ?? []).map((r) => r.trim()).filter(Boolean).join('\n');
 }
 
-/** ============
- *  Mapper API → UI
- *  ============ */
 function mapFromApi(v: BackendVacante): Vacancy & {
   descripcion: string;
   requisitos: string[];
@@ -83,17 +64,13 @@ function mapFromApi(v: BackendVacante): Vacancy & {
     publishedAt: undefined,
     closesAt: undefined,
     status: v.activa ? 'active' : 'closed',
-
-    // extras para el formulario
     descripcion: v.descripcion,
     requisitos: requisitosToArray(v.requisitos),
     tipo_contrato: v.tipo_contrato,
   };
 }
 
-/** ============
- *  Mapper UI → API
- *  ============ */
+/** ============ Mapper UI → API ============ */
 function mapToApi(
   payload: Partial<Vacancy> & {
     descripcion?: string;
@@ -103,7 +80,6 @@ function mapToApi(
 ): Partial<BackendVacante> {
   const ubicacion =
     [payload.city, payload.country].filter(Boolean).join(', ') || payload.city || '';
-
   return {
     id: payload.id!,
     puesto: payload.title ?? '',
@@ -124,6 +100,11 @@ export class Vacancies {
 
   listAll(): Observable<Vacancy[]> {
     return this.http.get<BackendVacante[]>(`${this.base}/`).pipe(map((arr) => arr.map(mapFromApi)));
+  }
+
+  /** Vacantes públicas activas (para postulante) */
+  listActive(): Observable<Vacancy[]> {
+    return this.listAll().pipe(map((list) => list.filter((v) => v.status === 'active')));
   }
 
   listMine(): Observable<Vacancy[]> {
@@ -192,7 +173,8 @@ export class Vacancies {
     responsabilidades: string[];
     preguntas: any[];
   }> {
-    return this.http.post<any>(`${this.base}/generateai/`, { puesto: title });
+    // ¡Ojo! El endpoint correcto es "generate-ai" (con guion), igual al backend.
+    return this.http.post<any>(`${this.base}/generate-ai/`, { puesto: title });
   }
 
   duplicate(id: number): Observable<Vacancy> {

@@ -17,14 +17,16 @@
         </svg>
       </div>
       <div>
-        <h1>Bienvenido, Usuario Empresa</h1>
-        <p>Panel de control para gestionar tu proceso de reclutamiento inteligente</p>
+        <h1 *ngIf="viewMode() === 'company'">Bienvenido, Usuario Empresa</h1>
+        <h1 *ngIf="viewMode() === 'candidate'">Vacantes disponibles</h1>
+        <p *ngIf="viewMode() === 'company'">Panel de control para gestionar tu proceso de reclutamiento inteligente</p>
+        <p *ngIf="viewMode() === 'candidate'">Explora oportunidades y postula conversando por chat</p>
       </div>
     </div>
   </div>
 
-  <!-- Stats Cards -->
-  <div class="stats-grid">
+  <!-- Stats Cards (solo empresa) -->
+  <div class="stats-grid" *ngIf="viewMode() === 'company'">
     <div *ngFor="let stat of stats()" [class]="'stat-card stat-' + stat.color">
       <h3>{{ stat.title }}</h3>
       <div class="stat-value">{{ stat.value }}</div>
@@ -35,6 +37,9 @@
   <!-- Tabs -->
   <div class="tabs">
     <button
+  <!-- Tabs (solo empresa, placeholder futuro) -->
+  <div class="tabs" *ngIf="viewMode() === 'company'">
+    <button 
       *ngFor="let tab of tabs"
       [class.active]="activeTab() === tab.id"
       (click)="setActiveTab(tab.id)"
@@ -47,8 +52,10 @@
   <!-- Vacantes Section -->
   <div class="section-header">
     <div>
-      <h2>Gestión de Vacantes</h2>
-      <p>Crea y administra las posiciones abiertas con configuración de IA personalizada</p>
+      <h2 *ngIf="viewMode() === 'company'">Gestión de Vacantes</h2>
+      <h2 *ngIf="viewMode() === 'candidate'">Vacantes</h2>
+      <p *ngIf="viewMode() === 'company'">Crea y administra las posiciones abiertas con configuración de IA personalizada</p>
+      <p *ngIf="viewMode() === 'candidate'">Encuentra el puesto ideal y conversa por chat antes de postular</p>
     </div>
     <button class="btn-primary" (click)="openModal(null)">
       <svg
@@ -59,6 +66,9 @@
         stroke="currentColor"
         stroke-width="2"
       >
+
+    <button class="btn-primary" (click)="openModal(null)" *ngIf="viewMode() === 'company'">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="12" y1="5" x2="12" y2="19"></line>
         <line x1="5" y1="12" x2="19" y2="12"></line>
       </svg>
@@ -98,6 +108,12 @@
           stroke="currentColor"
           stroke-width="2"
         >
+      <h3 *ngIf="viewMode() === 'company'">No hay vacantes activas</h3>
+      <h3 *ngIf="viewMode() === 'candidate'">No hay vacantes publicadas</h3>
+      <p *ngIf="viewMode() === 'company'">Comienza creando tu primera vacante para atraer candidatos</p>
+      <p *ngIf="viewMode() === 'candidate'">Vuelve más tarde o intenta con otro término</p>
+      <button class="btn-primary" (click)="openModal(null)" *ngIf="viewMode() === 'company'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
@@ -112,7 +128,9 @@
           <h3>{{ vacante.puesto }}</h3>
           <span class="badge-active" *ngIf="vacante.activa">Activa</span>
         </div>
-        <div class="vacante-actions">
+
+        <!-- Acciones para empresa -->
+        <div class="vacante-actions" *ngIf="viewMode() === 'company'">
           <button class="btn-icon" title="Ver Detalles">
             <svg
               width="20"
@@ -156,6 +174,16 @@
             </svg>
           </button>
         </div>
+
+        <!-- Acción para postulante -->
+        <div class="vacante-actions" *ngIf="viewMode() === 'candidate'">
+          <button class="btn-primary" (click)="openChat(vacante)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
+            </svg>
+            Aplicar por chat
+          </button>
+        </div>
       </div>
 
       <div class="vacante-info-grid">
@@ -168,6 +196,8 @@
             stroke="currentColor"
             stroke-width="2"
           >
+        <div class="info-item" *ngIf="vacante.departamento">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
             <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
           </svg>
@@ -196,6 +226,8 @@
             stroke="currentColor"
             stroke-width="2"
           >
+        <div class="info-item" *ngIf="vacante.salario">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="12" y1="1" x2="12" y2="23"></line>
             <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
           </svg>
@@ -210,12 +242,16 @@
             stroke="currentColor"
             stroke-width="2"
           >
+
+        <!-- Solo empresa: KPIs mock -->
+        <div class="info-item" *ngIf="viewMode() === 'company'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
             <circle cx="9" cy="7" r="4"></circle>
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
           </svg>
-          {{ vacante.candidatos }} candidatos
+          {{ vacante.candidatos || 0 }} candidatos
         </div>
         <div class="info-item">
           <svg
@@ -226,6 +262,8 @@
             stroke="currentColor"
             stroke-width="2"
           >
+        <div class="info-item" *ngIf="viewMode() === 'company'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>
             <polyline points="12 6 12 12 16 14"></polyline>
           </svg>
@@ -235,7 +273,7 @@
 
       <p class="vacante-description">{{ vacante.descripcion }}</p>
 
-      <div class="vacante-footer">
+      <div class="vacante-footer" *ngIf="viewMode() === 'company'">
         <span>Publicada: {{ vacante.publicada }}</span>
         <span>Cierra: {{ vacante.cierra }}</span>
         <span>{{ vacante.preguntasIA }} preguntas IA configuradas</span>
@@ -243,7 +281,7 @@
     </div>
   </div>
 
-  <!-- Modal -->
+  <!-- Modal (CRUD empresa) -->
   <div *ngIf="showModal()" class="modal-overlay" (click)="closeModal()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
@@ -592,3 +630,31 @@
   </div>
 </div>
 
+
+  <!-- Drawer Chat (postulante) -->
+  <div class="chat-overlay" *ngIf="chatOpen()" (click)="closeChat()"></div>
+  <div class="chat-drawer" [class.open]="chatOpen()">
+    <div class="chat-header">
+      <div class="chat-title">
+        <strong>Chat de postulación</strong>
+        <span *ngIf="chatVacante()"> • {{ chatVacante()?.puesto }}</span>
+      </div>
+      <button class="btn-icon-only" (click)="closeChat()">
+        ✕
+      </button>
+    </div>
+
+    <div class="chat-body" #chatScroll>
+      <div *ngFor="let m of chatMessages()"
+           [class]="m.from === 'user' ? 'bubble bubble-user' : 'bubble bubble-bot'">
+        <div class="bubble-text">{{ m.text }}</div>
+        <div class="bubble-time">{{ m.time }}</div>
+      </div>
+    </div>
+
+    <form class="chat-input" (submit)="sendMessage($event)">
+      <input type="text" [(ngModel)]="chatDraft" name="chatDraft" placeholder="Escribe tu mensaje..." class="form-input">
+      <button class="btn-primary" type="submit">Enviar</button>
+    </form>
+  </div>
+</div>
