@@ -8,5 +8,7 @@ import { Vacancy } from '@interfaces/vacancy';
   styleUrl: './vacancy-card.scss',
 })
 export class VacancyCard {
-  @Input({ required: true }) vacancy!: Vacancy;
+  vacante = input.required<VacanteUI>();
+  edit = output<VacanteUI>();
+  deleteClick = output<number>();
 }
