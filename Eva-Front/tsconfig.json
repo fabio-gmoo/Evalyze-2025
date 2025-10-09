@@ -1,7 +1,6 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "strict": true,
     "baseUrl": "./",
     "paths": {
       "@pages/*":        ["src/app/pages/*"],
@@ -11,29 +10,23 @@
       "@environment":    ["src/app/environments/environment"],
       "@environments/*": ["src/app/environments/*"],
 
-      /* === NUEVO: alias para /core === */
-      "@core/*":              ["src/app/core/*"],
-      "@core/services/*":     ["src/app/core/services/*"],
+      /* 👇 alias correcto para tus servicios reales */
+      "@services/*":     ["src/app/services/*"],
 
-      /* (si quieres mantener @services como sinónimo de @core/services) */
-      "@services/*":          ["src/app/core/services/*"],
+      /* opcional: solo si realmente usas /core en otros imports */
+      "@core/*":         ["src/app/core/*"],
 
       "@assets/*":       ["src/assets/*"],
       "@shared/*":       ["src/app/shared/*"]
     },
 
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
+    "strict": true,
     "skipLibCheck": true,
     "isolatedModules": true,
-    "experimentalDecorators": true,
-    "importHelpers": true,
     "target": "ES2022",
     "module": "preserve",
 
-    /* Evita los ts2571 si tienes algún catch sin tipar en el proyecto */
+    /* Evita los “Object is of type 'unknown'” en catch */
     "useUnknownInCatchVariables": false
   },
   "angularCompilerOptions": {

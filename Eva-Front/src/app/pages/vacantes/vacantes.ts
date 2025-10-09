@@ -2,7 +2,11 @@ import { Component, OnInit, inject, signal, ViewChild, ElementRef } from '@angul
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Vacancies } from '@core/services/vacancies';
+// Update the import path below if the service is located elsewhere, for example:
+import { Vacancies } from '../../services/vacancies';
+// Or, if the correct path is different, adjust accordingly:
+// import { Vacancies } from '../../../core/services/vacancies';
+// import { Vacancies } from 'src/app/core/services/vacancies';
 import { Vacancy } from '@interfaces/vacancy';
 
 
