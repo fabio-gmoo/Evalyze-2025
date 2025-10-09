@@ -1,14 +1,15 @@
+// src/app/pages/vacantes/vacantes.ts
 import { Component, OnInit, inject, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-// Update the import path below if the service is located elsewhere, for example:
-import { Vacancies } from '../../services/vacancies';
-// Or, if the correct path is different, adjust accordingly:
-// import { Vacancies } from '../../../core/services/vacancies';
-// import { Vacancies } from 'src/app/core/services/vacancies';
-import { Vacancy } from '@interfaces/vacancy';
 
+// Ajusta el import al servicio según tu estructura:
+import { Vacancies } from '../../services/vacancies';
+// Si en algún momento mueves el servicio a core, cambia por:
+// import { Vacancies } from '../../core/services/vacancies';
+
+import { Vacancy } from '@interfaces/vacancy';
 
 /** ====== Tipos locales ====== */
 interface Pregunta {
@@ -375,6 +376,28 @@ export class Vacantes implements OnInit {
         }
       });
     }
+  }
+
+  /** ====== Preguntas: helpers para el template ====== */
+  trackByPregunta = (_: number, item: Pregunta) => item.id;
+
+  addPregunta(): void {
+    const list = this.preguntas();
+    const nextId = (list.at(-1)?.id ?? 0) + 1;
+    this.preguntas.set([
+      ...list,
+      { id: nextId, pregunta: '', tipo: 'Técnica', peso: 20, palabrasClave: '' }
+    ]);
+  }
+
+  removePregunta(index: number): void {
+    const list = this.preguntas();
+    this.preguntas.set(list.filter((_, i) => i !== index));
+  }
+
+  updatePregunta(index: number, patch: Partial<Pregunta>): void {
+    const updated = this.preguntas().map((q, i) => (i === index ? { ...q, ...patch } : q));
+    this.preguntas.set(updated);
   }
 
   /** ===== Chat (postulante) ===== */
