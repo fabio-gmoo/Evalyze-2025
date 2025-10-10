@@ -107,3 +107,50 @@ class VacanteViewSet(viewsets.ModelViewSet):
             return Response(
                 {"detail": f"Error de FastAPI: {e.response.text}"}, status=502
             )
+
+    @action(detail=False, methods=["post"], url_path="save")
+    def create_vacante(self, request):
+        # Recibe los datos del request
+        puesto = request.data.get("puesto")
+        descripcion = request.data.get("descripcion")
+        requisitos = request.data.get("requisitos")
+        ubicacion = request.data.get("place")
+        status = request.data.get("status")
+        salariomin = request.data.get("salarioMin")
+        salariomax = request.data.get("salarioMax")
+        tipo_contrato = request.data.get("tipo_contrato")
+        departamento = request.data.get("departamento")
+
+        # Valida que los campos requeridos estén presentes
+        if not puesto:
+            return Response({"detail": "El campo 'puesto' es obligatorio."}, status=400)
+        if not descripcion:
+            return Response(
+                {"detail": "El campo 'descripcion' es obligatorio."}, status=400
+            )
+
+        # Crea la nueva vacante
+        user = getattr(request, "user", None)
+        if user and user.is_authenticated:
+            created_by = user
+        else:
+            created_by = None
+
+        vacante = Vacante.objects.create(
+            puesto=puesto,
+            descripcion=descripcion,
+            requisitos=requisitos,
+            ubicacion=ubicacion,
+            status=status,
+            salariomin=salariomin,
+            salariomax=salariomax,
+            tipo_contrato=tipo_contrato,
+            departamento=departamento,
+            created_by=created_by,
+            activa=True,  # Por defecto activa la vacante
+        )
+
+        # Devuelve la respuesta con los datos de la vacante creada
+        return Response(
+            self.get_serializer(vacante).data, status=status.HTTP_201_CREATED
+        )

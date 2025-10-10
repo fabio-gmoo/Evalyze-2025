@@ -188,4 +188,8 @@ export class Vacancies {
       .post<BackendVacante>(`${this.base}/${id}/duplicate/`, {})
       .pipe(map(mapFromApi));
   }
+
+  save(payload: Partial<Vacancy>): Observable<Vacancy> {
+    return this.http.post<any>(`${this.base}/save`, { payload });
+  }
 }
