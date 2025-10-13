@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, status  # type: ignore
+from rest_framework import viewsets, permissions, status as http_status  # type: ignore
 from rest_framework.decorators import action  # type: ignore
 from rest_framework.response import Response  # type: ignore
 from .models import Vacante
@@ -67,7 +67,9 @@ class VacanteViewSet(viewsets.ModelViewSet):
             departamento=src.departamento,
             created_by=src.created_by,
         )
-        return Response(self.get_serializer(dup).data, status=status.HTTP_201_CREATED)
+        return Response(
+            self.get_serializer(dup).data, status=http_status.HTTP_201_CREATED
+        )
 
     @action(detail=False, methods=["post"], url_path="generate-ai")
     def generate_ai(self, request):
@@ -115,42 +117,53 @@ class VacanteViewSet(viewsets.ModelViewSet):
         descripcion = request.data.get("descripcion")
         requisitos = request.data.get("requisitos")
         ubicacion = request.data.get("place")
-        status = request.data.get("status")
+        vacancy_status = request.data.get("status", "active")
         salariomin = request.data.get("salarioMin")
         salariomax = request.data.get("salarioMax")
-        tipo_contrato = request.data.get("tipo_contrato")
-        departamento = request.data.get("departamento")
+        tipo_contrato = request.data.get("tipo_contrato", "")
+        departamento = request.data.get("departamento", "")
 
-        # Valida que los campos requeridos estén presentes
+        # Validaciones básicas
         if not puesto:
-            return Response({"detail": "El campo 'puesto' es obligatorio."}, status=400)
+            return Response(
+                {"detail": "El campo 'puesto' es obligatorio."},
+                status=http_status.HTTP_400_BAD_REQUEST,
+            )
         if not descripcion:
             return Response(
-                {"detail": "El campo 'descripcion' es obligatorio."}, status=400
+                {"detail": "El campo 'descripcion' es obligatorio."},
+                status=http_status.HTTP_400_BAD_REQUEST,
             )
 
-        # Crea la nueva vacante
-        user = getattr(request, "user", None)
-        if user and user.is_authenticated:
-            created_by = user
-        else:
-            created_by = None
+        # Usuario autenticado
+        user = request.user if hasattr(request, "user") else None
+        created_by = user if getattr(user, "is_authenticated", False) else None
 
-        vacante = Vacante.objects.create(
-            puesto=puesto,
-            descripcion=descripcion,
-            requisitos=requisitos,
-            ubicacion=ubicacion,
-            status=status,
-            salariomin=salariomin,
-            salariomax=salariomax,
-            tipo_contrato=tipo_contrato,
-            departamento=departamento,
-            created_by=created_by,
-            activa=True,  # Por defecto activa la vacante
-        )
+        # Convertir requisitos si viene como lista
+        if isinstance(requisitos, list):
+            requisitos = "\n".join(requisitos)
 
-        # Devuelve la respuesta con los datos de la vacante creada
-        return Response(
-            self.get_serializer(vacante).data, status=status.HTTP_201_CREATED
-        )
+        try:
+            vacante = Vacante.objects.create(
+                puesto=puesto,
+                descripcion=descripcion,
+                requisitos=requisitos,
+                ubicacion=ubicacion,
+                salariomin=salariomin,
+                salariomax=salariomax,
+                tipo_contrato=tipo_contrato,
+                departamento=departamento,
+                created_by=created_by,
+                # Convertir status a booleano
+                activa=(vacancy_status == "active"),
+            )
+
+            return Response(
+                self.get_serializer(vacante).data,
+                status=http_status.HTTP_201_CREATED,  # ✅ Ahora usa http_status
+            )
+        except Exception as e:
+            return Response(
+                {"detail": f"Error al crear vacante: {str(e)}"},
+                status=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

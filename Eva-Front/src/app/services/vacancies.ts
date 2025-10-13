@@ -190,6 +190,6 @@ export class Vacancies {
   }
 
   save(payload: Partial<Vacancy>): Observable<Vacancy> {
-    return this.http.post<any>(`${this.base}/save`, { payload });
+    return this.http.post<any>(`${this.base}/save`, payload);
   }
 }
