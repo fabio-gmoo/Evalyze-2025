@@ -15,9 +15,20 @@ app.add_middleware(
     allow_origins=['http://localhost:4200','http://127.0.0.1:4200'],
     allow_credentials=True, allow_methods=['*'], allow_headers=['*'],
 )
+first = chat_once(
+    f"<system>{system}</system>\n"
+    f"<user>Inicia la conversación con un saludo breve y preséntate como 'Evalyze Assistant'.</user>\n"
+    f"<assistant>",
+    model=req.model
+)
 
 SESSIONS: Dict[str, List[Tuple[str, str]]] = {}
-SYSTEM = 'Eres un asistente para entrevistas/exámenes. Sé claro y conciso. Responde en español.'
+SYSTEM = (
+    "Eres **Evalyze Assistant**, el asistente oficial de la plataforma Evalyze. "
+    "Preséntate como 'Evalyze Assistant' al iniciar. "
+    "Ayudas a crear y revisar entrevistas/exámenes técnicos. "
+    "Sé claro, profesional y breve. Responde en español."
+)
 DEFAULT_CHAT_MODEL = 'examiner'
 DEFAULT_EXAM_MODEL = 'examiner'
 
