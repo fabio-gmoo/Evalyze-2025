@@ -3,9 +3,14 @@
     <div class="logo">🤖</div>
     <div class="name">Evalyze</div>
   </div>
+
   @if (mode() === 'login') {
-    <app-login (signupClick)="switchTo('signup')" (loginSuccess)="onLoginSuccess()"> </app-login>
+    <app-login
+  (signupClick)="switchTo('signup')"
+  (loginSuccess)="onLoginSuccess()">
+</app-login>
+
   } @else {
-    <app-register (loginClick)="switchTo('login')"> </app-register>
+    <app-register (loginClick)="switchTo('login')"></app-register>
   }
 </section>

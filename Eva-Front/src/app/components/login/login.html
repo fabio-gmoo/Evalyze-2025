@@ -5,7 +5,10 @@
   <h3 class="card-title">Iniciar Sesión</h3>
   <p class="card-sub">Ingresa tus credenciales para acceder a tu dashboard</p>
 
-  <app-loginform />
+  <!-- ✅ Propaga el rol hacia arriba -->
+  <app-loginform
+    (loginSuccess)="loginSuccess.emit($event)">
+  </app-loginform>
 
   <p class="swap">
     ¿No tienes cuenta?

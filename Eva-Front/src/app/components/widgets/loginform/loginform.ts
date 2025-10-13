@@ -6,18 +6,19 @@ import {
   NonNullableFormBuilder,
 } from '@angular/forms';
 import { Auth } from '@services/auth';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
 type Role = 'company' | 'candidate';
 
 @Component({
   selector: 'app-loginform',
+  standalone: true,
   imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './loginform.html',
   styleUrl: './loginform.scss',
 })
 export class Loginform {
-  @Output() loginSuccess = new EventEmitter<void>();
+  @Output() loginSuccess = new EventEmitter<Role>();
 
   show = signal(false);
   loading = signal(false);
@@ -25,7 +26,6 @@ export class Loginform {
 
   private fb: NonNullableFormBuilder = inject(FormBuilder).nonNullable;
   private auth = inject(Auth);
-  private router = inject(Router);
 
   form = this.fb.group({
     email: this.fb.control('', { validators: [Validators.required, Validators.email] }),
@@ -36,13 +36,8 @@ export class Loginform {
 
   disabled = computed(() => this.loading() || this.form.invalid);
 
-  toggleShow() {
-    this.show.set(!this.show());
-  }
-
-  setRole(r: Role) {
-    this.form.controls.role.setValue(r);
-  }
+  toggleShow() { this.show.set(!this.show()); }
+  setRole(r: Role) { this.form.controls.role.setValue(r); }
 
   submit() {
     if (this.loading() || this.form.invalid) return;
@@ -50,35 +45,27 @@ export class Loginform {
     this.loading.set(true);
     this.errorMsg.set(null);
 
-    const { email, password, role } = this.form.getRawValue(); // ← Incluir role
+    const { email, password, role, remember } = this.form.getRawValue();
 
     this.auth.login({ email, password, role }).subscribe({
-      next: (user) => {
-        console.log('Login exitoso, usuario:', user);
-        this.loginSuccess.emit();
-        this.router.navigate(['/vacantes']);
+      next: (_user) => {
+        try {
+          const storage = remember ? localStorage : sessionStorage;
+          storage.setItem('role', role!);
+          sessionStorage.setItem('justLoggedIn', '1'); // <- bandera anti-bloqueo guard
+        } catch {}
+
+        this.loginSuccess.emit(role!);
       },
       error: (err) => {
-        console.error('Error en login:', err);
-
-        // Extraer el mensaje de error
-        let errorMessage = 'No se pudo iniciar sesión';
-
-        if (err?.error?.role) {
-          // Error de validación de rol
-          errorMessage = err.error.role;
-        } else if (err?.error?.detail) {
-          errorMessage = err.error.detail;
-        } else if (err?.error?.non_field_errors) {
-          errorMessage = err.error.non_field_errors[0];
-        }
-
-        this.errorMsg.set(errorMessage);
+        let msg = 'No se pudo iniciar sesión';
+        if (err?.error?.role) msg = err.error.role;
+        else if (err?.error?.detail) msg = err.error.detail;
+        else if (err?.error?.non_field_errors) msg = err.error.non_field_errors[0];
+        this.errorMsg.set(msg);
         this.loading.set(false);
       },
-      complete: () => {
-        this.loading.set(false);
-      },
+      complete: () => this.loading.set(false),
     });
   }
 }

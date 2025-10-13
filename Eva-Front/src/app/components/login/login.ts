@@ -1,6 +1,8 @@
 import { Component, output } from '@angular/core';
 import { Loginform } from '@widgets/loginform/loginform';
 
+type Role = 'company' | 'candidate';
+
 @Component({
   selector: 'app-login',
   imports: [Loginform],
@@ -9,8 +11,11 @@ import { Loginform } from '@widgets/loginform/loginform';
 })
 export class Login {
   signupClick = output<void>();
-  loginSuccess = output<void>(); // ✅ Agregar output para propagar el éxito
+  // puede emitir con o sin rol; soporta ambos
+  loginSuccess = output<void | Role>();
 
+  // ya no esperamos $event; si algún día el widget emite rol, puedes
+  // volver a aceptar un parámetro opcional: onLoginSuccess(role?: Role)
   onLoginSuccess() {
     this.loginSuccess.emit();
   }

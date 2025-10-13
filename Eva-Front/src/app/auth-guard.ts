@@ -1,18 +1,27 @@
-import { CanActivateFn } from '@angular/router';
 import { inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { TokenStorage } from '@services/token-storage';
+import { CanActivateFn, Router } from '@angular/router';
 
-export const authGuard: CanActivateFn = (route, state) => {
-  const store = inject(TokenStorage);
+export const authGuard: CanActivateFn = () => {
   const router = inject(Router);
 
-  // Verifica si el usuario está autenticado (es decir, si existe un token de acceso)
-  if (store.access) {
-    return true; // El usuario está autenticado, permite el acceso
-  } else {
-    // Si el usuario no está autenticado, redirige a la página de login
-    router.navigate(['/auth']);
-    return false; // Bloquea el acceso a la ruta
-  }
+  // ✅ Permiso one-shot justo tras login para evitar condiciones de carrera
+  try {
+    const just = sessionStorage.getItem('justLoggedIn');
+    if (just === '1') {
+      sessionStorage.removeItem('justLoggedIn');
+      return true;
+    }
+  } catch {}
+
+  const token =
+    (typeof localStorage !== 'undefined' && localStorage.getItem('token')) ||
+    (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('token'));
+
+  // Si no hay token en storage, mira cookie httpOnly
+  const hasCookie =
+    typeof document !== 'undefined' && /\b(token|sid|session|auth)=/.test(document.cookie || '');
+
+  if (token || hasCookie) return true;
+
+  return router.createUrlTree(['/auth']);
 };
