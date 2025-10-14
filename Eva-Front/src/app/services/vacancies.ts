@@ -11,28 +11,43 @@ type BackendVacante = {
   puesto: string;
   descripcion: string;
   requisitos?: string | string[];
-  ubicacion: string; // "Ciudad, País"
+  ubicacion?: string; // "Ciudad, País"
   salario?: string | null; // "45000 - 65000" | "A convenir" | null
+  // Si tu backend expone campos separados, los aceptamos también:
+  salariomin?: string | null;
+  salariomax?: string | null;
   tipo_contrato?: string | null;
   activa: boolean;
   departamento?: string;
 };
 
-function parseUbicacion(ubicacion: string | undefined) {
+function parseUbicacion(ubicacion: string | undefined | null) {
   if (!ubicacion) return { city: '', country: '' };
   const [city, ...rest] = ubicacion.split(',');
   return { city: city?.trim() || '', country: rest.join(',').trim() || '' };
 }
-function parseSalario(s: string | null | undefined) {
+
+function parseSalarioFromApi(obj: BackendVacante) {
+  // Si backend reporta separately, úsalos primero
+  if (obj.salariomin || obj.salariomax) {
+    const min = obj.salariomin ? Number(String(obj.salariomin).replace(/\D/g, '')) : undefined;
+    const max = obj.salariomax ? Number(String(obj.salariomax).replace(/\D/g, '')) : undefined;
+    return { salaryMin: min, salaryMax: max, currency: 'EUR' as const };
+  }
+  const s = obj.salario ?? undefined;
   if (!s) return { salaryMin: undefined, salaryMax: undefined, currency: undefined };
   const match = s.match(/(\d+)\s*-\s*(\d+)/);
   if (!match) return { salaryMin: undefined, salaryMax: undefined, currency: undefined };
   return { salaryMin: Number(match[1]), salaryMax: Number(match[2]), currency: 'EUR' as const };
 }
+
 function composeSalario(min?: number, max?: number) {
   if (typeof min === 'number' && typeof max === 'number') return `${min} - ${max}`;
+  if (typeof min === 'number' && !max) return `${min}`;
+  if (!min && typeof max === 'number') return `${max}`;
   return 'A convenir';
 }
+
 function requisitosToArray(requisitos: BackendVacante['requisitos']): string[] {
   if (!requisitos) return [];
   if (Array.isArray(requisitos)) return requisitos;
@@ -53,8 +68,9 @@ function mapFromApi(v: BackendVacante): Vacancy & {
   requisitos: string[];
   tipo_contrato?: string | null;
 } {
-  const { city, country } = parseUbicacion(v.ubicacion);
-  const { salaryMin, salaryMax, currency } = parseSalario(v.salario ?? undefined);
+  // Preferir ubicacion del objeto; si no viene, puede que frontend envíe city/country separados
+  const { city, country } = parseUbicacion(v.ubicacion ?? '');
+  const { salaryMin, salaryMax, currency } = parseSalarioFromApi(v);
   return {
     id: v.id,
     title: v.puesto,
@@ -84,10 +100,16 @@ function mapToApi(
     tipo_contrato?: string | null;
   },
 ): Partial<BackendVacante> {
+  // El frontend a veces usa city como "Ciudad, País". Lo respetamos.
   const ubicacion =
-    [payload.city, payload.country].filter(Boolean).join(', ') || payload.city || '';
-  return {
-    id: payload.id!,
+    // preferir si el caller ya construyó la cadena
+    (payload as any).ubicacion ||
+    [payload.city, payload.country].filter(Boolean).join(', ') ||
+    payload.city ||
+    '';
+
+  // Construimos el objeto base sin forzar `id` (evitamos id: undefined)
+  const base: Partial<BackendVacante> = {
     puesto: payload.title ?? '',
     descripcion: payload.descripcion ?? '',
     requisitos: requisitosToText(payload.requisitos),
@@ -97,6 +119,16 @@ function mapToApi(
     activa: payload.status ? payload.status === 'active' : true,
     departamento: payload.area ?? '',
   };
+
+  // Además, si vienen valores numericos separados, inclúyelos para compatibilidad con el backend
+  if (typeof payload.salaryMin === 'number') base.salariomin = String(payload.salaryMin);
+  if (typeof payload.salaryMax === 'number') base.salariomax = String(payload.salaryMax);
+
+  if (typeof (payload as any).id === 'number') {
+    (base as any).id = (payload as any).id;
+  }
+
+  return base;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -179,7 +211,7 @@ export class Vacancies {
     responsabilidades: string[];
     preguntas: any[];
   }> {
-    // ¡Ojo! El endpoint correcto es "generate-ai" (con guion), igual al backend.
+    // Endpoint: /jobs/generate-ai/
     return this.http.post<any>(`${this.base}/generate-ai/`, { puesto: title });
   }
 
@@ -189,7 +221,9 @@ export class Vacancies {
       .pipe(map(mapFromApi));
   }
 
+  // save -> usa la acción custom en Django: /jobs/save/
   save(payload: Partial<Vacancy>): Observable<Vacancy> {
-    return this.http.post<any>(`${this.base}/save`, payload);
+    const body = mapToApi(payload as any);
+    return this.http.post<BackendVacante>(`${this.base}/save/`, body).pipe(map(mapFromApi));
   }
 }

@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
 // Ajusta el import al servicio según tu estructura:
-import { Vacancies } from '../../services/vacancies';
+import { Vacancies } from '@services/vacancies';
 // Si en algún momento mueves el servicio a core, cambia por:
 // import { Vacancies } from '../../core/services/vacancies';
 
@@ -373,7 +373,7 @@ export class Vacantes implements OnInit {
       id: editing?.id, // Si existe, se actualiza, sino se crea
       title: form.puesto,
       area: form.departamento,
-      place: form.ubicacion,
+      city: form.ubicacion,
       salaryMin: form.salarioMin ? Number(form.salarioMin) : undefined,
       salaryMax: form.salarioMax ? Number(form.salarioMax) : undefined,
       status: 'active' as const, // Por defecto, la vacante está activa
@@ -417,7 +417,7 @@ export class Vacantes implements OnInit {
       });
     }
   }
-
+  trackByIndex = (_index: number, _item: any) => _index;
   /** ====== Preguntas: helpers para el template ====== */
   trackByPregunta = (_: number, item: Pregunta) => item.id;
 

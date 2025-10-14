@@ -5,6 +5,7 @@ from .models import Vacante
 from .serializers import VacanteSerializer
 import httpx  # type: ignore
 from asgiref.sync import async_to_sync  # type: ignore
+import traceback
 
 
 class VacanteViewSet(viewsets.ModelViewSet):
@@ -112,55 +113,26 @@ class VacanteViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"], url_path="save")
     def create_vacante(self, request):
-        # Recibe los datos del request
-        puesto = request.data.get("puesto")
-        descripcion = request.data.get("descripcion")
-        requisitos = request.data.get("requisitos")
-        ubicacion = request.data.get("place")
-        vacancy_status = request.data.get("status", "active")
-        salariomin = request.data.get("salarioMin")
-        salariomax = request.data.get("salarioMax")
-        tipo_contrato = request.data.get("tipo_contrato", "")
-        departamento = request.data.get("departamento", "")
+        # Permitimos que el serializer maneje validación y conversiones
+        data = dict(request.data)
+        # Alias: permitir que el frontend envíe 'place' en vez de 'ubicacion'
+        if "place" in data and "ubicacion" not in data:
+            data["ubicacion"] = data.pop("place")
 
-        # Validaciones básicas
-        if not puesto:
-            return Response(
-                {"detail": "El campo 'puesto' es obligatorio."},
-                status=http_status.HTTP_400_BAD_REQUEST,
-            )
-        if not descripcion:
-            return Response(
-                {"detail": "El campo 'descripcion' es obligatorio."},
-                status=http_status.HTTP_400_BAD_REQUEST,
-            )
+        serializer = self.get_serializer(data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=http_status.HTTP_400_BAD_REQUEST)
 
-        # Usuario autenticado
-        user = request.user if hasattr(request, "user") else None
-        created_by = user if getattr(user, "is_authenticated", False) else None
-
-        # Convertir requisitos si viene como lista
-        if isinstance(requisitos, list):
-            requisitos = "\n".join(requisitos)
-
+        user = (
+            request.user
+            if hasattr(request, "user")
+            and getattr(request.user, "is_authenticated", False)
+            else None
+        )
         try:
-            vacante = Vacante.objects.create(
-                puesto=puesto,
-                descripcion=descripcion,
-                requisitos=requisitos,
-                ubicacion=ubicacion,
-                salariomin=salariomin,
-                salariomax=salariomax,
-                tipo_contrato=tipo_contrato,
-                departamento=departamento,
-                created_by=created_by,
-                # Convertir status a booleano
-                activa=(vacancy_status == "active"),
-            )
-
+            obj = serializer.save(created_by=user)
             return Response(
-                self.get_serializer(vacante).data,
-                status=http_status.HTTP_201_CREATED,  # ✅ Ahora usa http_status
+                self.get_serializer(obj).data, status=http_status.HTTP_201_CREATED
             )
         except Exception as e:
             return Response(
