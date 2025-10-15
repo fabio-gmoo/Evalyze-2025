@@ -349,7 +349,20 @@ export class Vacantes implements OnInit {
       error: (error: HttpErrorResponse) => {
         console.error('Error generando con IA:', error);
         this.loading.set(false);
-        alert('Error al generar contenido con IA');
+
+        // Intentar extraer el mensaje de detalle del error del backend
+        let msg = 'Error al generar contenido con IA';
+        if (error.error) {
+          // Si el backend devolvió un objeto con `detail`, usarlo
+          if (typeof error.error === 'object' && 'detail' in error.error) {
+            msg = (error.error as any).detail;
+          } else if (typeof error.error === 'string') {
+            // Si devolvió string plano
+            msg = error.error;
+          }
+        }
+
+        alert(msg);
       },
     });
   }
@@ -417,7 +430,9 @@ export class Vacantes implements OnInit {
       });
     }
   }
+
   trackByIndex = (_index: number, _item: any) => _index;
+
   /** ====== Preguntas: helpers para el template ====== */
   trackByPregunta = (_: number, item: Pregunta) => item.id;
 
@@ -446,20 +461,22 @@ export class Vacantes implements OnInit {
     this.chatMessages.set([
       {
         from: 'bot',
-        text: `¡Hola! Bienvenido a tu entrevista para “${v.puesto}”. Te haré 4 preguntas. ¿Listo para comenzar?`,
+        text: `¡Hola! Bienvenido a tu entrevista para "${v.puesto}". Te haré 4 preguntas. ¿Listo para comenzar?`,
         time: this.timeNow(),
       },
     ]);
     this.chatOpen.set(true);
     setTimeout(() => this.scrollChatBottom(), 0);
   }
+
   closeChat(): void {
     this.chatOpen.set(false);
     this.chatVacante.set(null);
     this.chatMessages.set([]);
     this.chatDraft = '';
   }
-  sendMessage(ev: Event) {
+
+  sendMessage(ev: Event): void {
     ev.preventDefault();
     const msg = (this.chatDraft || '').trim();
     if (!msg) return;
@@ -476,10 +493,12 @@ export class Vacantes implements OnInit {
     }, 450);
     this.scrollChatBottom();
   }
+
   private timeNow(): string {
     return new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   }
-  private scrollChatBottom() {
+
+  private scrollChatBottom(): void {
     try {
       this.chatScroll?.nativeElement.scrollTo({
         top: this.chatScroll.nativeElement.scrollHeight,

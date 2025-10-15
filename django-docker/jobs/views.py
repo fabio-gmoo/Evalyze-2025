@@ -72,11 +72,70 @@ class VacanteViewSet(viewsets.ModelViewSet):
             self.get_serializer(dup).data, status=http_status.HTTP_201_CREATED
         )
 
+    BLOCKED_WORDS = {
+        "prostitución",
+        "prostituta",
+        "prostituto",
+        "pornografía",
+        "escort",
+        "narcotráfico",
+        "traficante",
+        "tráfico de drogas",
+        "drogas",
+        "lavado de dinero",
+        "terrorismo",
+        "terrorista",
+        "extorsión",
+        "corrupción",
+        "piratería",
+        "mercado negro",
+        "contrabando",
+        "secuestro",
+        "violencia sexual",
+        "trabajo forzado",
+        "esclavitud",
+        "explotación sexual",
+        "trata de personas",
+        "pedofilia",
+        "pornografía infantil",
+        "armas",
+        "venta de armas",
+        "contrabando de armas",
+        "venta ilegal",
+        "delito",
+        "ilegal",
+        "estafa",
+        "fraude",
+        "hackeo",
+        "piratería informática",
+        "narco",
+        "drogas",
+        "droga",
+    }
+
     @action(detail=False, methods=["post"], url_path="generate-ai")
     def generate_ai(self, request):
         title = (request.data or {}).get("puesto", "").strip()
         if not title:
             return Response({"detail": "Falta 'puesto'."}, status=400)
+
+        def contains_blocked(text: str) -> str | None:
+            """
+            Retorna la primera palabra bloqueada encontrada en `text`, o None si no hay ninguna.
+            """
+            lowercase = text.lower()
+            for w in self.BLOCKED_WORDS:
+                if w in lowercase:
+                    return w
+            return None
+
+        if (bad := contains_blocked(title)) is not None:
+            return Response(
+                {
+                    "detail": "Puesto no permitido, vuelva a intentarlo.",
+                },
+                status=http_status.HTTP_400_BAD_REQUEST,
+            )
 
         payload = {
             "puesto": title,

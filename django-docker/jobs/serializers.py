@@ -4,21 +4,18 @@ from .models import Vacante
 
 
 class VacanteSerializer(serializers.ModelSerializer):
-    # Exponemos requisitos como lista en la API
     requisitos = serializers.ListField(child=serializers.CharField(), allow_empty=True)
-    # Campo calculado para mantener compatibilidad con frontend: "45000 - 65000" | "A convenir"
     salario = serializers.SerializerMethodField()
 
     class Meta:
         model = Vacante
-        # Incluimos salariomin/salariomax como campos del modelo (si quieres que sean visibles, opcional).
         fields = [
             "id",
             "puesto",
             "descripcion",
             "requisitos",
             "ubicacion",
-            "salario",  # string compuesto que usa el frontend
+            "salario",
             "tipo_contrato",
             "activa",
             "departamento",
@@ -36,24 +33,22 @@ class VacanteSerializer(serializers.ModelSerializer):
             return str(obj.salariomax)
         return "A convenir"
 
-    # Acepta 'requisitos' como string multilínea o lista; y convierte 'salario' compuesto a campos separados.
     def to_internal_value(self, data):
-        data = dict(data)  # copia para no mutar original
+        data = dict(data)
 
-        # requisitos: permitir string multilínea
+        # Si requisitos viene como string (aunque idealmente no), permitirlo
         if "requisitos" in data and isinstance(data["requisitos"], str):
             data["requisitos"] = [
                 r.strip() for r in data["requisitos"].splitlines() if r.strip()
             ]
 
-        # aceptar 'salario' compuesto: "123 - 456" -> salariomin / salariomax
+        # Procesamiento de salario (igual que antes)
         sal = data.get("salario")
         if isinstance(sal, str) and "-" in sal:
             parts = [p.strip() for p in sal.split("-", 1)]
             data["salariomin"] = parts[0]
             data["salariomax"] = parts[1]
         else:
-            # también aceptar salarioMin / salarioMax (nombres que viene del front)
             if "salarioMin" in data:
                 data["salariomin"] = data.pop("salarioMin")
             if "salarioMax" in data:
@@ -61,18 +56,27 @@ class VacanteSerializer(serializers.ModelSerializer):
 
         return super().to_internal_value(data)
 
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        raw = getattr(instance, "requisitos", None)
+        # Si en el modelo requisitos es texto (string), convertir a lista
+        if isinstance(raw, str):
+            lines = [r.strip() for r in raw.splitlines() if r.strip()]
+            rep["requisitos"] = lines
+        # Si ya es lista (por ejemplo usando ArrayField), no tocar
+        return rep
+
     def create(self, validated_data):
-        # validated_data["requisitos"] -> list; guardar como texto
         req_list = validated_data.pop("requisitos", [])
+        # Si se envió lista, convertirla a string multilinea para almacenar
         if isinstance(req_list, list):
             validated_data["requisitos"] = "\n".join(req_list)
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         req_list = validated_data.pop("requisitos", None)
-        if req_list is not None:
+        if req_list is not None and isinstance(req_list, list):
             instance.requisitos = "\n".join(req_list)
-        # El resto lo maneja el update normal
         for k, v in validated_data.items():
             setattr(instance, k, v)
         instance.save()
