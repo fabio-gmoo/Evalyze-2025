@@ -1,0 +1,69 @@
+<!-- src/app/pages/vacantes/components/ai-questions/ai-questions.component.html -->
+<div class="form-group">
+  <div class="form-group-header">
+    <label>Preguntas</label>
+    <button class="btn-add-question" (click)="onAdd()" type="button">+ Añadir pregunta</button>
+  </div>
+
+  @for (p of preguntas; track trackByPregunta($index, p); let i = $index) {
+    <div class="pregunta-card">
+      <div class="pregunta-header">
+        <h4>Pregunta {{ i + 1 }}</h4>
+        <button class="btn-icon-only btn-delete" (click)="onRemove(i)" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M6 6l12 12M18 6L6 18"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div class="form-group">
+        <label>Enunciado</label>
+        <input
+          class="form-input"
+          [ngModel]="p.pregunta"
+          (ngModelChange)="onUpdate(i, { pregunta: $event })"
+          placeholder="Escribe la pregunta"
+        />
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Tipo</label>
+          <select
+            class="form-select"
+            [ngModel]="p.tipo"
+            (ngModelChange)="onUpdate(i, { tipo: $event })"
+          >
+            <option>Técnica</option>
+            <option>Conductual</option>
+            <option>Situacional</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Peso (%)</label>
+          <input
+            class="form-input"
+            type="number"
+            [ngModel]="p.peso"
+            (ngModelChange)="onUpdate(i, { peso: +$event })"
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Palabras clave esperadas (separadas por coma)</label>
+        <input
+          class="form-input"
+          [ngModel]="p.palabrasClave"
+          (ngModelChange)="onUpdate(i, { palabrasClave: $event })"
+          placeholder="hooks, estado, renders..."
+        />
+      </div>
+    </div>
+  }
+</div>

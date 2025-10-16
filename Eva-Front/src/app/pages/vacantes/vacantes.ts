@@ -6,50 +6,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 // Ajusta el import al servicio según tu estructura:
 import { Vacancies } from '@services/vacancies';
+import { VacanteUI, Pregunta, FormData } from '@interfaces/vacante-model';
 // Si en algún momento mueves el servicio a core, cambia por:
 // import { Vacancies } from '../../core/services/vacancies';
 
 import { Vacancy } from '@interfaces/vacancy';
-
-/** ====== Tipos locales ====== */
-interface Pregunta {
-  id: number;
-  pregunta: string;
-  tipo: string;
-  peso: number;
-  palabrasClave: string;
-}
-
-interface VacanteUI {
-  id?: number;
-  puesto: string;
-  descripcion: string;
-  requisitos: string[];
-  ubicacion: string; // "Ciudad, País"
-  salario: string; // "45000 - 65000" | "A convenir"
-  tipo_contrato: string | null | undefined;
-  activa: boolean;
-  departamento?: string;
-  candidatos?: number;
-  duracionIA?: string;
-  publicada?: string;
-  cierra?: string;
-  preguntasIA?: number;
-}
-
-interface FormData {
-  puesto: string;
-  departamento: string;
-  ubicacion: string;
-  tipo_contrato: string;
-  salarioMin: string;
-  salarioMax: string;
-  descripcion: string;
-  requisitos: string[];
-  responsabilidades: string[];
-  duracion: number;
-  puntuacionMinima: number;
-}
 
 type ViewMode = 'company' | 'candidate';
 
@@ -329,9 +290,7 @@ export class Vacantes implements OnInit {
           ...current,
           descripcion: response.descripcion,
           requisitos: response.requisitos,
-          responsabilidades: response.responsabilidades,
         });
-
         if (response.preguntas?.length) {
           this.preguntas.set(
             response.preguntas.map((p, index) => ({

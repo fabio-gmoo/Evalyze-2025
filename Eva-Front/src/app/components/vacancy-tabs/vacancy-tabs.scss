@@ -1,0 +1,48 @@
+// src/app/pages/vacantes/components/vacancy-tabs/vacancy-tabs.component.scss
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #2d3548;
+  overflow-x: auto;
+
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #2d3548;
+    border-radius: 2px;
+  }
+}
+
+.tab-button {
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+
+  &:hover {
+    color: #e2e8f0;
+    background: rgba(100, 102, 241, 0.1);
+  }
+  &.active {
+    color: #6366f1;
+    border-bottom-color: #6366f1;
+  }
+}
+
+@media (max-width: 768px) {
+  .tabs {
+    gap: 0.25rem;
+  }
+  .tab-button {
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+  }
+}

@@ -1,0 +1,82 @@
+// src/app/pages/vacantes/components/stats-grid/stats-grid.component.scss
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: #1a1f2e;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #2d3548;
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: #3d4558;
+    transform: translateY(-2px);
+  }
+
+  h3 {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    margin: 0 0 0.5rem 0;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+  }
+  .stat-change {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+  }
+
+  &.stat-blue {
+    .stat-value,
+    .stat-change {
+      color: #60a5fa;
+    }
+  }
+  &.stat-green {
+    .stat-value,
+    .stat-change {
+      color: #34d399;
+    }
+  }
+  &.stat-purple {
+    .stat-value,
+    .stat-change {
+      color: #a78bfa;
+    }
+  }
+  &.stat-yellow {
+    .stat-value,
+    .stat-change {
+      color: #fbbf24;
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-card .stat-value {
+    font-size: 1.5rem;
+  }
+}

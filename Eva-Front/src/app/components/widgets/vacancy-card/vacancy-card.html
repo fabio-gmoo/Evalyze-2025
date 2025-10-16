@@ -1,1 +1,71 @@
+<!-- src/app/pages/vacantes/components/vacancy-card/vacancy-card.component.html -->
+<article class="vacante-card">
+  <div class="vacante-header">
+    <div class="vacante-title-section">
+      <h3>{{ vacancy.puesto }}</h3>
+      @if (vacancy.activa) {
+        <span class="badge-active">Activa</span>
+      }
+    </div>
 
+    @if (viewMode === 'company') {
+      <div class="vacante-actions">
+        <button class="btn-icon" (click)="onEdit()" type="button">Editar</button>
+        <button class="btn-icon btn-delete" (click)="onDelete()" type="button">Eliminar</button>
+      </div>
+    }
+
+    @if (viewMode === 'candidate') {
+      <div class="vacante-actions">
+        <button class="btn-primary" (click)="onApply()" type="button">Aplicar Ahora</button>
+      </div>
+    }
+  </div>
+
+  <div class="vacante-info-grid">
+    <div class="info-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2l7 7-7 7-7-7 7-7z" stroke="#6366f1" stroke-width="2" />
+      </svg>
+      {{ vacancy.ubicacion }}
+    </div>
+    <div class="info-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M3 12h18" stroke="#6366f1" stroke-width="2" stroke-linecap="round" />
+      </svg>
+      {{ vacancy.tipo_contrato || 'Tiempo Completo' }}
+    </div>
+    <div class="info-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M12 6v12M6 12h12" stroke="#6366f1" stroke-width="2" stroke-linecap="round" />
+      </svg>
+      {{ vacancy.salario }}
+      @if (viewMode === 'company') {
+        <span>&nbsp;EUR</span>
+      }
+    </div>
+    @if (viewMode === 'company') {
+      <div class="info-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke="#6366f1" stroke-width="2" />
+        </svg>
+        {{ vacancy.candidatos || 0 }} candidatos
+      </div>
+    }
+  </div>
+
+  <div class="vacante-description">
+    {{ vacancy.descripcion }}
+  </div>
+
+  <footer class="vacante-footer">
+    <div>Publicada: {{ vacancy.publicada }}</div>
+    <div>Cierra: {{ vacancy.cierra }}</div>
+    @if (vacancy.preguntasIA) {
+      <div>{{ vacancy.preguntasIA }} preguntas IA</div>
+    }
+    @if (vacancy.duracionIA) {
+      <div>{{ vacancy.duracionIA }}</div>
+    }
+  </footer>
+</article>

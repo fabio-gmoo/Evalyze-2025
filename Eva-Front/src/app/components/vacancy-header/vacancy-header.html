@@ -1,0 +1,19 @@
+<!-- src/app/pages/vacantes/components/vacancy-header/vacancy-header.component.html -->
+<header class="header">
+  <div class="header-content">
+    <div class="header-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M4 7h16M4 12h16M4 17h10" stroke="white" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    </div>
+    <div>
+      <h1>Vacantes</h1>
+      @if (viewMode === 'company') {
+        <p>Panel para gestionar posiciones con IA.</p>
+      }
+      @if (viewMode === 'candidate') {
+        <p>Explora vacantes y aplica con entrevistas asistidas por IA.</p>
+      }
+    </div>
+  </div>
+</header>

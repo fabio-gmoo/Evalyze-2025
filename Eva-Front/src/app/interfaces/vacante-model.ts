@@ -1,29 +1,26 @@
-// src/app/interfaces/vacancy.ts
-export type VacancyStatus = 'active' | 'closed';
-
-export interface Vacancy {
-  id: number;
-  title: string;
-  area: string; // p.ej. Tecnología / Datos
-  city: string;
-  country: string;
-  salaryMin?: number;
-  salaryMax?: number;
-  currency?: string; // 'USD' | 'EUR' | ...
-  candidatesCount?: number;
-  aiDurationMin?: number;
-  shortDescription?: string;
-  publishedAt?: string; // ISO
-  closesAt?: string; // ISO
-  status: VacancyStatus;
-}
-
 export interface Pregunta {
   id: number;
   pregunta: string;
   tipo: string;
   peso: number;
   palabrasClave: string;
+}
+
+export interface VacanteUI {
+  id?: number;
+  puesto: string;
+  descripcion: string;
+  requisitos: string[];
+  ubicacion: string;
+  salario: string;
+  tipo_contrato: string | null | undefined;
+  activa: boolean;
+  departamento?: string;
+  candidatos?: number;
+  duracionIA?: string;
+  publicada?: string;
+  cierra?: string;
+  preguntasIA?: number;
 }
 
 export interface FormData {
@@ -35,7 +32,7 @@ export interface FormData {
   salarioMax: string;
   descripcion: string;
   requisitos: string[];
-  responsabilidades: string[];
+
   duracion: number;
   puntuacionMinima: number;
 }
