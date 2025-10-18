@@ -4,7 +4,7 @@ from rest_framework.response import Response  # type: ignore
 from .models import Vacante
 from .serializers import VacanteSerializer
 import httpx  # type: ignore
-from asgiref.sync import async_to_sync  # type: ignore
+from django.db.models import Q  # type: ignore
 import logging
 
 logger = logging.getLogger(__name__)
@@ -22,6 +22,45 @@ class VacanteViewSet(viewsets.ModelViewSet):
             created_by=user if getattr(
                 user, "is_authenticated", False) else None
         )
+
+    @action(detail=False, methods=["get"], url_path="all-vacancies")
+    def all_vacancies(self, request):
+        """
+        Obtiene todas las vacantes del usuario autenticado.
+        Parámetros opcionales:
+        - active: true/false (filtrar por estado activo)
+        - search: texto para buscar en título o descripción
+        - ordering: campo para ordenar (ej: -created_at, titulo)
+        """
+        # Filtrar vacantes del usuario autenticado
+        queryset = self.get_queryset()
+
+        # Filtro opcional: solo activas
+        active = request.query_params.get("active", None)
+        if active is not None:
+            is_active = active.lower() == "true"
+            queryset = queryset.filter(activo=is_active)
+
+        # Filtro opcional: búsqueda
+        search = request.query_params.get("search", None)
+        if search:
+            queryset = queryset.filter(
+                Q(titulo__icontains=search) | Q(descripcion__icontains=search)
+            )
+
+        # Ordenamiento opcional (default: más recientes primero)
+        ordering = request.query_params.get("ordering", "-created_at")
+        queryset = queryset.order_by(ordering)
+
+        # Paginación
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # Sin paginación
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=200)
 
     @action(detail=False, methods=["get"], url_path="mine")
     def mine(self, request):
