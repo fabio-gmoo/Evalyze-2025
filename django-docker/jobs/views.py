@@ -5,7 +5,9 @@ from .models import Vacante
 from .serializers import VacanteSerializer
 import httpx  # type: ignore
 from asgiref.sync import async_to_sync  # type: ignore
-import traceback
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class VacanteViewSet(viewsets.ModelViewSet):
@@ -17,7 +19,8 @@ class VacanteViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         user = getattr(self.request, "user", None)
         serializer.save(
-            created_by=user if getattr(user, "is_authenticated", False) else None
+            created_by=user if getattr(
+                user, "is_authenticated", False) else None
         )
 
     @action(detail=False, methods=["get"], url_path="mine")
@@ -72,70 +75,11 @@ class VacanteViewSet(viewsets.ModelViewSet):
             self.get_serializer(dup).data, status=http_status.HTTP_201_CREATED
         )
 
-    BLOCKED_WORDS = {
-        "prostitución",
-        "prostituta",
-        "prostituto",
-        "pornografía",
-        "escort",
-        "narcotráfico",
-        "traficante",
-        "tráfico de drogas",
-        "drogas",
-        "lavado de dinero",
-        "terrorismo",
-        "terrorista",
-        "extorsión",
-        "corrupción",
-        "piratería",
-        "mercado negro",
-        "contrabando",
-        "secuestro",
-        "violencia sexual",
-        "trabajo forzado",
-        "esclavitud",
-        "explotación sexual",
-        "trata de personas",
-        "pedofilia",
-        "pornografía infantil",
-        "armas",
-        "venta de armas",
-        "contrabando de armas",
-        "venta ilegal",
-        "delito",
-        "ilegal",
-        "estafa",
-        "fraude",
-        "hackeo",
-        "piratería informática",
-        "narco",
-        "drogas",
-        "droga",
-    }
-
     @action(detail=False, methods=["post"], url_path="generate-ai")
     def generate_ai(self, request):
         title = (request.data or {}).get("puesto", "").strip()
         if not title:
             return Response({"detail": "Falta 'puesto'."}, status=400)
-
-        def contains_blocked(text: str) -> str | None:
-            """
-            Retorna la primera palabra bloqueada encontrada en `text`, o None si no hay ninguna.
-            """
-            lowercase = text.lower()
-            for w in self.BLOCKED_WORDS:
-                if w in lowercase:
-                    return w
-            return None
-
-        if (bad := contains_blocked(title)) is not None:
-            return Response(
-                {
-                    "detail": "Puesto no permitido, vuelva a intentarlo.",
-                },
-                status=http_status.HTTP_400_BAD_REQUEST,
-            )
 
         payload = {
             "puesto": title,
@@ -154,21 +98,42 @@ class VacanteViewSet(viewsets.ModelViewSet):
                 )
                 response.raise_for_status()
 
-                # Transformar la respuesta de FastAPI al formato que espera el frontend
+                # Si llegamos aquí, fue exitoso
                 fastapi_data = response.json()
                 frontend_data = {
                     "descripcion": fastapi_data.get("descripcion_sugerida", ""),
                     "requisitos": fastapi_data.get("requisitos_sugeridos", []),
-                    "responsabilidades": [],  # FastAPI no devuelve esto
-                    "preguntas": [],  # FastAPI no devuelve esto
+                    "responsabilidades": [],
+                    "preguntas": [],
                 }
-
                 return Response(frontend_data, status=200)
 
         except httpx.HTTPStatusError as e:
+            # ESTE ES EL PROBLEMA - FastAPI devuelve 400 pero tu frontend no lo maneja
+            error_detail = "Error al generar contenido"
+
+            try:
+                error_data = e.response.json()
+                detail = error_data.get("detail", {})
+
+                if isinstance(detail, dict):
+                    # Error de moderación estructurado
+                    error_detail = detail.get(
+                        "message", "Contenido inapropiado")
+                elif isinstance(detail, str):
+                    error_detail = detail
+
+            except:
+                error_detail = e.response.text
+
+            # CRÍTICO: Devolver el error correctamente
             return Response(
-                {"detail": f"Error de FastAPI: {e.response.text}"}, status=502
+                {"error": error_detail},  # ← Cambiar "detail" a "error"
+                status=400,
             )
+
+        except Exception as e:
+            return Response({"error": f"Error de conexión: {str(e)}"}, status=500)
 
     @action(detail=False, methods=["post"], url_path="save")
     def create_vacante(self, request):
@@ -191,7 +156,8 @@ class VacanteViewSet(viewsets.ModelViewSet):
         try:
             obj = serializer.save(created_by=user)
             return Response(
-                self.get_serializer(obj).data, status=http_status.HTTP_201_CREATED
+                self.get_serializer(
+                    obj).data, status=http_status.HTTP_201_CREATED
             )
         except Exception as e:
             return Response(

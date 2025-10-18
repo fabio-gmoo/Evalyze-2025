@@ -1,23 +1,46 @@
 // src/app/pages/vacantes/vacantes.ts
-import { Component, OnInit, inject, signal, ViewChild, ElementRef } from '@angular/core';
+
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
-// Ajusta el import al servicio según tu estructura:
 import { Vacancies } from '@services/vacancies';
-import { VacanteUI, Pregunta, FormData } from '@interfaces/vacante-model';
-// Si en algún momento mueves el servicio a core, cambia por:
-// import { Vacancies } from '../../core/services/vacancies';
-
 import { Vacancy } from '@interfaces/vacancy';
 
-type ViewMode = 'company' | 'candidate';
+// Components
+import { VacancyHeader } from '@components/vacancy-header/vacancy-header';
+import { StatsGrid } from '@components/stats-grid/stats-grid';
+import { VacancyTabs } from '@components/vacancy-tabs/vacancy-tabs';
+import { VacancyList } from '@components/vacancy-list/vacancy-list';
+import { VacancyModal } from '@components/vacancy-modal/vacancy-modal';
+import { ChatDrawer } from '@components/chat-drawer/chat-drawer';
+
+// Models
+import {
+  VacanteUI,
+  ViewMode,
+  StatCard,
+  Pregunta,
+  FormData,
+  ChatMessage,
+  Tab,
+} from '@interfaces/vacante-model';
+
+// Utils
+import { mapVacancyToUI, getInitialFormData, getCurrentTime } from '@interfaces/vacancy-utils';
 
 @Component({
   selector: 'app-vacantes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    VacancyHeader,
+    StatsGrid,
+    VacancyTabs,
+    VacancyList,
+    VacancyModal,
+    ChatDrawer,
+  ],
   templateUrl: './vacantes.html',
   styleUrls: ['./vacantes.scss'],
 })
@@ -30,7 +53,6 @@ export class Vacantes implements OnInit {
   editingVacante = signal<VacanteUI | null>(null);
   loading = signal<boolean>(false);
 
-  /** Modo de vista por query param: ?mode=company|candidate (default company) */
   private initialMode(): ViewMode {
     const mode = new URLSearchParams(window.location.search).get('mode');
     return mode === 'candidate' ? 'candidate' : 'company';
@@ -41,43 +63,30 @@ export class Vacantes implements OnInit {
     { id: 1, pregunta: '', tipo: 'Técnica', peso: 20, palabrasClave: '' },
   ]);
 
-  formData = signal<FormData>({
-    puesto: '',
-    departamento: '',
-    ubicacion: '',
-    tipo_contrato: 'Tiempo Completo',
-    salarioMin: '',
-    salarioMax: '',
-    descripcion: '',
-    requisitos: [''],
-    responsabilidades: [''],
-    duracion: 45,
-    puntuacionMinima: 75,
-  });
+  formData = signal<FormData>(getInitialFormData());
 
-  stats = signal([
-    { title: 'Vacantes Activas', value: 0, change: '+0 esta semana', color: 'blue' as const },
-    { title: 'Candidatos', value: 0, change: '+0 hoy', color: 'green' as const },
-    { title: 'Entrevistas IA', value: 0, change: '0 pendientes', color: 'purple' as const },
-    { title: 'Contrataciones', value: 0, change: 'Este mes', color: 'yellow' as const },
+  stats = signal<StatCard[]>([
+    { title: 'Vacantes Activas', value: 0, change: '+0 esta semana', color: 'blue' },
+    { title: 'Candidatos', value: 0, change: '+0 hoy', color: 'green' },
+    { title: 'Entrevistas IA', value: 0, change: '0 pendientes', color: 'purple' },
+    { title: 'Contrataciones', value: 0, change: 'Este mes', color: 'yellow' },
   ]);
 
-  tabs = [
+  tabs: Tab[] = [
     { id: 'vacantes', label: 'Vacantes' },
     { id: 'postulaciones', label: 'Postulaciones' },
     { id: 'entrevistas', label: 'Entrevistas IA' },
     { id: 'ranking', label: 'Ranking' },
     { id: 'informes', label: 'Informes' },
-  ] as const;
+  ];
 
   vacantes = signal<VacanteUI[]>([]);
 
   /** ===== Chat (postulante) ===== */
   chatOpen = signal<boolean>(false);
-  chatMessages = signal<{ from: 'user' | 'bot'; text: string; time: string }[]>([]);
+  chatMessages = signal<ChatMessage[]>([]);
   chatVacante = signal<VacanteUI | null>(null);
-  chatDraft = '';
-  @ViewChild('chatScroll') chatScroll?: ElementRef<HTMLDivElement>;
+  chatDraft = signal<string>('');
 
   /** ====== Lifecycle ====== */
   ngOnInit(): void {
@@ -96,34 +105,7 @@ export class Vacantes implements OnInit {
 
     obs.subscribe({
       next: (data: Vacancy[]) => {
-        const mapped: VacanteUI[] = data.map((v: Vacancy): VacanteUI => {
-          const ubicacion = [v.city, v.country].filter(Boolean).join(', ');
-          const salario =
-            typeof v.salaryMin === 'number' && typeof v.salaryMax === 'number'
-              ? `${v.salaryMin} - ${v.salaryMax}`
-              : 'A convenir';
-
-          return {
-            id: v.id,
-            puesto: v.title,
-            descripcion: v.shortDescription || (v as any).descripcion || '',
-            requisitos: (v as any).requisitos || [],
-            ubicacion,
-            salario,
-            tipo_contrato: (v as any).tipo_contrato ?? null,
-            activa: v.status === 'active',
-            departamento: v.area || '',
-            candidatos: v.candidatesCount ?? 0,
-            duracionIA: (v.aiDurationMin ? `${v.aiDurationMin}min` : '45min') + ' IA',
-            publicada: v.publishedAt
-              ? new Date(v.publishedAt).toLocaleDateString('es-ES')
-              : new Date().toLocaleDateString('es-ES'),
-            cierra: v.closesAt
-              ? new Date(v.closesAt).toLocaleDateString('es-ES')
-              : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES'),
-            preguntasIA: 2,
-          };
-        });
+        const mapped: VacanteUI[] = data.map(mapVacancyToUI);
         this.vacantes.set(mapped);
         this.loading.set(false);
       },
@@ -179,17 +161,12 @@ export class Vacantes implements OnInit {
             salarioMax: full.salaryMax?.toString() ?? '',
             descripcion: (full as any).descripcion ?? full.shortDescription ?? '',
             requisitos: (full as any).requisitos ?? [''],
-            responsabilidades: [
-              'Desarrollar interfaces de usuario',
-              'Colaborar con el equipo de diseño',
-            ],
             duracion: 45,
             puntuacionMinima: 75,
           });
           this.showModal.set(true);
         },
         error: (_error: HttpErrorResponse) => {
-          // fallback con la card
           this.editingVacante.set(v);
           const [min, max] = (v.salario || '').split('-').map((s: string) => s?.trim());
           this.formData.set({
@@ -201,10 +178,6 @@ export class Vacantes implements OnInit {
             salarioMax: max || '',
             descripcion: v.descripcion || '',
             requisitos: v.requisitos?.length ? v.requisitos : [''],
-            responsabilidades: [
-              'Desarrollar interfaces de usuario',
-              'Colaborar con el equipo de diseño',
-            ],
             duracion: 45,
             puntuacionMinima: 75,
           });
@@ -225,44 +198,32 @@ export class Vacantes implements OnInit {
   }
 
   resetForm(): void {
-    this.formData.set({
-      puesto: '',
-      departamento: '',
-      ubicacion: '',
-      tipo_contrato: 'Tiempo Completo',
-      salarioMin: '',
-      salarioMax: '',
-      descripcion: '',
-      requisitos: [''],
-      responsabilidades: [''],
-      duracion: 45,
-      puntuacionMinima: 75,
-    });
+    this.formData.set(getInitialFormData());
     this.preguntas.set([{ id: 1, pregunta: '', tipo: 'Técnica', peso: 20, palabrasClave: '' }]);
   }
 
-  updateFormField(field: keyof FormData, value: string | number): void {
+  updateFormField(event: { field: keyof FormData; value: string | number }): void {
     const current = this.formData();
-    this.formData.set({ ...current, [field]: value as never });
+    this.formData.set({ ...current, [event.field]: event.value as never });
   }
 
-  updateArrayItem(field: 'requisitos' | 'responsabilidades', index: number, value: string): void {
+  updateArrayItem(event: { index: number; value: string }): void {
     const current = this.formData();
-    const newArray = [...current[field]];
-    newArray[index] = value;
-    this.formData.set({ ...current, [field]: newArray });
+    const newArray = [...current.requisitos];
+    newArray[event.index] = event.value;
+    this.formData.set({ ...current, requisitos: newArray });
   }
 
-  addArrayItem(field: 'requisitos' | 'responsabilidades'): void {
+  addArrayItem(): void {
     const current = this.formData();
-    this.formData.set({ ...current, [field]: [...current[field], ''] });
+    this.formData.set({ ...current, requisitos: [...current.requisitos, ''] });
   }
 
-  removeArrayItem(field: 'requisitos' | 'responsabilidades', index: number): void {
+  removeArrayItem(index: number): void {
     const current = this.formData();
-    if (current[field].length > 1) {
-      const newArray = current[field].filter((_, i) => i !== index);
-      this.formData.set({ ...current, [field]: newArray });
+    if (current.requisitos.length > 1) {
+      const newArray = current.requisitos.filter((_, i) => i !== index);
+      this.formData.set({ ...current, requisitos: newArray });
     }
   }
 
@@ -277,7 +238,6 @@ export class Vacantes implements OnInit {
       next: (response: {
         descripcion: string;
         requisitos: string[];
-        responsabilidades: string[];
         preguntas: Array<{
           pregunta: string;
           tipo: string;
@@ -291,6 +251,7 @@ export class Vacantes implements OnInit {
           descripcion: response.descripcion,
           requisitos: response.requisitos,
         });
+
         if (response.preguntas?.length) {
           this.preguntas.set(
             response.preguntas.map((p, index) => ({
@@ -309,14 +270,11 @@ export class Vacantes implements OnInit {
         console.error('Error generando con IA:', error);
         this.loading.set(false);
 
-        // Intentar extraer el mensaje de detalle del error del backend
         let msg = 'Error al generar contenido con IA';
         if (error.error) {
-          // Si el backend devolvió un objeto con `detail`, usarlo
           if (typeof error.error === 'object' && 'detail' in error.error) {
             msg = (error.error as any).detail;
           } else if (typeof error.error === 'string') {
-            // Si devolvió string plano
             msg = error.error;
           }
         }
@@ -330,7 +288,6 @@ export class Vacantes implements OnInit {
     const form = this.formData();
     const editing = this.editingVacante();
 
-    // Validar campos obligatorios
     if (!form.puesto.trim()) {
       alert('El título del puesto es requerido');
       return;
@@ -340,15 +297,14 @@ export class Vacantes implements OnInit {
       return;
     }
 
-    // Construir el payload para crear o actualizar
     const payload = {
-      id: editing?.id, // Si existe, se actualiza, sino se crea
+      id: editing?.id,
       title: form.puesto,
       area: form.departamento,
       city: form.ubicacion,
       salaryMin: form.salarioMin ? Number(form.salarioMin) : undefined,
       salaryMax: form.salarioMax ? Number(form.salarioMax) : undefined,
-      status: 'active' as const, // Por defecto, la vacante está activa
+      status: 'active' as const,
       descripcion: form.descripcion,
       requisitos: form.requisitos.filter((r: string) => r.trim() !== ''),
       tipo_contrato: form.tipo_contrato,
@@ -356,15 +312,14 @@ export class Vacantes implements OnInit {
 
     this.loading.set(true);
 
-    // Llamar al servicio dependiendo si estamos creando o actualizando
     const obs = editing?.id
-      ? this.vacanciesService.update(editing.id!, payload) // Actualizar si hay ID
-      : this.vacanciesService.create(payload); // Crear si no hay ID
+      ? this.vacanciesService.update(editing.id!, payload)
+      : this.vacanciesService.create(payload);
 
     obs.subscribe({
       next: () => {
-        this.loadVacantes(); // Recargar vacantes
-        this.closeModal(); // Cerrar modal
+        this.loadVacantes();
+        this.closeModal();
         alert(editing?.id ? 'Vacante actualizada exitosamente' : 'Vacante creada exitosamente');
       },
       error: (error: HttpErrorResponse) => {
@@ -390,11 +345,7 @@ export class Vacantes implements OnInit {
     }
   }
 
-  trackByIndex = (_index: number, _item: any) => _index;
-
-  /** ====== Preguntas: helpers para el template ====== */
-  trackByPregunta = (_: number, item: Pregunta) => item.id;
-
+  /** ====== Preguntas ====== */
   addPregunta(): void {
     const list = this.preguntas();
     const nextId = (list.at(-1)?.id ?? 0) + 1;
@@ -409,8 +360,10 @@ export class Vacantes implements OnInit {
     this.preguntas.set(list.filter((_, i) => i !== index));
   }
 
-  updatePregunta(index: number, patch: Partial<Pregunta>): void {
-    const updated = this.preguntas().map((q, i) => (i === index ? { ...q, ...patch } : q));
+  updatePregunta(event: { index: number; patch: Partial<Pregunta> }): void {
+    const updated = this.preguntas().map((q, i) =>
+      i === event.index ? { ...q, ...event.patch } : q,
+    );
     this.preguntas.set(updated);
   }
 
@@ -421,48 +374,35 @@ export class Vacantes implements OnInit {
       {
         from: 'bot',
         text: `¡Hola! Bienvenido a tu entrevista para "${v.puesto}". Te haré 4 preguntas. ¿Listo para comenzar?`,
-        time: this.timeNow(),
+        time: getCurrentTime(),
       },
     ]);
     this.chatOpen.set(true);
-    setTimeout(() => this.scrollChatBottom(), 0);
   }
 
   closeChat(): void {
     this.chatOpen.set(false);
     this.chatVacante.set(null);
     this.chatMessages.set([]);
-    this.chatDraft = '';
+    this.chatDraft.set('');
   }
 
-  sendMessage(ev: Event): void {
-    ev.preventDefault();
-    const msg = (this.chatDraft || '').trim();
-    if (!msg) return;
-    const now = this.timeNow();
+  sendMessage(msg: string): void {
+    if (!msg.trim()) return;
+    const now = getCurrentTime();
     this.chatMessages.set([...this.chatMessages(), { from: 'user', text: msg, time: now }]);
-    this.chatDraft = '';
+    this.chatDraft.set('');
+
     setTimeout(() => {
       const follow = `Gracias por la información. En breve te pediremos tu CV y coordinaremos una entrevista.`;
       this.chatMessages.set([
         ...this.chatMessages(),
-        { from: 'bot', text: follow, time: this.timeNow() },
+        { from: 'bot', text: follow, time: getCurrentTime() },
       ]);
-      this.scrollChatBottom();
     }, 450);
-    this.scrollChatBottom();
   }
 
-  private timeNow(): string {
-    return new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-  }
-
-  private scrollChatBottom(): void {
-    try {
-      this.chatScroll?.nativeElement.scrollTo({
-        top: this.chatScroll.nativeElement.scrollHeight,
-        behavior: 'smooth',
-      });
-    } catch {}
+  updateChatDraft(value: string): void {
+    this.chatDraft.set(value);
   }
 }

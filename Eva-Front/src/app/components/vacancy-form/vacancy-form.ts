@@ -16,31 +16,24 @@ export class VacancyForm {
   @Output() formDataChange = new EventEmitter<FormData>();
   @Output() generateWithAI = new EventEmitter<void>();
   @Output() fieldUpdate = new EventEmitter<{ field: keyof FormData; value: string | number }>();
-  @Output() arrayItemUpdate = new EventEmitter<{
-    field: 'requisitos' | 'responsabilidades';
-    index: number;
-    value: string;
-  }>();
-  @Output() arrayItemAdd = new EventEmitter<'requisitos' | 'responsabilidades'>();
-  @Output() arrayItemRemove = new EventEmitter<{
-    field: 'requisitos';
-    index: number;
-  }>();
+  @Output() arrayItemUpdate = new EventEmitter<{ index: number; value: string }>();
+  @Output() arrayItemAdd = new EventEmitter<void>();
+  @Output() arrayItemRemove = new EventEmitter<number>();
 
   onFieldUpdate(field: keyof FormData, value: string | number): void {
     this.fieldUpdate.emit({ field, value });
   }
 
-  onArrayItemUpdate(field: 'requisitos', index: number, value: string): void {
-    this.arrayItemUpdate.emit({ field, index, value });
+  onArrayItemUpdate(index: number, value: string): void {
+    this.arrayItemUpdate.emit({ index, value });
   }
 
-  onArrayItemAdd(field: 'requisitos'): void {
-    this.arrayItemAdd.emit(field);
+  onArrayItemAdd(): void {
+    this.arrayItemAdd.emit();
   }
 
-  onArrayItemRemove(field: 'requisitos', index: number): void {
-    this.arrayItemRemove.emit({ field, index });
+  onArrayItemRemove(index: number): void {
+    this.arrayItemRemove.emit(index);
   }
 
   onGenerateWithAI(): void {

@@ -1,1 +1,13 @@
-<p>vacancy-tabs works!</p>
+<!-- src/app/pages/vacantes/components/vacancy-tabs/vacancy-tabs.component.html -->
+<nav class="tabs">
+  @for (t of tabs; track t.id) {
+    <button
+      class="tab-button"
+      [class.active]="activeTab === t.id"
+      (click)="onTabClick(t.id)"
+      type="button"
+    >
+      {{ t.label }}
+    </button>
+  }
+</nav>

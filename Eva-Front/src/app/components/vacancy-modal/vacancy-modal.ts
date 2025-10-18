@@ -23,16 +23,9 @@ export class VacancyModal {
   @Output() save = new EventEmitter<void>();
   @Output() generateWithAI = new EventEmitter<void>();
   @Output() fieldUpdate = new EventEmitter<{ field: keyof FormData; value: string | number }>();
-  @Output() arrayItemUpdate = new EventEmitter<{
-    field: 'requisitos';
-    index: number;
-    value: string;
-  }>();
-  @Output() arrayItemAdd = new EventEmitter<'requisitos'>();
-  @Output() arrayItemRemove = new EventEmitter<{
-    field: 'requisitos';
-    index: number;
-  }>();
+  @Output() arrayItemUpdate = new EventEmitter<{ index: number; value: string }>();
+  @Output() arrayItemAdd = new EventEmitter<void>();
+  @Output() arrayItemRemove = new EventEmitter<number>();
   @Output() preguntaAdd = new EventEmitter<void>();
   @Output() preguntaRemove = new EventEmitter<number>();
   @Output() preguntaUpdate = new EventEmitter<{ index: number; patch: Partial<Pregunta> }>();
@@ -53,16 +46,16 @@ export class VacancyModal {
     this.fieldUpdate.emit(event);
   }
 
-  onArrayItemUpdate(event: { field: 'requisitos'; index: number; value: string }): void {
+  onArrayItemUpdate(event: { index: number; value: string }): void {
     this.arrayItemUpdate.emit(event);
   }
 
-  onArrayItemAdd(field: 'requisitos'): void {
-    this.arrayItemAdd.emit(field);
+  onArrayItemAdd(): void {
+    this.arrayItemAdd.emit();
   }
 
-  onArrayItemRemove(event: { field: 'requisitos'; index: number }): void {
-    this.arrayItemRemove.emit(event);
+  onArrayItemRemove(index: number): void {
+    this.arrayItemRemove.emit(index);
   }
 
   onPreguntaAdd(): void {

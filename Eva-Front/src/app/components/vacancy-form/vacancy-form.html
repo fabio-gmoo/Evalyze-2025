@@ -109,16 +109,12 @@
         <input
           class="form-input"
           [ngModel]="r"
-          (ngModelChange)="onArrayItemUpdate('requisitos', i, $event)"
+          (ngModelChange)="onArrayItemUpdate(i, $event)"
           placeholder="Ej: 5+ años con React"
         />
-        <button class="btn-remove" (click)="onArrayItemRemove('requisitos', i)" type="button">
-          Quitar
-        </button>
+        <button class="btn-remove" (click)="onArrayItemRemove(i)" type="button">Quitar</button>
       </div>
     </div>
   }
-  <button class="btn-add-item" (click)="onArrayItemAdd('requisitos')" type="button">
-    + Agregar requisito
-  </button>
+  <button class="btn-add-item" (click)="onArrayItemAdd()" type="button">+ Agregar requisito</button>
 </section>

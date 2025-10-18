@@ -1,3 +1,4 @@
+# interview-svc/app/domain/ports.py
 from abc import ABC, abstractmethod
 from .models import ChatRequest, ChatResponse
 

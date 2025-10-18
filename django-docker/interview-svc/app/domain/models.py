@@ -1,3 +1,4 @@
+# interview-svc/app/domain/models.py
 from pydantic import BaseModel, Field, field_validator  # type: ignore
 
 
@@ -29,8 +30,7 @@ class VacancyDraftOut(BaseModel):
             return v
         if isinstance(v, str):
             # separar por saltos de línea o por punto/coma
-            parts = [p.strip("-• ").strip()
-                     for p in v.split("\n") if p.strip()]
+            parts = [p.strip("-• ").strip() for p in v.split("\n") if p.strip()]
             if parts:
                 return parts
         return []

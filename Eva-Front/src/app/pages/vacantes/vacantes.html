@@ -1,61 +1,19 @@
-<!-- CONTENEDOR -->
+<!-- src/app/pages/vacantes/vacantes.html (REFACTORED) -->
 <div class="vacantes-container">
-  <!-- ======= HEADER ======= -->
-  <header class="header">
-    <div class="header-content">
-      <div class="header-icon">
-        <!-- icono simple -->
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M4 7h16M4 12h16M4 17h10"
-            stroke="white"
-            stroke-width="2"
-            stroke-linecap="round"
-          />
-        </svg>
-      </div>
-      <div>
-        <h1>Vacantes</h1>
-        @if (viewMode() === 'company') {
-          <p>Panel para gestionar posiciones con IA.</p>
-        }
-        @if (viewMode() === 'candidate') {
-          <p>Explora vacantes y aplica con entrevistas asistidas por IA.</p>
-        }
-      </div>
-    </div>
-  </header>
+  <!-- Header -->
+  <app-vacancy-header [viewMode]="viewMode()" />
 
-  <!-- ======= STATS (solo empresa) ======= -->
+  <!-- Stats (solo empresa) -->
   @if (viewMode() === 'company') {
-    <section class="stats-grid">
-      @for (s of stats(); track s.title) {
-        <div class="stat-card" [ngClass]="'stat-' + s.color">
-          <h3>{{ s.title }}</h3>
-          <div class="stat-value">{{ s.value }}</div>
-          <div class="stat-change">{{ s.change }}</div>
-        </div>
-      }
-    </section>
+    <app-stats-grid [stats]="stats()" />
   }
 
-  <!-- ======= TABS (solo empresa) ======= -->
+  <!-- Tabs (solo empresa) -->
   @if (viewMode() === 'company') {
-    <nav class="tabs">
-      @for (t of tabs; track t.id) {
-        <button
-          class="tab-button"
-          [class.active]="activeTab() === t.id"
-          (click)="setActiveTab(t.id)"
-          type="button"
-        >
-          {{ t.label }}
-        </button>
-      }
-    </nav>
+    <app-vacancy-tabs [tabs]="tabs" [activeTab]="activeTab()" (tabChange)="setActiveTab($event)" />
   }
 
-  <!-- ======= ACCIONES / TÍTULO DE SECCIÓN ======= -->
+  <!-- Sección de acciones -->
   <div class="section-header">
     <div>
       @if (viewMode() === 'company') {
@@ -80,413 +38,46 @@
     }
   </div>
 
-  <!-- ======= LISTA VACANTES ======= -->
-  @if (vacantes()?.length) {
-    <section class="vacantes-list">
-      @for (v of vacantes(); track v.id) {
-        <article class="vacante-card">
-          <div class="vacante-header">
-            <div class="vacante-title-section">
-              <h3>{{ v.puesto }}</h3>
-              @if (v.activa) {
-                <span class="badge-active">Activa</span>
-              }
-            </div>
+  <!-- Lista de vacantes -->
+  <app-vacancy-list
+    [vacancies]="vacantes()"
+    [viewMode]="viewMode()"
+    [loading]="loading()"
+    (edit)="openModal($event)"
+    (delete)="eliminarVacante($event)"
+    (apply)="openChat($event)"
+    (createNew)="openModal(null)"
+  />
 
-            @if (viewMode() === 'company') {
-              <div class="vacante-actions">
-                <button class="btn-icon" (click)="openModal(v)" type="button">Editar</button>
-                <button class="btn-icon btn-delete" (click)="eliminarVacante(v.id!)" type="button">
-                  Eliminar
-                </button>
-              </div>
-            }
+  <!-- Modal crear/editar -->
+  <app-vacancy-modal
+    [show]="showModal()"
+    [editingVacante]="editingVacante()"
+    [formData]="formData()"
+    [preguntas]="preguntas()"
+    [loading]="loading()"
+    [duracion]="formData().duracion"
+    [puntuacionMinima]="formData().puntuacionMinima"
+    (close)="closeModal()"
+    (save)="guardarVacante()"
+    (generateWithAI)="generarConIA()"
+    (fieldUpdate)="updateFormField($event)"
+    (arrayItemUpdate)="updateArrayItem($event)"
+    (arrayItemAdd)="addArrayItem()"
+    (arrayItemRemove)="removeArrayItem($event)"
+    (preguntaAdd)="addPregunta()"
+    (preguntaRemove)="removePregunta($event)"
+    (preguntaUpdate)="updatePregunta($event)"
+  />
 
-            @if (viewMode() === 'candidate') {
-              <div class="vacante-actions">
-                <button class="btn-primary" (click)="openChat(v)" type="button">
-                  Aplicar Ahora
-                </button>
-              </div>
-            }
-          </div>
-
-          <div class="vacante-info-grid">
-            <div class="info-item">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2l7 7-7 7-7-7 7-7z" stroke="#6366f1" stroke-width="2" />
-              </svg>
-              {{ v.ubicacion }}
-            </div>
-            <div class="info-item">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M3 12h18" stroke="#6366f1" stroke-width="2" stroke-linecap="round" />
-              </svg>
-              {{ v.tipo_contrato || 'Tiempo Completo' }}
-            </div>
-            <div class="info-item">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 6v12M6 12h12"
-                  stroke="#6366f1"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                />
-              </svg>
-              {{ v.salario }}
-              @if (viewMode() === 'company') {
-                <span>&nbsp;EUR</span>
-              }
-            </div>
-            @if (viewMode() === 'company') {
-              <div class="info-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="9" stroke="#6366f1" stroke-width="2" />
-                </svg>
-                {{ v.candidatos || 0 }} candidatos
-              </div>
-            }
-          </div>
-
-          <div class="vacante-description">
-            {{ v.descripcion }}
-          </div>
-
-          <footer class="vacante-footer">
-            <div>Publicada: {{ v.publicada }}</div>
-            <div>Cierra: {{ v.cierra }}</div>
-            @if (v.preguntasIA) {
-              <div>{{ v.preguntasIA }} preguntas IA</div>
-            }
-            @if (v.duracionIA) {
-              <div>{{ v.duracionIA }}</div>
-            }
-          </footer>
-        </article>
-      }
-    </section>
-  } @else {
-    <div class="empty-state">
-      <svg viewBox="0 0 24 24">
-        <path fill="currentColor" d="M12 2a10 10 0 100 20 10 10 0 000-20zM7 11h10v2H7z" />
-      </svg>
-      <h3>No hay vacantes</h3>
-      @if (viewMode() === 'company') {
-        <p>Crea tu primera vacante para comenzar.</p>
-        <button class="btn-primary" (click)="openModal(null)" type="button">Nueva Vacante</button>
-      }
-    </div>
-  }
-
-  <!-- ======= MODAL CREAR/EDITAR ======= -->
-  @if (showModal()) {
-    <div class="modal-overlay">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>{{ editingVacante() ? 'Editar Vacante' : 'Nueva Vacante' }}</h2>
-          <button class="btn-close" (click)="closeModal()" type="button">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M6 6l12 12M18 6L6 18"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <div class="modal-body">
-          <!-- Datos básicos -->
-          <section class="form-section">
-            <h3>Datos del Puesto</h3>
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label>Título del puesto</label>
-                <input
-                  class="form-input"
-                  [ngModel]="formData().puesto"
-                  (ngModelChange)="updateFormField('puesto', $event)"
-                  placeholder="Ej: Desarrollador Frontend Senior"
-                />
-              </div>
-
-              <div class="form-group">
-                <label>Departamento / Área</label>
-                <input
-                  class="form-input"
-                  [ngModel]="formData().departamento"
-                  (ngModelChange)="updateFormField('departamento', $event)"
-                  placeholder="Ej: Tecnología"
-                />
-              </div>
-
-              <div class="form-group">
-                <label>Ubicación</label>
-                <input
-                  class="form-input"
-                  [ngModel]="formData().ubicacion"
-                  (ngModelChange)="updateFormField('ubicacion', $event)"
-                  placeholder="Ciudad, País"
-                />
-              </div>
-
-              <div class="form-group">
-                <label>Tipo de contrato</label>
-                <select
-                  class="form-select"
-                  [ngModel]="formData().tipo_contrato"
-                  (ngModelChange)="updateFormField('tipo_contrato', $event)"
-                >
-                  <option>Tiempo Completo</option>
-                  <option>Medio Tiempo</option>
-                  <option>Contrato</option>
-                  <option>Prácticas</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label>Salario Mínimo</label>
-                <input
-                  class="form-input"
-                  type="number"
-                  [ngModel]="formData().salarioMin"
-                  (ngModelChange)="updateFormField('salarioMin', $event)"
-                  placeholder="45000"
-                />
-              </div>
-
-              <div class="form-group">
-                <label>Salario Máximo</label>
-                <input
-                  class="form-input"
-                  type="number"
-                  [ngModel]="formData().salarioMax"
-                  (ngModelChange)="updateFormField('salarioMax', $event)"
-                  placeholder="65000"
-                />
-              </div>
-
-              <div class="form-group" style="grid-column: 1 / -1">
-                <div class="form-group-header">
-                  <label>Descripción</label>
-                  <button
-                    class="btn-generate-ia"
-                    (click)="generarConIA()"
-                    [disabled]="loading()"
-                    type="button"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path
-                        d="M12 2l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1 3-6z"
-                        stroke="white"
-                        stroke-width="1.5"
-                      />
-                    </svg>
-                    Generar con IA
-                    @if (loading()) {
-                      <span class="loading-spinner" style="margin-left: 0.5rem"></span>
-                    }
-                  </button>
-                </div>
-                <textarea
-                  class="form-textarea"
-                  rows="5"
-                  [ngModel]="formData().descripcion"
-                  (ngModelChange)="updateFormField('descripcion', $event)"
-                  placeholder="Resumen del puesto, objetivos, etc."
-                ></textarea>
-              </div>
-            </div>
-          </section>
-
-          <!-- Requisitos / Responsabilidades -->
-          <section class="form-section">
-            <h3>Requisitos</h3>
-            @for (r of formData().requisitos; track $index; let i = $index) {
-              <div class="form-group">
-                <div class="array-input-group">
-                  <input
-                    class="form-input"
-                    [ngModel]="r"
-                    (ngModelChange)="updateArrayItem('requisitos', i, $event)"
-                    placeholder="Ej: 5+ años con React"
-                  />
-                  <button
-                    class="btn-remove"
-                    (click)="removeArrayItem('requisitos', i)"
-                    type="button"
-                  >
-                    Quitar
-                  </button>
-                </div>
-              </div>
-            }
-            <button class="btn-add-item" (click)="addArrayItem('requisitos')" type="button">
-              + Agregar requisito
-            </button>
-          </section>
-
-          <!-- Config de entrevista IA -->
-          <section class="form-section">
-            <h3>Configuración de Entrevista IA</h3>
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label>Duración (min)</label>
-                <input
-                  class="form-input"
-                  type="number"
-                  [ngModel]="formData().duracion"
-                  (ngModelChange)="updateFormField('duracion', $event)"
-                />
-              </div>
-              <div class="form-group">
-                <label>Puntuación mínima (%)</label>
-                <input
-                  class="form-input"
-                  type="number"
-                  [ngModel]="formData().puntuacionMinima"
-                  (ngModelChange)="updateFormField('puntuacionMinima', $event)"
-                />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <div class="form-group-header">
-                <label>Preguntas</label>
-                <button class="btn-add-question" (click)="addPregunta()" type="button">
-                  + Añadir pregunta
-                </button>
-              </div>
-
-              @for (p of preguntas(); track p.id; let i = $index) {
-                <div class="pregunta-card">
-                  <div class="pregunta-header">
-                    <h4>Pregunta {{ i + 1 }}</h4>
-                    <button
-                      class="btn-icon-only btn-delete"
-                      (click)="removePregunta(i)"
-                      type="button"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path
-                          d="M6 6l12 12M18 6L6 18"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Enunciado</label>
-                    <input
-                      class="form-input"
-                      [ngModel]="p.pregunta"
-                      (ngModelChange)="updatePregunta(i, { pregunta: $event })"
-                      placeholder="Escribe la pregunta"
-                    />
-                  </div>
-
-                  <div class="form-grid-2">
-                    <div class="form-group">
-                      <label>Tipo</label>
-                      <select
-                        class="form-select"
-                        [ngModel]="p.tipo"
-                        (ngModelChange)="updatePregunta(i, { tipo: $event })"
-                      >
-                        <option>Técnica</option>
-                        <option>Conductual</option>
-                        <option>Situacional</option>
-                      </select>
-                    </div>
-                    <div class="form-group">
-                      <label>Peso (%)</label>
-                      <input
-                        class="form-input"
-                        type="number"
-                        [ngModel]="p.peso"
-                        (ngModelChange)="updatePregunta(i, { peso: +$event })"
-                      />
-                    </div>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Palabras clave esperadas (separadas por coma)</label>
-                    <input
-                      class="form-input"
-                      [ngModel]="p.palabrasClave"
-                      (ngModelChange)="updatePregunta(i, { palabrasClave: $event })"
-                      placeholder="hooks, estado, renders..."
-                    />
-                  </div>
-                </div>
-              }
-            </div>
-          </section>
-        </div>
-
-        <div class="modal-footer">
-          <button class="btn-secondary" (click)="closeModal()" type="button">Cancelar</button>
-          <button
-            class="btn-primary"
-            (click)="guardarVacante()"
-            [disabled]="loading()"
-            type="button"
-          >
-            Guardar
-            @if (loading()) {
-              <span class="loading-spinner" style="margin-left: 0.5rem"></span>
-            }
-          </button>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- ======= CHAT DRAWER (postulante) ======= -->
-  @if (chatOpen()) {
-    <div class="chat-overlay" (click)="closeChat()"></div>
-  }
-  <aside class="chat-drawer" [class.open]="chatOpen()">
-    <div class="chat-header">
-      <div class="chat-title">
-        <strong>Entrevista IA</strong>
-        @if (chatVacante()) {
-          <div>— {{ chatVacante()?.puesto }}</div>
-        }
-      </div>
-      <button class="btn-close" (click)="closeChat()" type="button">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M6 6l12 12M18 6L6 18"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          />
-        </svg>
-      </button>
-    </div>
-
-    <div class="chat-body" #chatScroll>
-      @for (m of chatMessages(); track $index) {
-        <div [ngClass]="m.from === 'user' ? 'bubble bubble-user' : 'bubble bubble-bot'">
-          <div>{{ m.text }}</div>
-          <div class="bubble-time">{{ m.time }}</div>
-        </div>
-      }
-    </div>
-
-    <form class="chat-input" (submit)="sendMessage($event)">
-      <input
-        class="form-input"
-        placeholder="Escribe tu respuesta..."
-        [(ngModel)]="chatDraft"
-        name="chatDraft"
-      />
-      <button class="btn-primary" type="submit">Enviar</button>
-    </form>
-  </aside>
+  <!-- Chat drawer (postulante) -->
+  <app-chat-drawer
+    [open]="chatOpen()"
+    [messages]="chatMessages()"
+    [vacancy]="chatVacante()"
+    [draft]="chatDraft()"
+    (close)="closeChat()"
+    (send)="sendMessage($event)"
+    (draftChange)="updateChatDraft($event)"
+  />
 </div>

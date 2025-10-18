@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { VacancyCard } from '@components/vacancy-card/vacancy-card';
-import { VacanteUI, ViewMode } from '@interfaces/vacancte-model';
+import { VacancyCard } from '@widgets/vacancy-card/vacancy-card';
+import { VacanteUI, ViewMode } from '@interfaces/vacante-model';
 
 @Component({
   selector: 'app-vacancy-list',
