@@ -6,6 +6,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { Vacancies } from '@services/vacancies';
 import { Vacancy } from '@interfaces/vacancy';
+import { Auth } from '@services/auth';
+import { Me } from '@interfaces/token-types-dto';
 
 // Components
 import { VacancyHeader } from '@components/vacancy-header/vacancy-header';
@@ -46,18 +48,16 @@ import { mapVacancyToUI, getInitialFormData, getCurrentTime } from '@interfaces/
 })
 export class Vacantes implements OnInit {
   private vacanciesService = inject(Vacancies);
+  private auth = inject(Auth);
 
   /** ====== State ====== */
   activeTab = signal<string>('vacantes');
   showModal = signal<boolean>(false);
   editingVacante = signal<VacanteUI | null>(null);
   loading = signal<boolean>(false);
+  currentUser: Me | null = null; // Add this
 
-  private initialMode(): ViewMode {
-    const mode = new URLSearchParams(window.location.search).get('mode');
-    return mode === 'candidate' ? 'candidate' : 'company';
-  }
-  viewMode = signal<ViewMode>(this.initialMode());
+  vacantes = signal<VacanteUI[]>([]);
 
   preguntas = signal<Pregunta[]>([
     { id: 1, pregunta: '', tipo: 'Técnica', peso: 20, palabrasClave: '' },
@@ -80,8 +80,6 @@ export class Vacantes implements OnInit {
     { id: 'informes', label: 'Informes' },
   ];
 
-  vacantes = signal<VacanteUI[]>([]);
-
   /** ===== Chat (postulante) ===== */
   chatOpen = signal<boolean>(false);
   chatMessages = signal<ChatMessage[]>([]);
@@ -90,27 +88,46 @@ export class Vacantes implements OnInit {
 
   /** ====== Lifecycle ====== */
   ngOnInit(): void {
-    this.loadVacantes();
-    if (this.viewMode() === 'company') this.loadStats();
+    this.auth.me$.subscribe((user) => {
+      this.currentUser = user;
+      // Load vacancies after getting user info
+      this.loadVacantes();
+      // Load stats only for companies
+      if (this.currentUser?.role === 'company') {
+        this.loadStats();
+      }
+    });
+  }
+
+  /** ====== Computed properties ====== */
+  viewMode(): ViewMode {
+    return this.currentUser?.role === 'company' ? 'company' : 'candidate';
+  }
+
+  canCreateVacancy(): boolean {
+    return this.currentUser?.role === 'company';
   }
 
   /** ====== Data fetch ====== */
   loadVacantes(): void {
     this.loading.set(true);
 
-    const obs =
-      this.viewMode() === 'company'
-        ? this.vacanciesService.listMine()
-        : this.vacanciesService.listActive();
+    // If user is a company, load only their vacancies
+    // If user is a candidate, load all vacancies
+    const endpoint =
+      this.currentUser?.role === 'company'
+        ? this.vacanciesService.getMine()
+        : this.vacanciesService.getAllVacancies();
 
-    obs.subscribe({
+    endpoint.subscribe({
       next: (data: Vacancy[]) => {
-        const mapped: VacanteUI[] = data.map(mapVacancyToUI);
+        // Map backend data to UI format
+        const mapped = data.map((v) => mapVacancyToUI(v));
         this.vacantes.set(mapped);
         this.loading.set(false);
       },
-      error: (error: HttpErrorResponse) => {
-        console.error('Error cargando vacantes:', error);
+      error: (err) => {
+        console.error('Error loading vacancies:', err);
         this.loading.set(false);
       },
     });
@@ -148,6 +165,11 @@ export class Vacantes implements OnInit {
   }
 
   openModal(v: VacanteUI | null = null): void {
+    // Only companies can create/edit vacancies
+    if (!this.canCreateVacancy()) {
+      return;
+    }
+
     if (v?.id) {
       this.vacanciesService.getById(v.id).subscribe({
         next: (full: Vacancy) => {
@@ -228,6 +250,11 @@ export class Vacantes implements OnInit {
   }
 
   generarConIA(): void {
+    // Only companies can generate with AI
+    if (!this.canCreateVacancy()) {
+      return;
+    }
+
     const form = this.formData();
     if (!form.puesto.trim()) {
       alert('Por favor ingresa el título del puesto primero');
@@ -285,6 +312,11 @@ export class Vacantes implements OnInit {
   }
 
   guardarVacante(): void {
+    // Only companies can save vacancies
+    if (!this.canCreateVacancy()) {
+      return;
+    }
+
     const form = this.formData();
     const editing = this.editingVacante();
 
@@ -331,6 +363,11 @@ export class Vacantes implements OnInit {
   }
 
   eliminarVacante(id: number): void {
+    // Only companies can delete vacancies
+    if (!this.canCreateVacancy()) {
+      return;
+    }
+
     if (confirm('¿Estás seguro de eliminar esta vacante?')) {
       this.vacanciesService.delete(id).subscribe({
         next: () => {
@@ -367,8 +404,12 @@ export class Vacantes implements OnInit {
     this.preguntas.set(updated);
   }
 
-  /** ===== Chat (postulante) ===== */
   openChat(v: VacanteUI): void {
+    // Only candidates can chat/apply
+    if (this.currentUser?.role !== 'candidate') {
+      return;
+    }
+
     this.chatVacante.set(v);
     this.chatMessages.set([
       {

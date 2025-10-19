@@ -1,4 +1,5 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, inject } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
@@ -8,6 +9,7 @@ import { Component, Output, EventEmitter } from '@angular/core';
 })
 export class Navbar {
   menuOpen = false;
+  private router = inject(Router);
 
   // Cambiar los nombres para que coincidan con home.html
   @Output() openLogin = new EventEmitter<void>();
@@ -22,14 +24,15 @@ export class Navbar {
   }
 
   handleLogin() {
-    this.openLogin.emit();
-
-    this.closeMenu();
+    //this.openLogin.emit();
+    //this.closeMenu();
+    this.router.navigate(['/auth']);
   }
 
   handleSignup() {
-    this.openSignup.emit();
+    //this.openSignup.emit();
 
-    this.closeMenu();
+    //this.closeMenu();
+    this.router.navigate(['/auth']);
   }
 }

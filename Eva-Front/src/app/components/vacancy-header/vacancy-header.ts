@@ -40,7 +40,7 @@ export class VacancyHeader implements OnInit {
 
   logout() {
     this.auth.logout();
-    this.router.navigate(['/login']);
+    this.router.navigate(['/home']);
   }
 
   get viewMode() {

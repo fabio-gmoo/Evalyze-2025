@@ -136,16 +136,18 @@ export class Vacancies {
   private http = inject(HttpClient);
   private base = `${environment.apiBase}/jobs`;
 
-  listAll(): Observable<Vacancy[]> {
-    return this.http.get<BackendVacante[]>(`${this.base}/`).pipe(map((arr) => arr.map(mapFromApi)));
+  getAllVacancies(): Observable<Vacancy[]> {
+    return this.http
+      .get<BackendVacante[]>(`${this.base}/all-vacancies/`)
+      .pipe(map((arr) => arr.map(mapFromApi)));
   }
 
   /** Vacantes públicas activas (para postulante) */
   listActive(): Observable<Vacancy[]> {
-    return this.listAll().pipe(map((list) => list.filter((v) => v.status === 'active')));
+    return this.getAllVacancies().pipe(map((list) => list.filter((v) => v.status === 'active')));
   }
 
-  listMine(): Observable<Vacancy[]> {
+  getMine(): Observable<Vacancy[]> {
     return this.http
       .get<BackendVacante[]>(`${this.base}/mine/`)
       .pipe(map((arr) => arr.map(mapFromApi)));
