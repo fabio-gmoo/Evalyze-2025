@@ -1,5 +1,5 @@
-<!-- src/app/pages/vacantes/components/vacancy-list/vacancy-list.component.html -->
-@if (vacancies?.length) {
+<!-- src/app/components/vacancy-list/vacancy-list.html -->
+@if (vacancies.length) {
   <section class="vacantes-list">
     @for (v of vacancies; track v.id) {
       <app-vacancy-card
@@ -8,6 +8,7 @@
         (edit)="onEdit($event)"
         (delete)="onDelete($event)"
         (apply)="onApply($event)"
+        (details)="onDetails($event)"
       />
     }
   </section>
@@ -19,7 +20,11 @@
     <h3>No hay vacantes</h3>
     @if (viewMode === 'company') {
       <p>Crea tu primera vacante para comenzar.</p>
-      <button class="btn-primary" (click)="onCreateNew()" type="button">Nueva Vacante</button>
+      @if (canCreateVacancy) {
+        <button class="btn-primary" (click)="onCreateNew()" type="button">Nueva Vacante</button>
+      }
+    } @else {
+      <p>No hay vacantes disponibles en este momento.</p>
     }
   </div>
 }

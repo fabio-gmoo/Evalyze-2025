@@ -12,10 +12,10 @@ import { Me } from '@interfaces/token-types-dto';
 // Components
 import { VacancyHeader } from '@components/vacancy-header/vacancy-header';
 import { StatsGrid } from '@components/stats-grid/stats-grid';
-import { VacancyTabs } from '@components/vacancy-tabs/vacancy-tabs';
 import { VacancyList } from '@components/vacancy-list/vacancy-list';
 import { VacancyModal } from '@components/vacancy-modal/vacancy-modal';
 import { ChatDrawer } from '@components/chat-drawer/chat-drawer';
+import { VacancyDetailsModal } from '@components/vacancy-details-modal/vacancy-details-modal';
 
 // Models
 import {
@@ -38,10 +38,10 @@ import { mapVacancyToUI, getInitialFormData, getCurrentTime } from '@interfaces/
     CommonModule,
     VacancyHeader,
     StatsGrid,
-    VacancyTabs,
     VacancyList,
     VacancyModal,
     ChatDrawer,
+    VacancyDetailsModal,
   ],
   templateUrl: './vacantes.html',
   styleUrls: ['./vacantes.scss'],
@@ -49,6 +49,9 @@ import { mapVacancyToUI, getInitialFormData, getCurrentTime } from '@interfaces/
 export class Vacantes implements OnInit {
   private vacanciesService = inject(Vacancies);
   private auth = inject(Auth);
+
+  showDetailsModal = signal<boolean>(false);
+  detailsVacancy = signal<VacanteUI | null>(null);
 
   /** ====== State ====== */
   activeTab = signal<string>('vacantes');
@@ -262,16 +265,7 @@ export class Vacantes implements OnInit {
     }
     this.loading.set(true);
     this.vacanciesService.generateWithAI(form.puesto).subscribe({
-      next: (response: {
-        descripcion: string;
-        requisitos: string[];
-        preguntas: Array<{
-          pregunta: string;
-          tipo: string;
-          peso?: number;
-          palabras_clave?: string[];
-        }>;
-      }) => {
+      next: (response: { descripcion: string; requisitos: string[] }) => {
         const current = this.formData();
         this.formData.set({
           ...current,
@@ -279,17 +273,6 @@ export class Vacantes implements OnInit {
           requisitos: response.requisitos,
         });
 
-        if (response.preguntas?.length) {
-          this.preguntas.set(
-            response.preguntas.map((p, index) => ({
-              id: index + 1,
-              pregunta: p.pregunta,
-              tipo: p.tipo,
-              peso: p.peso ?? 20,
-              palabrasClave: Array.isArray(p.palabras_clave) ? p.palabras_clave.join(', ') : '',
-            })),
-          );
-        }
         this.loading.set(false);
         alert('Contenido generado con IA exitosamente');
       },
@@ -312,7 +295,6 @@ export class Vacantes implements OnInit {
   }
 
   guardarVacante(): void {
-    // Only companies can save vacancies
     if (!this.canCreateVacancy()) {
       return;
     }
@@ -328,6 +310,8 @@ export class Vacantes implements OnInit {
       alert('La descripción es requerida');
       return;
     }
+
+    // Get company name from current user
 
     const payload = {
       id: editing?.id,
@@ -361,7 +345,6 @@ export class Vacantes implements OnInit {
       },
     });
   }
-
   eliminarVacante(id: number): void {
     // Only companies can delete vacancies
     if (!this.canCreateVacancy()) {
@@ -445,5 +428,25 @@ export class Vacantes implements OnInit {
 
   updateChatDraft(value: string): void {
     this.chatDraft.set(value);
+  }
+
+  openDetails(vacancy: VacanteUI): void {
+    this.detailsVacancy.set(vacancy);
+    this.showDetailsModal.set(true);
+  }
+
+  closeDetails(): void {
+    this.showDetailsModal.set(false);
+    this.detailsVacancy.set(null);
+  }
+
+  onDetailsApply(vacancy: VacanteUI): void {
+    this.closeDetails();
+    this.openChat(vacancy);
+  }
+
+  onDetailsEdit(vacancy: VacanteUI): void {
+    this.closeDetails();
+    this.openModal(vacancy);
   }
 }

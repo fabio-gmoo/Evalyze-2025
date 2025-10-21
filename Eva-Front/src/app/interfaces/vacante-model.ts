@@ -9,18 +9,15 @@ export interface Pregunta {
 export interface VacanteUI {
   id?: number;
   puesto: string;
-  descripcion: string;
-  requisitos: string[];
-  ubicacion: string;
-  salario: string;
-  tipo_contrato: string | null | undefined;
-  activa: boolean;
   departamento?: string;
+  ubicacion: string;
+  tipo_contrato?: string;
+  salario?: string;
+  descripcion?: string;
+  requisitos?: string[];
   candidatos?: number;
-  duracionIA?: string;
-  publicada?: string;
-  cierra?: string;
-  preguntasIA?: number;
+  activa: boolean;
+  company_name?: string; // NEW
 }
 
 export interface FormData {

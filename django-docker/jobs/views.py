@@ -17,11 +17,12 @@ class VacanteViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.AllowAny]
 
     def perform_create(self, serializer):
-        user = getattr(self.request, "user", None)
-        serializer.save(
-            created_by=user if getattr(
-                user, "is_authenticated", False) else None
-        )
+        user = self.request.user if self.request.user.is_authenticated else None
+        company_name = ""
+        if user and hasattr(user, "company_profile"):
+            company_name = user.company_profile.company_name
+
+        serializer.save(created_by=user, company_name=company_name)
 
     @action(detail=False, methods=["get"], url_path="all-vacancies")
     def all_vacancies(self, request):
@@ -157,8 +158,7 @@ class VacanteViewSet(viewsets.ModelViewSet):
 
                 if isinstance(detail, dict):
                     # Error de moderación estructurado
-                    error_detail = detail.get(
-                        "message", "Contenido inapropiado")
+                    error_detail = detail.get("message", "Contenido inapropiado")
                 elif isinstance(detail, str):
                     error_detail = detail
 
@@ -176,9 +176,7 @@ class VacanteViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"], url_path="save")
     def create_vacante(self, request):
-        # Permitimos que el serializer maneje validación y conversiones
         data = dict(request.data)
-        # Alias: permitir que el frontend envíe 'place' en vez de 'ubicacion'
         if "place" in data and "ubicacion" not in data:
             data["ubicacion"] = data.pop("place")
 
@@ -187,19 +185,14 @@ class VacanteViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=http_status.HTTP_400_BAD_REQUEST)
 
         user = (
-            request.user
-            if hasattr(request, "user")
-            and getattr(request.user, "is_authenticated", False)
-            else None
+            request.user if getattr(request.user, "is_authenticated", False) else None
         )
-        try:
-            obj = serializer.save(created_by=user)
-            return Response(
-                self.get_serializer(
-                    obj).data, status=http_status.HTTP_201_CREATED
-            )
-        except Exception as e:
-            return Response(
-                {"detail": f"Error al crear vacante: {str(e)}"},
-                status=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+        # Calcula automáticamente el nombre de la empresa si el usuario tiene CompanyProfile
+        company_name = ""
+        if user and hasattr(user, "company_profile"):
+            company_name = user.company_profile.company_name
+
+        obj = serializer.save(created_by=user, company_name=company_name)
+        return Response(
+            self.get_serializer(obj).data, status=http_status.HTTP_201_CREATED
+        )

@@ -14,6 +14,7 @@ export class VacancyCard {
   @Output() edit = new EventEmitter<VacanteUI>();
   @Output() delete = new EventEmitter<number>();
   @Output() apply = new EventEmitter<VacanteUI>();
+  @Output() details = new EventEmitter<VacanteUI>();
 
   onEdit(): void {
     this.edit.emit(this.vacancy);
@@ -27,5 +28,9 @@ export class VacancyCard {
 
   onApply(): void {
     this.apply.emit(this.vacancy);
+  }
+
+  onDetails() {
+    this.details.emit(this.vacancy);
   }
 }

@@ -27,41 +27,6 @@
           (arrayItemAdd)="onArrayItemAdd()"
           (arrayItemRemove)="onArrayItemRemove($event)"
         />
-
-        <!-- Configuración de entrevista IA -->
-        <section class="form-section">
-          <h3>Configuración de Entrevista IA</h3>
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label>Duración (min)</label>
-              <input
-                class="form-input"
-                type="number"
-                [value]="duracion"
-                (input)="onFieldUpdate({ field: 'duracion', value: +$any($event.target).value })"
-              />
-            </div>
-            <div class="form-group">
-              <label>Puntuación mínima (%)</label>
-              <input
-                class="form-input"
-                type="number"
-                [value]="puntuacionMinima"
-                (input)="
-                  onFieldUpdate({ field: 'puntuacionMinima', value: +$any($event.target).value })
-                "
-              />
-            </div>
-          </div>
-
-          <!-- Preguntas IA -->
-          <app-ai-questions
-            [preguntas]="preguntas"
-            (add)="onPreguntaAdd()"
-            (remove)="onPreguntaRemove($event)"
-            (update)="onPreguntaUpdate($event)"
-          />
-        </section>
       </div>
 
       <div class="modal-footer">

@@ -13,18 +13,24 @@ export class VacancyList {
   @Input() vacancies: VacanteUI[] = [];
   @Input() viewMode: ViewMode = 'company';
   @Input() loading: boolean = false;
+  @Input() canCreateVacancy: boolean = true;
 
   @Output() edit = new EventEmitter<VacanteUI>();
   @Output() delete = new EventEmitter<number>();
   @Output() apply = new EventEmitter<VacanteUI>();
   @Output() createNew = new EventEmitter<void>();
+  @Output() details = new EventEmitter<VacanteUI>(); // New event
 
   onEdit(vacancy: VacanteUI): void {
-    this.edit.emit(vacancy);
+    if (this.canCreateVacancy) {
+      this.edit.emit(vacancy);
+    }
   }
 
   onDelete(id: number): void {
-    this.delete.emit(id);
+    if (this.canCreateVacancy) {
+      this.delete.emit(id);
+    }
   }
 
   onApply(vacancy: VacanteUI): void {
@@ -32,6 +38,12 @@ export class VacancyList {
   }
 
   onCreateNew(): void {
-    this.createNew.emit();
+    if (this.canCreateVacancy) {
+      this.createNew.emit();
+    }
+  }
+
+  onDetails(vacancy: VacanteUI): void {
+    this.details.emit(vacancy);
   }
 }

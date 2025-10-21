@@ -1,12 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VacancyForm } from '@components/vacancy-form/vacancy-form';
-import { AiQuestions } from '@components/ai-questions/ai-questions';
+
 import { FormData, Pregunta, VacanteUI } from '@interfaces/vacante-model';
 
 @Component({
   selector: 'app-vacancy-modal',
-  imports: [CommonModule, AiQuestions, VacancyForm],
+  imports: [CommonModule, VacancyForm],
   templateUrl: './vacancy-modal.html',
   styleUrl: './vacancy-modal.scss',
 })

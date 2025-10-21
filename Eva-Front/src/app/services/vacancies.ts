@@ -80,11 +80,9 @@ function mapFromApi(v: BackendVacante): Vacancy & {
     salaryMin,
     salaryMax,
     currency,
-    candidatesCount: 0,
-    aiDurationMin: 45,
+
     shortDescription: v.descripcion?.slice(0, 180),
-    publishedAt: undefined,
-    closesAt: undefined,
+
     status: v.activa ? 'active' : 'closed',
     descripcion: v.descripcion,
     requisitos: requisitosToArray(v.requisitos),
@@ -162,6 +160,7 @@ export class Vacancies {
       descripcion?: string;
       requisitos?: string[];
       tipo_contrato?: string | null;
+      company_name?: string;
     },
   ): Observable<Vacancy> {
     const body = mapToApi(payload);
@@ -211,7 +210,6 @@ export class Vacancies {
     descripcion: string;
     requisitos: string[];
     responsabilidades: string[];
-    preguntas: any[];
   }> {
     // Endpoint: /jobs/generate-ai/
     return this.http.post<any>(`${this.base}/generate-ai/`, { puesto: title });

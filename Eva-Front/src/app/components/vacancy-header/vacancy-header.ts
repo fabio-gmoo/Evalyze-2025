@@ -49,18 +49,18 @@ export class VacancyHeader implements OnInit {
 
   get userName(): string {
     if (!this.user) return 'Usuario';
-    return this.user.full_name || this.user.email;
+    return this.user.name || this.user.email;
   }
 
   get userInitials(): string {
     if (!this.user) return 'U';
 
-    if (this.user.full_name) {
-      const names = this.user.full_name.trim().split(' ');
+    if (this.user.name) {
+      const names = this.user.name.trim().split(' ');
       if (names.length >= 2) {
         return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
       }
-      return this.user.full_name.substring(0, 2).toUpperCase();
+      return this.user.name.substring(0, 2).toUpperCase();
     }
 
     return this.user.email.substring(0, 2).toUpperCase();

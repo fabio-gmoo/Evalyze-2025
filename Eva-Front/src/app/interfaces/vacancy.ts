@@ -13,8 +13,9 @@ export interface Vacancy {
   candidatesCount?: number;
   aiDurationMin?: number;
   shortDescription?: string;
-  publishedAt?: string; // ISO
-  closesAt?: string; // ISO
+  company_name?: string;
+  updatedAt?: string;
+  createdAt?: string;
   status: VacancyStatus;
 }
 

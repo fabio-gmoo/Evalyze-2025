@@ -10,7 +10,8 @@ class RoleTokenObtainPairSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
         # claims extra (útiles en el front)
         token["email"] = user.email
-        token["role"] = getattr(user, "role", None)
+        token["role"] = user.role
+        token["name"] = user.name
         return token
 
     def validate(self, attrs):
@@ -19,19 +20,17 @@ class RoleTokenObtainPairSerializer(TokenObtainPairSerializer):
         # SUPER ya agrega 'access' y 'refresh'
         data = super().validate(attrs)
 
-        user_role = getattr(self.user, "role", None)
-
-        if user_role != selected_role:
+        if self.user.role != selected_role:
             raise serializers.ValidationError(
                 {
-                    "role": f"Este usuario no tiene rol de '{selected_role}'. Tiene rol de '{user_role}'."
+                    "role": f"Este usuario no tiene rol de '{selected_role}'. Tiene rol de '{self.user.role}'."
                 }
             )
 
-        # añade datos del usuario a la respuesta (opcional)
         data["user"] = {
             "id": self.user.id,
             "email": self.user.email,
-            "role": getattr(self.user, "role", None),
+            "role": self.user.role,
+            "name": self.user.name,
         }
         return data

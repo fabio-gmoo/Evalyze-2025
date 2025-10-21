@@ -10,9 +10,11 @@ User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source="name", read_only=True)
+
     class Meta:
         model = User
-        fields = ("id", "email", "role")
+        fields = ("id", "email", "role", "name")
 
 
 # === Registro de Empresa ===
@@ -23,8 +25,6 @@ class RegisterCompanySerializer(serializers.ModelSerializer):
     confirm = serializers.CharField(write_only=True)
     # Campos del perfil:
     company_name = serializers.CharField(write_only=True)
-    website = serializers.URLField(required=False, allow_blank=True, write_only=True)
-    industry = serializers.CharField(required=False, allow_blank=True, write_only=True)
     size = serializers.CharField(required=False, allow_blank=True, write_only=True)
     country = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
@@ -36,8 +36,6 @@ class RegisterCompanySerializer(serializers.ModelSerializer):
             "password",
             "confirm",
             "company_name",
-            "website",
-            "industry",
             "size",
             "country",
         )
@@ -54,8 +52,7 @@ class RegisterCompanySerializer(serializers.ModelSerializer):
         pwd = data.pop("password")
         data.pop("confirm")
         company_name = data.pop("company_name")
-        website = data.pop("website", "")
-        industry = data.pop("industry", "")
+
         size = data.pop("size", "")
         country = data.pop("country", "")
 
@@ -65,9 +62,7 @@ class RegisterCompanySerializer(serializers.ModelSerializer):
 
         CompanyProfile.objects.create(
             user=user,
-            name=company_name,
-            website=website,
-            industry=industry,
+            company_name=company_name,
             size=size,
             country=country,
         )
@@ -82,9 +77,6 @@ class RegisterCandidateSerializer(serializers.ModelSerializer):
     confirm = serializers.CharField(write_only=True)
     # Perfil:
     full_name = serializers.CharField(write_only=True)
-    phone = serializers.CharField(required=False, allow_blank=True, write_only=True)
-    location = serializers.CharField(required=False, allow_blank=True, write_only=True)
-    headline = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
     class Meta:
         model = User
@@ -94,9 +86,6 @@ class RegisterCandidateSerializer(serializers.ModelSerializer):
             "password",
             "confirm",
             "full_name",
-            "phone",
-            "location",
-            "headline",
         )
 
     def validate(self, attrs):
@@ -111,9 +100,6 @@ class RegisterCandidateSerializer(serializers.ModelSerializer):
         pwd = data.pop("password")
         data.pop("confirm")
         full_name = data.pop("full_name")
-        phone = data.pop("phone", "")
-        location = data.pop("location", "")
-        headline = data.pop("headline", "")
 
         user = User(email=data["email"], role=Roles.CANDIDATE, username=data["email"])
         user.set_password(pwd)
@@ -122,8 +108,5 @@ class RegisterCandidateSerializer(serializers.ModelSerializer):
         CandidateProfile.objects.create(
             user=user,
             full_name=full_name,
-            phone=phone,
-            location=location,
-            headline=headline,
         )
         return user

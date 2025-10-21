@@ -1,32 +1,24 @@
 import { Vacancy } from '@interfaces/vacancy';
 import { VacanteUI, FormData } from '@interfaces/vacante-model';
 
-export function mapVacancyToUI(v: Vacancy): VacanteUI {
-  const ubicacion = [v.city, v.country].filter(Boolean).join(', ');
-  const salario =
-    typeof v.salaryMin === 'number' && typeof v.salaryMax === 'number'
-      ? `${v.salaryMin} - ${v.salaryMax}`
-      : 'A convenir';
+export function mapVacancyToUI(vacancy: Vacancy): VacanteUI {
+  const salaryParts = [];
+  if (vacancy.salaryMin) salaryParts.push(vacancy.salaryMin);
+  if (vacancy.salaryMax) salaryParts.push(vacancy.salaryMax);
+  const salario = salaryParts.length > 0 ? salaryParts.join(' - ') : undefined;
 
   return {
-    id: v.id,
-    puesto: v.title,
-    descripcion: v.shortDescription || (v as any).descripcion || '',
-    requisitos: (v as any).requisitos || [],
-    ubicacion,
-    salario,
-    tipo_contrato: (v as any).tipo_contrato ?? null,
-    activa: v.status === 'active',
-    departamento: v.area || '',
-    candidatos: v.candidatesCount ?? 0,
-    duracionIA: (v.aiDurationMin ? `${v.aiDurationMin}min` : '45min') + ' IA',
-    publicada: v.publishedAt
-      ? new Date(v.publishedAt).toLocaleDateString('es-ES')
-      : new Date().toLocaleDateString('es-ES'),
-    cierra: v.closesAt
-      ? new Date(v.closesAt).toLocaleDateString('es-ES')
-      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES'),
-    preguntasIA: 2,
+    id: vacancy.id,
+    puesto: vacancy.title,
+    departamento: vacancy.area || undefined,
+    ubicacion: [vacancy.city, vacancy.country].filter(Boolean).join(', ') || 'No especificada',
+    tipo_contrato: (vacancy as any).tipo_contrato || 'Tiempo Completo',
+    salario: salario,
+    descripcion: vacancy.shortDescription || (vacancy as any).descripcion || '',
+    requisitos: (vacancy as any).requisitos || [],
+    candidatos: (vacancy as any).candidatos || 0,
+    activa: vacancy.status === 'active',
+    company_name: vacancy.company_name, // NEW
   };
 }
 

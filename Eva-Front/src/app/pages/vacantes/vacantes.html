@@ -8,11 +8,6 @@
     <app-stats-grid [stats]="stats()" />
   }
 
-  <!-- Tabs (solo empresa) -->
-  @if (viewMode() === 'company') {
-    <app-vacancy-tabs [tabs]="tabs" [activeTab]="activeTab()" (tabChange)="setActiveTab($event)" />
-  }
-
   <!-- Sección de acciones -->
   <div class="section-header">
     <div>
@@ -47,7 +42,18 @@
     (delete)="eliminarVacante($event)"
     (apply)="openChat($event)"
     (createNew)="openModal(null)"
+    (details)="openDetails($event)"
   />
+
+  @if (showDetailsModal() && detailsVacancy()) {
+    <app-vacancy-details-modal
+      [vacancy]="detailsVacancy()!"
+      [viewMode]="viewMode()"
+      (close)="closeDetails()"
+      (apply)="onDetailsApply($event)"
+      (edit)="onDetailsEdit($event)"
+    />
+  }
 
   <!-- Modal crear/editar -->
   <app-vacancy-modal
