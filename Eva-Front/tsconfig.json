@@ -1,30 +1,33 @@
-/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
-/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "strict": true,
+    "baseUrl": "./",
     "paths": {
-      "@pages/*": ["./src/app/pages/*"],
-      "@components/*": ["./src/app/components/*"],
-      "@widgets/*": ["./src/app/components/widgets/*"],
-      "@interfaces/*": ["./src/app/interfaces/*"],
-      "@environment": ["./src/app/environments/environment"],
-      "@environments/*": ["./src/environments/*"],
-      "@services/*": ["./src/app/services/*"],
-      "@assets/*": ["./src/assets/*"],
-      "@shared/*": ["./src/app/shared/*"]
+      "@pages/*":        ["src/app/pages/*"],
+      "@components/*":   ["src/app/components/*"],
+      "@widgets/*":      ["src/app/components/widgets/*"],
+      "@interfaces/*":   ["src/app/interfaces/*"],
+      "@environment":    ["src/app/environments/environment"],
+      "@environments/*": ["src/app/environments/*"],
+
+      /* 👇 alias correcto para tus servicios reales */
+      "@services/*":     ["src/app/services/*"],
+
+      /* opcional: solo si realmente usas /core en otros imports */
+      "@core/*":         ["src/app/core/*"],
+
+      "@assets/*":       ["src/assets/*"],
+      "@shared/*":       ["src/app/shared/*"]
     },
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
+
+    "strict": true,
     "skipLibCheck": true,
     "isolatedModules": true,
-    "experimentalDecorators": true,
-    "importHelpers": true,
     "target": "ES2022",
-    "module": "preserve"
+    "module": "preserve",
+
+    /* Evita los “Object is of type 'unknown'” en catch */
+    "useUnknownInCatchVariables": false
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
@@ -35,11 +38,7 @@
   },
   "files": [],
   "references": [
-    {
-      "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.spec.json"
-    }
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.spec.json" }
   ]
 }

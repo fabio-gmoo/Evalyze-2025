@@ -6,31 +6,42 @@ import { environment } from '@environment';
 import { Vacancy } from '@interfaces/vacancy';
 import { map } from 'rxjs/operators';
 
-/** ============
- *  Backend types (Django)
- *  ============ */
 type BackendVacante = {
   id: number;
   puesto: string;
   descripcion: string;
   requisitos?: string | string[];
-  ubicacion: string; // "Ciudad, País"
-  salario?: string | null; // "45000 - 65000" | "A convenir" | null
+  ubicacion?: string;
+  salario?: string | null;
+  salariomin?: string | null;
+  salariomax?: string | null;
   tipo_contrato?: string | null;
   activa: boolean;
   departamento?: string;
+  company_name?: string;
+  created_by_info?: {
+    // NEW
+    id: number;
+    email: string;
+    name: string;
+    role: string;
+  };
+  applications_count?: number; // NEW
 };
-
-/** ============
- *  Helpers parse/compose
- *  ============ */
-function parseUbicacion(ubicacion: string | undefined) {
+function parseUbicacion(ubicacion: string | undefined | null) {
   if (!ubicacion) return { city: '', country: '' };
   const [city, ...rest] = ubicacion.split(',');
   return { city: city?.trim() || '', country: rest.join(',').trim() || '' };
 }
 
-function parseSalario(s: string | null | undefined) {
+function parseSalarioFromApi(obj: BackendVacante) {
+  // Si backend reporta separately, úsalos primero
+  if (obj.salariomin || obj.salariomax) {
+    const min = obj.salariomin ? Number(String(obj.salariomin).replace(/\D/g, '')) : undefined;
+    const max = obj.salariomax ? Number(String(obj.salariomax).replace(/\D/g, '')) : undefined;
+    return { salaryMin: min, salaryMax: max, currency: 'EUR' as const };
+  }
+  const s = obj.salario ?? undefined;
   if (!s) return { salaryMin: undefined, salaryMax: undefined, currency: undefined };
   const match = s.match(/(\d+)\s*-\s*(\d+)/);
   if (!match) return { salaryMin: undefined, salaryMax: undefined, currency: undefined };
@@ -39,6 +50,8 @@ function parseSalario(s: string | null | undefined) {
 
 function composeSalario(min?: number, max?: number) {
   if (typeof min === 'number' && typeof max === 'number') return `${min} - ${max}`;
+  if (typeof min === 'number' && !max) return `${min}`;
+  if (!min && typeof max === 'number') return `${max}`;
   return 'A convenir';
 }
 
@@ -50,7 +63,6 @@ function requisitosToArray(requisitos: BackendVacante['requisitos']): string[] {
     .map((r) => r.trim())
     .filter(Boolean);
 }
-
 function requisitosToText(arr?: string[]): string {
   return (arr ?? [])
     .map((r) => r.trim())
@@ -58,16 +70,16 @@ function requisitosToText(arr?: string[]): string {
     .join('\n');
 }
 
-/** ============
- *  Mapper API → UI
- *  ============ */
 function mapFromApi(v: BackendVacante): Vacancy & {
   descripcion: string;
   requisitos: string[];
   tipo_contrato?: string | null;
+  created_by_info?: any;
+  applications_count?: number;
 } {
-  const { city, country } = parseUbicacion(v.ubicacion);
-  const { salaryMin, salaryMax, currency } = parseSalario(v.salario ?? undefined);
+  const { city, country } = parseUbicacion(v.ubicacion ?? '');
+  const { salaryMin, salaryMax, currency } = parseSalarioFromApi(v);
+
   return {
     id: v.id,
     title: v.puesto,
@@ -77,23 +89,17 @@ function mapFromApi(v: BackendVacante): Vacancy & {
     salaryMin,
     salaryMax,
     currency,
-    candidatesCount: 0,
-    aiDurationMin: 45,
     shortDescription: v.descripcion?.slice(0, 180),
-    publishedAt: undefined,
-    closesAt: undefined,
     status: v.activa ? 'active' : 'closed',
-
-    // extras para el formulario
     descripcion: v.descripcion,
     requisitos: requisitosToArray(v.requisitos),
     tipo_contrato: v.tipo_contrato,
+    company_name: (v as any).company_name,
+    created_by_info: (v as any).created_by_info, // NEW
+    applications_count: (v as any).applications_count, // NEW
   };
 }
-
-/** ============
- *  Mapper UI → API
- *  ============ */
+/** ============ Mapper UI → API ============ */
 function mapToApi(
   payload: Partial<Vacancy> & {
     descripcion?: string;
@@ -101,11 +107,16 @@ function mapToApi(
     tipo_contrato?: string | null;
   },
 ): Partial<BackendVacante> {
+  // El frontend a veces usa city como "Ciudad, País". Lo respetamos.
   const ubicacion =
-    [payload.city, payload.country].filter(Boolean).join(', ') || payload.city || '';
+    // preferir si el caller ya construyó la cadena
+    (payload as any).ubicacion ||
+    [payload.city, payload.country].filter(Boolean).join(', ') ||
+    payload.city ||
+    '';
 
-  return {
-    id: payload.id!,
+  // Construimos el objeto base sin forzar `id` (evitamos id: undefined)
+  const base: Partial<BackendVacante> = {
     puesto: payload.title ?? '',
     descripcion: payload.descripcion ?? '',
     requisitos: requisitosToText(payload.requisitos),
@@ -115,6 +126,16 @@ function mapToApi(
     activa: payload.status ? payload.status === 'active' : true,
     departamento: payload.area ?? '',
   };
+
+  // Además, si vienen valores numericos separados, inclúyelos para compatibilidad con el backend
+  if (typeof payload.salaryMin === 'number') base.salariomin = String(payload.salaryMin);
+  if (typeof payload.salaryMax === 'number') base.salariomax = String(payload.salaryMax);
+
+  if (typeof (payload as any).id === 'number') {
+    (base as any).id = (payload as any).id;
+  }
+
+  return base;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -122,11 +143,18 @@ export class Vacancies {
   private http = inject(HttpClient);
   private base = `${environment.apiBase}/jobs`;
 
-  listAll(): Observable<Vacancy[]> {
-    return this.http.get<BackendVacante[]>(`${this.base}/`).pipe(map((arr) => arr.map(mapFromApi)));
+  getAllVacancies(): Observable<Vacancy[]> {
+    return this.http
+      .get<BackendVacante[]>(`${this.base}/all-vacancies/`)
+      .pipe(map((arr) => arr.map(mapFromApi)));
   }
 
-  listMine(): Observable<Vacancy[]> {
+  /** Vacantes públicas activas (para postulante) */
+  listActive(): Observable<Vacancy[]> {
+    return this.getAllVacancies().pipe(map((list) => list.filter((v) => v.status === 'active')));
+  }
+
+  getMine(): Observable<Vacancy[]> {
     return this.http
       .get<BackendVacante[]>(`${this.base}/mine/`)
       .pipe(map((arr) => arr.map(mapFromApi)));
@@ -141,6 +169,7 @@ export class Vacancies {
       descripcion?: string;
       requisitos?: string[];
       tipo_contrato?: string | null;
+      company_name?: string;
     },
   ): Observable<Vacancy> {
     const body = mapToApi(payload);
@@ -190,14 +219,32 @@ export class Vacancies {
     descripcion: string;
     requisitos: string[];
     responsabilidades: string[];
-    preguntas: any[];
   }> {
-    return this.http.post<any>(`${this.base}/generateai/`, { puesto: title });
+    // Endpoint: /jobs/generate-ai/
+    return this.http.post<any>(`${this.base}/generate-ai/`, { puesto: title });
   }
 
   duplicate(id: number): Observable<Vacancy> {
     return this.http
       .post<BackendVacante>(`${this.base}/${id}/duplicate/`, {})
       .pipe(map(mapFromApi));
+  }
+
+  // save -> usa la acción custom en Django: /jobs/save/
+  save(payload: Partial<Vacancy>): Observable<Vacancy> {
+    const body = mapToApi(payload as any);
+    return this.http.post<BackendVacante>(`${this.base}/save/`, body).pipe(map(mapFromApi));
+  }
+
+  apply(vacancyId: number): Observable<any> {
+    return this.http.post(`${this.base}/${vacancyId}/apply/`, {});
+  }
+
+  getApplications(vacancyId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/${vacancyId}/applications/`);
+  }
+
+  getMyApplications(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/my-applications/`);
   }
 }

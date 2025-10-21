@@ -9,7 +9,7 @@ export interface Me {
   id: number;
   email: string;
   role: UserRole;
-  full_name: string;
+  name: string;
 }
 
 export interface LoginResponse extends TokenPair {

@@ -1,0 +1,30 @@
+<!-- src/app/components/vacancy-list/vacancy-list.html -->
+@if (vacancies.length) {
+  <section class="vacantes-list">
+    @for (v of vacancies; track v.id) {
+      <app-vacancy-card
+        [vacancy]="v"
+        [viewMode]="viewMode"
+        (edit)="onEdit($event)"
+        (delete)="onDelete($event)"
+        (apply)="onApply($event)"
+        (details)="onDetails($event)"
+      />
+    }
+  </section>
+} @else {
+  <div class="empty-state">
+    <svg viewBox="0 0 24 24">
+      <path fill="currentColor" d="M12 2a10 10 0 100 20 10 10 0 000-20zM7 11h10v2H7z" />
+    </svg>
+    <h3>No hay vacantes</h3>
+    @if (viewMode === 'company') {
+      <p>Crea tu primera vacante para comenzar.</p>
+      @if (canCreateVacancy) {
+        <button class="btn-primary" (click)="onCreateNew()" type="button">Nueva Vacante</button>
+      }
+    } @else {
+      <p>No hay vacantes disponibles en este momento.</p>
+    }
+  </div>
+}

@@ -103,7 +103,6 @@ export class Registerform {
             confirm: v.confirm,
             company_name: v.company, // 👈 nombres que espera DRF
             size: v.size,
-            industry: v.role, // si “role” = área/cargo
           }
         : {
             email: v.email,

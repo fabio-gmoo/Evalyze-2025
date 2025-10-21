@@ -1,146 +1,136 @@
 // src/app/pages/vacantes/vacantes.ts
+
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+
 import { Vacancies } from '@services/vacancies';
 import { Vacancy } from '@interfaces/vacancy';
+import { Auth } from '@services/auth';
+import { Me } from '@interfaces/token-types-dto';
 
-/** ====== Tipos locales del componente (UI/Modal) ====== */
-interface Pregunta {
-  id: number;
-  pregunta: string;
-  tipo: string;
-  peso: number;
-  palabrasClave: string;
-}
+// Components
+import { VacancyHeader } from '@components/vacancy-header/vacancy-header';
+import { StatsGrid } from '@components/stats-grid/stats-grid';
+import { VacancyList } from '@components/vacancy-list/vacancy-list';
+import { VacancyModal } from '@components/vacancy-modal/vacancy-modal';
+import { ChatDrawer } from '@components/chat-drawer/chat-drawer';
+import { VacancyDetailsModal } from '@components/vacancy-details-modal/vacancy-details-modal';
 
-interface VacanteUI {
-  id?: number;
-  puesto: string;
-  descripcion: string;
-  requisitos: string[];
-  ubicacion: string; // "Ciudad, País"
-  salario: string; // "45000 - 65000" | "A convenir"
-  tipo_contrato: string | null | undefined;
-  activa: boolean;
-  departamento?: string;
-  candidatos?: number;
-  duracionIA?: string;
-  publicada?: string;
-  cierra?: string;
-  preguntasIA?: number;
-}
+// Models
+import {
+  VacanteUI,
+  ViewMode,
+  StatCard,
+  Pregunta,
+  FormData,
+  ChatMessage,
+  Tab,
+} from '@interfaces/vacante-model';
 
-interface FormData {
-  puesto: string;
-  departamento: string;
-  ubicacion: string;
-  tipo_contrato: string;
-  salarioMin: string;
-  salarioMax: string;
-  descripcion: string;
-  requisitos: string[];
-  responsabilidades: string[];
-  duracion: number;
-  puntuacionMinima: number;
-}
+// Utils
+import { mapVacancyToUI, getInitialFormData, getCurrentTime } from '@interfaces/vacancy-utils';
 
 @Component({
   selector: 'app-vacantes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    VacancyHeader,
+    StatsGrid,
+    VacancyList,
+    VacancyModal,
+    ChatDrawer,
+    VacancyDetailsModal,
+  ],
   templateUrl: './vacantes.html',
   styleUrls: ['./vacantes.scss'],
 })
 export class Vacantes implements OnInit {
   private vacanciesService = inject(Vacancies);
+  private auth = inject(Auth);
+
+  showDetailsModal = signal<boolean>(false);
+  detailsVacancy = signal<VacanteUI | null>(null);
 
   /** ====== State ====== */
   activeTab = signal<string>('vacantes');
   showModal = signal<boolean>(false);
   editingVacante = signal<VacanteUI | null>(null);
   loading = signal<boolean>(false);
+  currentUser: Me | null = null; // Add this
+
+  vacantes = signal<VacanteUI[]>([]);
 
   preguntas = signal<Pregunta[]>([
     { id: 1, pregunta: '', tipo: 'Técnica', peso: 20, palabrasClave: '' },
   ]);
 
-  formData = signal<FormData>({
-    puesto: '',
-    departamento: '',
-    ubicacion: '',
-    tipo_contrato: 'Tiempo Completo',
-    salarioMin: '',
-    salarioMax: '',
-    descripcion: '',
-    requisitos: [''],
-    responsabilidades: [''],
-    duracion: 45,
-    puntuacionMinima: 75,
-  });
+  formData = signal<FormData>(getInitialFormData());
 
-  stats = signal([
-    { title: 'Vacantes Activas', value: 0, change: '+0 esta semana', color: 'blue' as const },
-    { title: 'Candidatos', value: 0, change: '+0 hoy', color: 'green' as const },
-    { title: 'Entrevistas IA', value: 0, change: '0 pendientes', color: 'purple' as const },
-    { title: 'Contrataciones', value: 0, change: 'Este mes', color: 'yellow' as const },
+  stats = signal<StatCard[]>([
+    { title: 'Vacantes Activas', value: 0, change: '+0 esta semana', color: 'blue' },
+    { title: 'Candidatos', value: 0, change: '+0 hoy', color: 'green' },
+    { title: 'Entrevistas IA', value: 0, change: '0 pendientes', color: 'purple' },
+    { title: 'Contrataciones', value: 0, change: 'Este mes', color: 'yellow' },
   ]);
 
-  tabs = [
+  tabs: Tab[] = [
     { id: 'vacantes', label: 'Vacantes' },
     { id: 'postulaciones', label: 'Postulaciones' },
     { id: 'entrevistas', label: 'Entrevistas IA' },
     { id: 'ranking', label: 'Ranking' },
     { id: 'informes', label: 'Informes' },
-  ] as const;
+  ];
 
-  vacantes = signal<VacanteUI[]>([]);
+  /** ===== Chat (postulante) ===== */
+  chatOpen = signal<boolean>(false);
+  chatMessages = signal<ChatMessage[]>([]);
+  chatVacante = signal<VacanteUI | null>(null);
+  chatDraft = signal<string>('');
 
   /** ====== Lifecycle ====== */
   ngOnInit(): void {
-    this.loadVacantes();
-    this.loadStats();
+    this.auth.me$.subscribe((user) => {
+      this.currentUser = user;
+      // Load vacancies after getting user info
+      this.loadVacantes();
+      // Load stats only for companies
+      if (this.currentUser?.role === 'company') {
+        this.loadStats();
+      }
+    });
+  }
+
+  /** ====== Computed properties ====== */
+  viewMode(): ViewMode {
+    return this.currentUser?.role === 'company' ? 'company' : 'candidate';
+  }
+
+  canCreateVacancy(): boolean {
+    return this.currentUser?.role === 'company';
   }
 
   /** ====== Data fetch ====== */
   loadVacantes(): void {
     this.loading.set(true);
-    this.vacanciesService.listMine().subscribe({
-      next: (data: Vacancy[]) => {
-        const mapped: VacanteUI[] = data.map((v: Vacancy): VacanteUI => {
-          const ubicacion = [v.city, v.country].filter(Boolean).join(', ');
-          const salario =
-            typeof v.salaryMin === 'number' && typeof v.salaryMax === 'number'
-              ? `${v.salaryMin} - ${v.salaryMax}`
-              : 'A convenir';
 
-          return {
-            id: v.id,
-            puesto: v.title,
-            descripcion: v.shortDescription || '',
-            requisitos: [],
-            ubicacion,
-            salario,
-            tipo_contrato: null,
-            activa: v.status === 'active',
-            departamento: v.area || 'Sin departamento',
-            candidatos: v.candidatesCount ?? 0,
-            duracionIA: (v.aiDurationMin ? `${v.aiDurationMin}min` : '45min') + ' IA',
-            publicada: v.publishedAt
-              ? new Date(v.publishedAt).toLocaleDateString('es-ES')
-              : new Date().toLocaleDateString('es-ES'),
-            cierra: v.closesAt
-              ? new Date(v.closesAt).toLocaleDateString('es-ES')
-              : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('es-ES'),
-            preguntasIA: 2,
-          };
-        });
+    // If user is a company, load only their vacancies
+    // If user is a candidate, load all vacancies
+    const endpoint =
+      this.currentUser?.role === 'company'
+        ? this.vacanciesService.getMine()
+        : this.vacanciesService.getAllVacancies();
+
+    endpoint.subscribe({
+      next: (data: Vacancy[]) => {
+        // Map backend data to UI format
+        const mapped = data.map((v) => mapVacancyToUI(v));
         this.vacantes.set(mapped);
         this.loading.set(false);
       },
-      error: (error: HttpErrorResponse) => {
-        console.error('Error cargando vacantes:', error);
+      error: (err) => {
+        console.error('Error loading vacancies:', err);
         this.loading.set(false);
       },
     });
@@ -178,30 +168,30 @@ export class Vacantes implements OnInit {
   }
 
   openModal(v: VacanteUI | null = null): void {
+    // Only companies can create/edit vacancies
+    if (!this.canCreateVacancy()) {
+      return;
+    }
+
     if (v?.id) {
       this.vacanciesService.getById(v.id).subscribe({
         next: (full: Vacancy) => {
           this.editingVacante.set(v);
           this.formData.set({
             puesto: full.title,
-            departamento: full.area,
+            departamento: full.area || '',
             ubicacion: [full.city, full.country].filter(Boolean).join(', '),
-            tipo_contrato: 'Tiempo Completo',
+            tipo_contrato: (full as any).tipo_contrato || 'Tiempo Completo',
             salarioMin: full.salaryMin?.toString() ?? '',
             salarioMax: full.salaryMax?.toString() ?? '',
-            descripcion: full.shortDescription ?? '',
-            requisitos: [],
-            responsabilidades: [
-              'Desarrollar interfaces de usuario',
-              'Colaborar con el equipo de diseño',
-            ],
+            descripcion: (full as any).descripcion ?? full.shortDescription ?? '',
+            requisitos: (full as any).requisitos ?? [''],
             duracion: 45,
             puntuacionMinima: 75,
           });
           this.showModal.set(true);
         },
         error: (_error: HttpErrorResponse) => {
-          // Fallback con datos de la card
           this.editingVacante.set(v);
           const [min, max] = (v.salario || '').split('-').map((s: string) => s?.trim());
           this.formData.set({
@@ -213,10 +203,6 @@ export class Vacantes implements OnInit {
             salarioMax: max || '',
             descripcion: v.descripcion || '',
             requisitos: v.requisitos?.length ? v.requisitos : [''],
-            responsabilidades: [
-              'Desarrollar interfaces de usuario',
-              'Colaborar con el equipo de diseño',
-            ],
             duracion: 45,
             puntuacionMinima: 75,
           });
@@ -237,48 +223,41 @@ export class Vacantes implements OnInit {
   }
 
   resetForm(): void {
-    this.formData.set({
-      puesto: '',
-      departamento: '',
-      ubicacion: '',
-      tipo_contrato: 'Tiempo Completo',
-      salarioMin: '',
-      salarioMax: '',
-      descripcion: '',
-      requisitos: [''],
-      responsabilidades: [''],
-      duracion: 45,
-      puntuacionMinima: 75,
-    });
+    this.formData.set(getInitialFormData());
     this.preguntas.set([{ id: 1, pregunta: '', tipo: 'Técnica', peso: 20, palabrasClave: '' }]);
   }
 
-  updateFormField(field: keyof FormData, value: string | number): void {
+  updateFormField(event: { field: keyof FormData; value: string | number }): void {
     const current = this.formData();
-    this.formData.set({ ...current, [field]: value as never });
+    this.formData.set({ ...current, [event.field]: event.value as never });
   }
 
-  updateArrayItem(field: 'requisitos' | 'responsabilidades', index: number, value: string): void {
+  updateArrayItem(event: { index: number; value: string }): void {
     const current = this.formData();
-    const newArray = [...current[field]];
-    newArray[index] = value;
-    this.formData.set({ ...current, [field]: newArray });
+    const newArray = [...current.requisitos];
+    newArray[event.index] = event.value;
+    this.formData.set({ ...current, requisitos: newArray });
   }
 
-  addArrayItem(field: 'requisitos' | 'responsabilidades'): void {
+  addArrayItem(): void {
     const current = this.formData();
-    this.formData.set({ ...current, [field]: [...current[field], ''] });
+    this.formData.set({ ...current, requisitos: [...current.requisitos, ''] });
   }
 
-  removeArrayItem(field: 'requisitos' | 'responsabilidades', index: number): void {
+  removeArrayItem(index: number): void {
     const current = this.formData();
-    if (current[field].length > 1) {
-      const newArray = current[field].filter((_, i) => i !== index);
-      this.formData.set({ ...current, [field]: newArray });
+    if (current.requisitos.length > 1) {
+      const newArray = current.requisitos.filter((_, i) => i !== index);
+      this.formData.set({ ...current, requisitos: newArray });
     }
   }
 
   generarConIA(): void {
+    // Only companies can generate with AI
+    if (!this.canCreateVacancy()) {
+      return;
+    }
+
     const form = this.formData();
     if (!form.puesto.trim()) {
       alert('Por favor ingresa el título del puesto primero');
@@ -286,48 +265,40 @@ export class Vacantes implements OnInit {
     }
     this.loading.set(true);
     this.vacanciesService.generateWithAI(form.puesto).subscribe({
-      next: (response: {
-        descripcion: string;
-        requisitos: string[];
-        responsabilidades: string[];
-        preguntas: Array<{
-          pregunta: string;
-          tipo: string;
-          peso?: number;
-          palabras_clave?: string[];
-        }>;
-      }) => {
+      next: (response: { descripcion: string; requisitos: string[] }) => {
         const current = this.formData();
         this.formData.set({
           ...current,
           descripcion: response.descripcion,
           requisitos: response.requisitos,
-          responsabilidades: response.responsabilidades,
         });
 
-        if (response.preguntas?.length) {
-          this.preguntas.set(
-            response.preguntas.map((p, index) => ({
-              id: index + 1,
-              pregunta: p.pregunta,
-              tipo: p.tipo,
-              peso: p.peso ?? 20,
-              palabrasClave: Array.isArray(p.palabras_clave) ? p.palabras_clave.join(', ') : '',
-            })),
-          );
-        }
         this.loading.set(false);
         alert('Contenido generado con IA exitosamente');
       },
       error: (error: HttpErrorResponse) => {
         console.error('Error generando con IA:', error);
         this.loading.set(false);
-        alert('Error al generar contenido con IA');
+
+        let msg = 'Error al generar contenido con IA';
+        if (error.error) {
+          if (typeof error.error === 'object' && 'detail' in error.error) {
+            msg = (error.error as any).detail;
+          } else if (typeof error.error === 'string') {
+            msg = error.error;
+          }
+        }
+
+        alert(msg);
       },
     });
   }
 
   guardarVacante(): void {
+    if (!this.canCreateVacancy()) {
+      return;
+    }
+
     const form = this.formData();
     const editing = this.editingVacante();
 
@@ -340,15 +311,13 @@ export class Vacantes implements OnInit {
       return;
     }
 
-    const city = form.ubicacion.split(',')[0]?.trim() || form.ubicacion.trim();
-    const country = form.ubicacion.split(',')[1]?.trim() || '';
+    // Get company name from current user
 
     const payload = {
       id: editing?.id,
       title: form.puesto,
       area: form.departamento,
-      city,
-      country,
+      city: form.ubicacion,
       salaryMin: form.salarioMin ? Number(form.salarioMin) : undefined,
       salaryMax: form.salarioMax ? Number(form.salarioMax) : undefined,
       status: 'active' as const,
@@ -376,30 +345,12 @@ export class Vacantes implements OnInit {
       },
     });
   }
-
-  /** ====== Preguntas IA (UI) ====== */
-  agregarPregunta(): void {
-    const current = this.preguntas();
-    const nextId = current.length ? Math.max(...current.map((p) => p.id)) + 1 : 1;
-    this.preguntas.set([
-      ...current,
-      { id: nextId, pregunta: '', tipo: 'Técnica', peso: 20, palabrasClave: '' },
-    ]);
-  }
-
-  actualizarPregunta(id: number, field: keyof Pregunta, value: string | number): void {
-    const current = this.preguntas();
-    this.preguntas.set(current.map((p) => (p.id === id ? { ...p, [field]: value as never } : p)));
-  }
-
-  eliminarPregunta(id: number): void {
-    const current = this.preguntas();
-    if (current.length > 1) {
-      this.preguntas.set(current.filter((p) => p.id !== id));
-    }
-  }
-
   eliminarVacante(id: number): void {
+    // Only companies can delete vacancies
+    if (!this.canCreateVacancy()) {
+      return;
+    }
+
     if (confirm('¿Estás seguro de eliminar esta vacante?')) {
       this.vacanciesService.delete(id).subscribe({
         next: () => {
@@ -412,5 +363,106 @@ export class Vacantes implements OnInit {
         },
       });
     }
+  }
+
+  /** ====== Preguntas ====== */
+  addPregunta(): void {
+    const list = this.preguntas();
+    const nextId = (list.at(-1)?.id ?? 0) + 1;
+    this.preguntas.set([
+      ...list,
+      { id: nextId, pregunta: '', tipo: 'Técnica', peso: 20, palabrasClave: '' },
+    ]);
+  }
+
+  removePregunta(index: number): void {
+    const list = this.preguntas();
+    this.preguntas.set(list.filter((_, i) => i !== index));
+  }
+
+  updatePregunta(event: { index: number; patch: Partial<Pregunta> }): void {
+    const updated = this.preguntas().map((q, i) =>
+      i === event.index ? { ...q, ...event.patch } : q,
+    );
+    this.preguntas.set(updated);
+  }
+
+  // src/app/pages/vacantes/vacantes.ts - Update openChat method
+
+  openChat(v: VacanteUI): void {
+    // Only candidates can chat/apply
+    if (this.currentUser?.role !== 'candidate') {
+      return;
+    }
+
+    // Apply to the vacancy
+    if (v.id) {
+      this.vacanciesService.apply(v.id).subscribe({
+        next: () => {
+          alert('¡Postulación enviada exitosamente!');
+          this.loadVacantes(); // Reload to update count
+        },
+        error: (error: HttpErrorResponse) => {
+          const errorMsg = error.error?.detail || 'Error al postular';
+          alert(errorMsg);
+        },
+      });
+    }
+
+    // Then open chat for interview
+    this.chatVacante.set(v);
+    this.chatMessages.set([
+      {
+        from: 'bot',
+        text: `¡Hola! Bienvenido a tu entrevista para "${v.puesto}". Te haré 4 preguntas. ¿Listo para comenzar?`,
+        time: getCurrentTime(),
+      },
+    ]);
+    this.chatOpen.set(true);
+  }
+  closeChat(): void {
+    this.chatOpen.set(false);
+    this.chatVacante.set(null);
+    this.chatMessages.set([]);
+    this.chatDraft.set('');
+  }
+
+  sendMessage(msg: string): void {
+    if (!msg.trim()) return;
+    const now = getCurrentTime();
+    this.chatMessages.set([...this.chatMessages(), { from: 'user', text: msg, time: now }]);
+    this.chatDraft.set('');
+
+    setTimeout(() => {
+      const follow = `Gracias por la información. En breve te pediremos tu CV y coordinaremos una entrevista.`;
+      this.chatMessages.set([
+        ...this.chatMessages(),
+        { from: 'bot', text: follow, time: getCurrentTime() },
+      ]);
+    }, 450);
+  }
+
+  updateChatDraft(value: string): void {
+    this.chatDraft.set(value);
+  }
+
+  openDetails(vacancy: VacanteUI): void {
+    this.detailsVacancy.set(vacancy);
+    this.showDetailsModal.set(true);
+  }
+
+  closeDetails(): void {
+    this.showDetailsModal.set(false);
+    this.detailsVacancy.set(null);
+  }
+
+  onDetailsApply(vacancy: VacanteUI): void {
+    this.closeDetails();
+    this.openChat(vacancy);
+  }
+
+  onDetailsEdit(vacancy: VacanteUI): void {
+    this.closeDetails();
+    this.openModal(vacancy);
   }
 }

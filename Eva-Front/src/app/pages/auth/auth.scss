@@ -5,17 +5,18 @@ body.no-scroll {
 
 .shell {
   min-height: 100dvh;
+  width: 100%;
   padding: 36px 16px 28px;
   scrollbar-width: none;
   display: grid;
-  place-items: start center;
+  place-items: center;
   text-align: center;
   border-radius: 2%;
   /* Fondo oscuro con degradado + opacidad */
   background: linear-gradient(180deg, rgba(20, 20, 30, 0.9) 0%, rgba(10, 10, 20, 0.85) 100%);
 
   /* Efecto glass */
-  backdrop-filter: blur(40%);
+  backdrop-filter: blur(20%);
   color: #dfe3ff;
 }
 

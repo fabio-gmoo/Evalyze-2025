@@ -4,3 +4,4 @@ uvicorn[standard]
 httpx
 pydantic>=2
 python-dotenv
+google-api-python-client

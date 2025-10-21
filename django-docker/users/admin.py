@@ -12,8 +12,8 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(CompanyProfile)
 class CompanyProfileAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "user")
-    search_fields = ("name", "user__email")
+    list_display = ("id", "company_name", "user")
+    search_fields = ("company_name", "user__email")
 
 
 @admin.register(CandidateProfile)

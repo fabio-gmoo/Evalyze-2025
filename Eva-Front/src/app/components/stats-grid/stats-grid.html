@@ -1,0 +1,10 @@
+<!-- src/app/pages/vacantes/components/stats-grid/stats-grid.component.html -->
+<section class="stats-grid">
+  @for (s of stats; track s.title) {
+    <div class="stat-card" [ngClass]="'stat-' + s.color">
+      <h3>{{ s.title }}</h3>
+      <div class="stat-value">{{ s.value }}</div>
+      <div class="stat-change">{{ s.change }}</div>
+    </div>
+  }
+</section>

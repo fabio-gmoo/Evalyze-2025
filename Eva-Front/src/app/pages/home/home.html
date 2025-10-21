@@ -6,8 +6,13 @@
 <app-cta (openSignup)="openAuth('signup')"></app-cta>
 <app-footer></app-footer>
 
-<!-- Modal de autenticación -->
+<!-- Modal de autenticación con overlay -->
 @if (showAuth()) {
-  <app-auth [startMode]="authMode()" (close)="closeAuth()" (loginSuccess)="onLoginSuccess()">
-  </app-auth>
+  <div class="modal-overlay" (click)="closeAuth()">
+    <div class="modal-wrapper" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeAuth()">×</button>
+      <app-auth [startMode]="authMode()" (close)="closeAuth()" (loginSuccess)="onLoginSuccess()">
+      </app-auth>
+    </div>
+  </div>
 }

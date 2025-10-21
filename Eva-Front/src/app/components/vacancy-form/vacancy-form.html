@@ -1,0 +1,120 @@
+<!-- src/app/pages/vacantes/components/vacancy-form/vacancy-form.component.html -->
+<section class="form-section">
+  <h3>Datos del Puesto</h3>
+  <div class="form-grid-2">
+    <div class="form-group">
+      <label>Título del puesto</label>
+      <input
+        class="form-input"
+        [ngModel]="formData.puesto"
+        (ngModelChange)="onFieldUpdate('puesto', $event)"
+        placeholder="Ej: Desarrollador Frontend Senior"
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Departamento / Área</label>
+      <input
+        class="form-input"
+        [ngModel]="formData.departamento"
+        (ngModelChange)="onFieldUpdate('departamento', $event)"
+        placeholder="Ej: Tecnología"
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Ubicación</label>
+      <input
+        class="form-input"
+        [ngModel]="formData.ubicacion"
+        (ngModelChange)="onFieldUpdate('ubicacion', $event)"
+        placeholder="Ciudad, País"
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Tipo de contrato</label>
+      <select
+        class="form-select"
+        [ngModel]="formData.tipo_contrato"
+        (ngModelChange)="onFieldUpdate('tipo_contrato', $event)"
+      >
+        <option>Tiempo Completo</option>
+        <option>Medio Tiempo</option>
+        <option>Contrato</option>
+        <option>Prácticas</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Salario Mínimo</label>
+      <input
+        class="form-input"
+        type="number"
+        [ngModel]="formData.salarioMin"
+        (ngModelChange)="onFieldUpdate('salarioMin', $event)"
+        placeholder="45000"
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Salario Máximo</label>
+      <input
+        class="form-input"
+        type="number"
+        [ngModel]="formData.salarioMax"
+        (ngModelChange)="onFieldUpdate('salarioMax', $event)"
+        placeholder="65000"
+      />
+    </div>
+
+    <div class="form-group" style="grid-column: 1 / -1">
+      <div class="form-group-header">
+        <label>Descripción</label>
+        <button
+          class="btn-generate-ia"
+          (click)="onGenerateWithAI()"
+          [disabled]="loading"
+          type="button"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M12 2l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1 3-6z"
+              stroke="white"
+              stroke-width="1.5"
+            />
+          </svg>
+          Generar con IA
+          @if (loading) {
+            <span class="loading-spinner" style="margin-left: 0.5rem"></span>
+          }
+        </button>
+      </div>
+      <textarea
+        class="form-textarea"
+        rows="5"
+        [ngModel]="formData.descripcion"
+        (ngModelChange)="onFieldUpdate('descripcion', $event)"
+        placeholder="Resumen del puesto, objetivos, etc."
+      ></textarea>
+    </div>
+  </div>
+</section>
+
+<section class="form-section">
+  <h3>Requisitos</h3>
+  @for (r of formData.requisitos; track trackByIndex($index); let i = $index) {
+    <div class="form-group">
+      <div class="array-input-group">
+        <input
+          class="form-input"
+          [ngModel]="r"
+          (ngModelChange)="onArrayItemUpdate(i, $event)"
+          placeholder="Ej: 5+ años con React"
+        />
+        <button class="btn-remove" (click)="onArrayItemRemove(i)" type="button">Quitar</button>
+      </div>
+    </div>
+  }
+  <button class="btn-add-item" (click)="onArrayItemAdd()" type="button">+ Agregar requisito</button>
+</section>
