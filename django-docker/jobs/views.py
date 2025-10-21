@@ -1,8 +1,8 @@
 from rest_framework import viewsets, permissions, status as http_status  # type: ignore
 from rest_framework.decorators import action  # type: ignore
 from rest_framework.response import Response  # type: ignore
-from .models import Vacante
-from .serializers import VacanteSerializer
+from .models import Vacante, Application
+from .serializers import VacanteSerializer, ApplicationSerializer
 import httpx  # type: ignore
 from django.db.models import Q  # type: ignore
 import logging
@@ -196,3 +196,65 @@ class VacanteViewSet(viewsets.ModelViewSet):
         return Response(
             self.get_serializer(obj).data, status=http_status.HTTP_201_CREATED
         )
+
+    @action(detail=True, methods=["post"], url_path="apply")
+    def apply(self, request, pk=None):
+        """Candidate applies to a vacancy"""
+        vacancy = self.get_object()
+        user = request.user
+
+        if not user.is_authenticated:
+            return Response(
+                {"detail": "Debes iniciar sesión para postular"},
+                status=http_status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if user.role != "candidate":
+            return Response(
+                {"detail": "Solo los candidatos pueden postular"},
+                status=http_status.HTTP_403_FORBIDDEN,
+            )
+
+        # Check if already applied
+        if Application.objects.filter(vacancy=vacancy, candidate=user).exists():
+            return Response(
+                {"detail": "Ya has postulado a esta vacante"},
+                status=http_status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Create application
+        application = Application.objects.create(
+            vacancy=vacancy, candidate=user, status="pending"
+        )
+
+        serializer = ApplicationSerializer(application)
+        return Response(serializer.data, status=http_status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["get"], url_path="applications")
+    def applications(self, request, pk=None):
+        """Get all applications for a vacancy (company only)"""
+        vacancy = self.get_object()
+
+        # Only creator can see applications
+        if vacancy.created_by != request.user:
+            return Response(
+                {"detail": "No autorizado"}, status=http_status.HTTP_403_FORBIDDEN
+            )
+
+        apps = vacancy.applications.all()
+        serializer = ApplicationSerializer(apps, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["get"], url_path="my-applications")
+    def my_applications(self, request):
+        """Get candidate's applications"""
+        user = request.user
+
+        if user.role != "candidate":
+            return Response(
+                {"detail": "Solo candidatos"}, status=http_status.HTTP_403_FORBIDDEN
+            )
+
+        apps = Application.objects.filter(candidate=user)
+        serializer = ApplicationSerializer(apps, many=True)
+        return Response(serializer.data)

@@ -387,12 +387,29 @@ export class Vacantes implements OnInit {
     this.preguntas.set(updated);
   }
 
+  // src/app/pages/vacantes/vacantes.ts - Update openChat method
+
   openChat(v: VacanteUI): void {
     // Only candidates can chat/apply
     if (this.currentUser?.role !== 'candidate') {
       return;
     }
 
+    // Apply to the vacancy
+    if (v.id) {
+      this.vacanciesService.apply(v.id).subscribe({
+        next: () => {
+          alert('¡Postulación enviada exitosamente!');
+          this.loadVacantes(); // Reload to update count
+        },
+        error: (error: HttpErrorResponse) => {
+          const errorMsg = error.error?.detail || 'Error al postular';
+          alert(errorMsg);
+        },
+      });
+    }
+
+    // Then open chat for interview
     this.chatVacante.set(v);
     this.chatMessages.set([
       {
@@ -403,7 +420,6 @@ export class Vacantes implements OnInit {
     ]);
     this.chatOpen.set(true);
   }
-
   closeChat(): void {
     this.chatOpen.set(false);
     this.chatVacante.set(null);

@@ -16,12 +16,15 @@ export function mapVacancyToUI(vacancy: Vacancy): VacanteUI {
     salario: salario,
     descripcion: vacancy.shortDescription || (vacancy as any).descripcion || '',
     requisitos: (vacancy as any).requisitos || [],
-    candidatos: (vacancy as any).candidatos || 0,
+    candidatos: vacancy.applications_count || 0, // Use applications_count
     activa: vacancy.status === 'active',
-    company_name: vacancy.company_name, // NEW
+    company_name: vacancy.company_name,
+    created_by_info: vacancy.created_by_info, // NEW
+    applications_count: vacancy.applications_count, // NEW
+    createdAt: vacancy.createdAt,
+    updatedAt: vacancy.updatedAt,
   };
 }
-
 export function getInitialFormData(): FormData {
   return {
     puesto: '',

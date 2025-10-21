@@ -17,7 +17,17 @@ export interface VacanteUI {
   requisitos?: string[];
   candidatos?: number;
   activa: boolean;
-  company_name?: string; // NEW
+  createdAt?: string;
+  updatedAt?: string;
+  company_name?: string;
+  created_by_info?: {
+    // NEW
+    id: number;
+    email: string;
+    name: string;
+    role: string;
+  };
+  applications_count?: number; // NEW
 }
 
 export interface FormData {

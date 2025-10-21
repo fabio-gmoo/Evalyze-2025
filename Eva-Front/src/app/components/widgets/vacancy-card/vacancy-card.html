@@ -3,6 +3,7 @@
   <div class="card-header">
     <div class="card-title-section">
       <h3 class="card-title">{{ vacancy.puesto }}</h3>
+      <h4>{{ vacancy.company_name }}</h4>
 
       <div class="card-meta">
         @if (vacancy.ubicacion) {
@@ -38,11 +39,10 @@
         }
       </div>
     </div>
-
     @if (vacancy.activa) {
       <span class="status-badge"> Activa </span>
     } @else {
-      <span class="status-badge inactive"> Inactiva </span>
+      <span class="status-badge inactive">Inactiva</span>
     }
   </div>
 
@@ -72,7 +72,12 @@
             <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
             <path d="M16 3.13a4 4 0 0 1 0 7.75" />
           </svg>
-          <strong>{{ vacancy.candidatos || 0 }}</strong> candidatos
+          <strong>{{ vacancy.applications_count || vacancy.candidatos || 0 }}</strong>
+          {{
+            (vacancy.applications_count || vacancy.candidatos || 0) === 1
+              ? 'candidato'
+              : 'candidatos'
+          }}
         </div>
       }
     </div>
@@ -89,6 +94,18 @@
       </button>
 
       @if (viewMode === 'company') {
+        <button
+          type="button"
+          class="btn btn-secondary btn-icon"
+          (click)="onEdit()"
+          title="Editar vacante"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+        </button>
+
         <button
           type="button"
           class="btn btn-danger btn-icon"

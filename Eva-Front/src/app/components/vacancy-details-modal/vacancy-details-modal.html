@@ -12,7 +12,7 @@
         </div>
         <div class="header-info">
           <h2>{{ vacancy.puesto }}</h2>
-          <h3 class="company-subtitle">{{ vacancy.company_name }}</h3>
+          <h3>{{ vacancy.company_name }}</h3>
           <div class="header-meta">
             @if (vacancy.ubicacion) {
               <span class="meta-item">
@@ -78,21 +78,43 @@
                   <span class="info-value">{{ vacancy.tipo_contrato }}</span>
                 </div>
               }
-              @if (vacancy.activa) {
-                <div class="info-item">
-                  <span class="info-label">Estado</span>
-                  <span class="info-value">
-                    @if (vacancy.activa) {
-                      <span class="status-badge"> Activa </span>
-                    } @else {
-                      <span class="status-badge inactive"> Inactiva </span>
-                    }
-                  </span>
-                </div>
-              }
+              <div class="info-item">
+                <span class="info-label">Estado</span>
+                <span class="info-value">
+                  @if (vacancy.activa) {
+                    <span class="status-badge"> Activa </span>
+                  } @else {
+                    <span class="status-badge inactive"> Inactive</span>
+                  }
+                </span>
+              </div>
             </div>
           </section>
+          <section class="content-section">
+            <h3 class="section-title">Requisitos del Puesto</h3>
 
+            @if (vacancy?.requisitos?.length) {
+              <ul class="requirements-list">
+                <!-- Iteramos sobre todos los requisitos.  Nota el uso de track $index -->
+                @for (req of vacancy?.requisitos ?? []; track $index) {
+                  <li class="requirement-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    {{ req }}
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="empty-message">No hay requisitos especificados</p>
+            }
+          </section>
+        </div>
+      }
+
+      <!-- Requisitos Tab -->
+      @if (activeTab === 'requisitos') {
+        <div class="tab-content">
           <section class="content-section">
             <h3 class="section-title">Requisitos del Puesto</h3>
             @if (vacancy.requisitos && vacancy.requisitos.length > 0) {

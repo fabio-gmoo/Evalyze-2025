@@ -11,16 +11,23 @@ type BackendVacante = {
   puesto: string;
   descripcion: string;
   requisitos?: string | string[];
-  ubicacion?: string; // "Ciudad, País"
-  salario?: string | null; // "45000 - 65000" | "A convenir" | null
-  // Si tu backend expone campos separados, los aceptamos también:
+  ubicacion?: string;
+  salario?: string | null;
   salariomin?: string | null;
   salariomax?: string | null;
   tipo_contrato?: string | null;
   activa: boolean;
   departamento?: string;
+  company_name?: string;
+  created_by_info?: {
+    // NEW
+    id: number;
+    email: string;
+    name: string;
+    role: string;
+  };
+  applications_count?: number; // NEW
 };
-
 function parseUbicacion(ubicacion: string | undefined | null) {
   if (!ubicacion) return { city: '', country: '' };
   const [city, ...rest] = ubicacion.split(',');
@@ -67,10 +74,12 @@ function mapFromApi(v: BackendVacante): Vacancy & {
   descripcion: string;
   requisitos: string[];
   tipo_contrato?: string | null;
+  created_by_info?: any;
+  applications_count?: number;
 } {
-  // Preferir ubicacion del objeto; si no viene, puede que frontend envíe city/country separados
   const { city, country } = parseUbicacion(v.ubicacion ?? '');
   const { salaryMin, salaryMax, currency } = parseSalarioFromApi(v);
+
   return {
     id: v.id,
     title: v.puesto,
@@ -80,16 +89,16 @@ function mapFromApi(v: BackendVacante): Vacancy & {
     salaryMin,
     salaryMax,
     currency,
-
     shortDescription: v.descripcion?.slice(0, 180),
-
     status: v.activa ? 'active' : 'closed',
     descripcion: v.descripcion,
     requisitos: requisitosToArray(v.requisitos),
     tipo_contrato: v.tipo_contrato,
+    company_name: (v as any).company_name,
+    created_by_info: (v as any).created_by_info, // NEW
+    applications_count: (v as any).applications_count, // NEW
   };
 }
-
 /** ============ Mapper UI → API ============ */
 function mapToApi(
   payload: Partial<Vacancy> & {
@@ -225,5 +234,17 @@ export class Vacancies {
   save(payload: Partial<Vacancy>): Observable<Vacancy> {
     const body = mapToApi(payload as any);
     return this.http.post<BackendVacante>(`${this.base}/save/`, body).pipe(map(mapFromApi));
+  }
+
+  apply(vacancyId: number): Observable<any> {
+    return this.http.post(`${this.base}/${vacancyId}/apply/`, {});
+  }
+
+  getApplications(vacancyId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/${vacancyId}/applications/`);
+  }
+
+  getMyApplications(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/my-applications/`);
   }
 }

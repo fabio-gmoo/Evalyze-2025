@@ -1,15 +1,22 @@
 // src/app/interfaces/vacancy.ts
 export type VacancyStatus = 'active' | 'closed';
 
+export interface CreatorInfo {
+  id: number;
+  email: string;
+  name: string;
+  role: 'company' | 'candidate';
+}
+
 export interface Vacancy {
   id: number;
   title: string;
-  area: string; // p.ej. Tecnología / Datos
+  area: string;
   city: string;
   country: string;
   salaryMin?: number;
   salaryMax?: number;
-  currency?: string; // 'USD' | 'EUR' | ...
+  currency?: string;
   candidatesCount?: number;
   aiDurationMin?: number;
   shortDescription?: string;
@@ -17,6 +24,8 @@ export interface Vacancy {
   updatedAt?: string;
   createdAt?: string;
   status: VacancyStatus;
+  created_by_info?: CreatorInfo; // NEW
+  applications_count?: number; // NEW
 }
 
 export interface Pregunta {
