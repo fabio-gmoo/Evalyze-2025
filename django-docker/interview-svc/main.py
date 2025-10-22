@@ -25,3 +25,6 @@ def create_app() -> FastAPI:
     chat_service = ChatService(llm=llm_adapter)
     app.include_router(get_ai_router(chat_service))
     return app
+
+
+app = create_app()

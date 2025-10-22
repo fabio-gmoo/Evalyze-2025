@@ -4,7 +4,7 @@ set -e
 # defaults
 : "${AI_PROVIDER:=ollama}"
 : "${OLLAMA_HOST:=http://ollama:11434}"
-: "${OLLAMA_MODEL:=llama3.1}"
+: "${OLLAMA_MODEL:=llama3.2}"
 
 # si usamos ollama, espera y asegura el modelo
 if [ "$AI_PROVIDER" = "ollama" ]; then
@@ -15,4 +15,4 @@ if [ "$AI_PROVIDER" = "ollama" ]; then
 fi
 
 # arranca FastAPI (tu main.py está en /app)
-exec python -m uvicorn main:app --host 0.0.0.0 --port 8080
+exec python -m uvicorn main:app --host 0.0.0.0 --port 8001

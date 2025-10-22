@@ -169,9 +169,26 @@
           </svg>
           Postular a esta Vacante
         </button>
+        @if (vacancy?.id) {
+          <button (click)="openChat(vacancy?.id)">Iniciar Entrevista AI</button>
+        }
+
+        <app-chat-modal
+          [open]="isChatModalOpen"
+          [vacancy]="vacancy"
+          [interviewQuestions]="activeInterviewQuestions"
+          (close)="isChatModalOpen = false"
+        ></app-chat-modal>
       }
 
       @if (viewMode === 'company') {
+        <button type="button" class="btn btn-secondary" (click)="onGenerateInterview()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          Generar Entrevista IA
+        </button>
+
         <button type="button" class="btn btn-primary" (click)="onEdit()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />

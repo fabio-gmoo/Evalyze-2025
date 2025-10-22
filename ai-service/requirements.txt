@@ -1,5 +1,12 @@
-﻿fastapi
-uvicorn
-requests
-sentence-transformers
-numpy
+﻿
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+requests==2.32.3
+sentence-transformers==3.0.1
+numpy==1.26.4
+torch==2.9.0
+transformers==4.44.2
+# Starlette: no fijar aquí; la instalará fastapi con la versión correcta
+# Puedes sustituir pydantic==2.9.2 por un rango compatible
+pydantic>=2.7.0,<3.0.0
+

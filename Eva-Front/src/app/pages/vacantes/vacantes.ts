@@ -8,6 +8,7 @@ import { Vacancies } from '@services/vacancies';
 import { Vacancy } from '@interfaces/vacancy';
 import { Auth } from '@services/auth';
 import { Me } from '@interfaces/token-types-dto';
+import { Interview } from '@services/interview';
 
 // Components
 import { VacancyHeader } from '@components/vacancy-header/vacancy-header';
@@ -49,6 +50,7 @@ import { mapVacancyToUI, getInitialFormData, getCurrentTime } from '@interfaces/
 export class Vacantes implements OnInit {
   private vacanciesService = inject(Vacancies);
   private auth = inject(Auth);
+  private interviewService = inject(Interview);
 
   showDetailsModal = signal<boolean>(false);
   detailsVacancy = signal<VacanteUI | null>(null);
@@ -464,5 +466,30 @@ export class Vacantes implements OnInit {
   onDetailsEdit(vacancy: VacanteUI): void {
     this.closeDetails();
     this.openModal(vacancy);
+  }
+
+  onGenerateInterview(vacancyId: number) {
+    this.loading.set(true);
+
+    this.interviewService
+      .generateInterview(vacancyId, {
+        level: 'intermedio',
+        n_questions: 4,
+      })
+      .subscribe({
+        next: (response) => {
+          this.loading.set(false);
+          console.log('Interview generated:', response.interview);
+          alert(`¡Entrevista generada con ${response.interview.questions.length} preguntas!`);
+
+          // TODO: Navigate to interview page or show interview modal
+          // this.router.navigate(['/interviews', vacancyId]);
+        },
+        error: (error) => {
+          this.loading.set(false);
+          console.error('Error generating interview:', error);
+          alert('Error al generar la entrevista');
+        },
+      });
   }
 }

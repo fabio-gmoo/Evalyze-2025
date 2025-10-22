@@ -3,7 +3,14 @@ import httpx  # type: ignore
 import json
 import os
 from fastapi import APIRouter, Header, HTTPException  # type: ignore
-from app.domain.models import ChatRequest, ChatResponse, VacancyDraftIn, VacancyDraftOut  # type: ignore
+from app.domain.models import (
+    ChatRequest,
+    ChatResponse,
+    VacancyDraftIn,
+    VacancyDraftOut,
+    StartConversationReq,
+    StartConversationRes,
+)  # type: ignore
 from app.domain.services import ChatService  # type: ignore
 from app.infrastructure.ai_provider import HttpLLMAdapter  # type: ignore
 from app.infrastructure.content_moderator import get_content_moderator  # type: ignore
@@ -22,7 +29,8 @@ CONTENT_MODERATION_ENABLED = (
     os.getenv("CONTENT_MODERATION_ENABLED", "true").lower() == "true"
 )
 CONTENT_MODERATION_REQUIRE_CONSENSUS = (
-    os.getenv("CONTENT_MODERATION_REQUIRE_CONSENSUS", "false").lower() == "true"
+    os.getenv("CONTENT_MODERATION_REQUIRE_CONSENSUS",
+              "false").lower() == "true"
 )
 PERSPECTIVE_THRESHOLD = float(os.getenv("PERSPECTIVE_THRESHOLD", "0.7"))
 
@@ -142,7 +150,7 @@ def get_ai_router(chat_service: ChatService) -> APIRouter:
                 start = content.find("{")
                 end = content.rfind("}")
                 if start >= 0 and end > start:
-                    raw = json.loads(content[start : end + 1])
+                    raw = json.loads(content[start: end + 1])
                 else:
                     raise HTTPException(
                         status_code=502, detail="El modelo no devolvió JSON válido."
@@ -151,7 +159,8 @@ def get_ai_router(chat_service: ChatService) -> APIRouter:
             # Normalizar respuesta (tu código original)
             out = VacancyDraftOut(
                 puesto=raw.get("puesto", req.puesto),
-                descripcion_sugerida=raw.get("descripcion_sugerida", req.descripcion),
+                descripcion_sugerida=raw.get(
+                    "descripcion_sugerida", req.descripcion),
                 requisitos_sugeridos=raw.get("requisitos_sugeridos", []),
             )
 
@@ -159,7 +168,8 @@ def get_ai_router(chat_service: ChatService) -> APIRouter:
             return out
 
         except httpx.HTTPStatusError as e:
-            logger.error(f"❌ Error HTTP en generación: {e.response.status_code}")
+            logger.error(f"❌ Error HTTP en generación: {
+                         e.response.status_code}")
             raise HTTPException(
                 status_code=e.response.status_code, detail=e.response.text
             )
@@ -203,5 +213,47 @@ def get_ai_router(chat_service: ChatService) -> APIRouter:
             raise HTTPException(
                 status_code=400, detail="Error al guardar la vacante en Django"
             )
+
+    @router.post("/candidate-conversations/start", response_model=StartConversationRes)
+    async def start_candidate_conversations(
+        req: StartConversationReq, x_api_key: str | None = Header(default=None)
+    ):
+        """
+        Initiates a conversation for all applied candidates based on the generated interview questions.
+        """
+        _check_public_key(x_api_key)
+
+        logger.info(
+            f"🚀 Starting conversations for {len(req.candidates)} candidates "
+            f"for vacancy ID {req.vacancy_id}: {req.vacancy_title}"
+        )
+
+        # --- LOGIC TO START CONVERSATION ---
+
+        # 1. In a real system, you would iterate over req.candidates.
+        # 2. For each candidate, you'd save the interview_questions to your DB.
+        # 3. You would then use the chat_service (or a new dedicated service)
+        #    to generate the FIRST message using the interview_questions as a system prompt.
+        #    The system prompt would instruct the LLM (via HttpLLMAdapter.chat) to
+        #    start the conversation with the first question.
+
+        started_ids = []
+        for candidate in req.candidates:
+            # Example: Imagine this line initiates a job or saves the chat history start
+            # For demonstration, we just log and collect the ID
+            logger.info(
+                f"   -> Initiating chat for candidate {
+                    candidate.id}: {candidate.name}"
+            )
+            started_ids.append(candidate.id)
+
+        # You would typically call chat_service.handle_chat or a new service here
+        # to generate the initial greeting/first question.
+
+        return StartConversationRes(
+            status="Initiation complete",
+            total_candidates=len(req.candidates),
+            started_chats=started_ids,
+        )
 
     return router

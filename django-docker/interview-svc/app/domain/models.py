@@ -1,5 +1,6 @@
 # interview-svc/app/domain/models.py
 from pydantic import BaseModel, Field, field_validator  # type: ignore
+from typing import List, Any
 
 
 class ChatRequest(BaseModel):
@@ -30,7 +31,8 @@ class VacancyDraftOut(BaseModel):
             return v
         if isinstance(v, str):
             # separar por saltos de línea o por punto/coma
-            parts = [p.strip("-• ").strip() for p in v.split("\n") if p.strip()]
+            parts = [p.strip("-• ").strip()
+                     for p in v.split("\n") if p.strip()]
             if parts:
                 return parts
         return []
@@ -38,3 +40,33 @@ class VacancyDraftOut(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+
+
+class InterviewQuestion(BaseModel):
+    id: str = Field(..., min_length=1)
+    question: str
+    type: str
+    expected_keywords: List[str]
+    rubric: str
+    weight: int
+
+
+class CandidateConversationStart(BaseModel):
+    id: int  # Candidate ID
+    email: str
+    name: str
+
+
+class StartConversationReq(BaseModel):
+    vacancy_id: int
+    vacancy_title: str
+    # The core interview structure
+    interview_questions: List[InterviewQuestion]
+    candidates: List[CandidateConversationStart]
+
+
+# NEW: Response model for conversation initiation
+class StartConversationRes(BaseModel):
+    status: str
+    total_candidates: int
+    started_chats: List[int]  # List of candidate IDs whose chats were started

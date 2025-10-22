@@ -5,10 +5,10 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8000:8000"
+      - '8000:8000'
     environment:
       # Para que Django sepa a dónde llamar a la IA dentro de la red del compose
-      AI_SERVICE_URL: http://ai-service:8080
+      AI_SERVICE_URL: http://ai-service:8001
     secrets:
       - source: jwt_key_private
         target: jwt_private.pem
@@ -25,9 +25,9 @@ services:
       context: ./interview-svc
       dockerfile: Dockerfile
     ports:
-      - "9000:9000"
+      - '9000:9000'
     env_file:
-      - ./.env         # <— mejor apunta al .env de esta carpeta
+      - ./.env # <— mejor apunta al .env de esta carpeta
     environment:
       DEMO_MODE: true
       DEMO_API_KEY: evalyze-demo-123
@@ -35,46 +35,50 @@ services:
       - app_network
 
   # --- AI Service (FastAPI) ---
+  ollama:
+    image: ollama/ollama:latest
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    ports:
+      - '11434:11434'
+    volumes:
+      - ollama_data:/root/.ollama
+    dns:
+      - 8.8.8.8 # Add Google DNS
+      - 8.8.4.4
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:11434/api/tags']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks:
+      - app_network
+
   ai-service:
     build:
-      context: ../ai-service        # <— tu carpeta hermana ai-service
+      context: ../ai-service/
+      dockerfile: Dockerfile
+    ports:
+      - '8001:8001'
+    volumes:
+      - ../ai-service:/app
     environment:
       AI_PROVIDER: ${AI_PROVIDER:-ollama}
       OLLAMA_HOST: http://ollama:11434
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.1}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2}
     depends_on:
       - ollama
-    volumes:
-      - ../ai-service/kb:/app/kb:ro # <— monta tu base de conocimiento
-    ports:
-      - "8088:8080"                 # <— para probar desde host
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8001/healthz']
       interval: 10s
       timeout: 3s
       retries: 5
     networks:
       - app_network
     restart: unless-stopped
-
-  # --- Ollama (modelos locales) ---
-  ollama:
-    image: ollama/ollama:latest
-    environment:
-      - OLLAMA_KEEP_ALIVE=24h
-    volumes:
-      - ollama-models:/root/.ollama
-    ports:
-      - "11434:11434"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
-      interval: 10s
-      timeout: 3s
-      retries: 10
-    networks:
-      - app_network
-    restart: unless-stopped
-
 secrets:
   jwt_key_private:
     file: ../secrets/jwtRS256.key
@@ -82,8 +86,7 @@ secrets:
     file: ../secrets/jwtRS256.key.pub
 
 volumes:
-  ollama-models:
-
+  ollama_data:
 networks:
   app_network:
     driver: bridge
