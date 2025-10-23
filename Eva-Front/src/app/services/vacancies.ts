@@ -245,6 +245,6 @@ export class Vacancies {
   }
 
   getMyApplications(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.base}/my-applications/`);
+    return this.http.get<any[]>(`${this.base}/my-applications`);
   }
 }

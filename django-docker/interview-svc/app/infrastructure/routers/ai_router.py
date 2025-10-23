@@ -214,7 +214,10 @@ def get_ai_router(chat_service: ChatService) -> APIRouter:
                 status_code=400, detail="Error al guardar la vacante en Django"
             )
 
-    @router.post("/candidate-conversations/start", response_model=StartConversationRes)
+    @router.post(
+        "/candidate-conversations/start",
+        response_model=StartConversationRes,
+    )
     async def start_candidate_conversations(
         req: StartConversationReq, x_api_key: str | None = Header(default=None)
     ):

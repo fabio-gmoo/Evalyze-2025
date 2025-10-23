@@ -32,9 +32,24 @@ export interface GenerateInterviewResponse {
   started_chats?: number[];
 }
 
+export interface InterviewQuestion {
+  id: string;
+  question: string;
+  type: 'technical' | 'behavioral' | 'situational';
+  expected_keywords: string[];
+  rubric: string;
+  weight: number;
+}
+
 export interface GenerateInterviewRequest {
   level?: 'junior' | 'intermedio' | 'senior';
   n_questions?: number;
+}
+
+export interface CandidateChatStartResponse {
+  session_id: string;
+  initial_message: string;
+  questions: InterviewQuestion[];
 }
 
 @Injectable({
@@ -50,6 +65,20 @@ export class Interview {
   ): Observable<GenerateInterviewResponse> {
     return this.http.post<GenerateInterviewResponse>(
       `${this.base}/${vacancyId}/generate-interview/`,
+      {
+        level: request.level || 'intermedio',
+        n_questions: request.n_questions || 4,
+      },
+    );
+  }
+
+  startCandidateChat(
+    vacancyId: number,
+    request: GenerateInterviewRequest = {},
+  ): Observable<CandidateChatStartResponse> {
+    return this.http.post<CandidateChatStartResponse>(
+      // Call the new DRF endpoint
+      `${this.base}/${vacancyId}/start-candidate-chat/`,
       {
         level: request.level || 'intermedio',
         n_questions: request.n_questions || 4,

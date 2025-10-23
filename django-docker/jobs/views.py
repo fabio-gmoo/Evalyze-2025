@@ -159,8 +159,7 @@ class VacanteViewSet(viewsets.ModelViewSet):
 
                 if isinstance(detail, dict):
                     # Error de moderación estructurado
-                    error_detail = detail.get(
-                        "message", "Contenido inapropiado")
+                    error_detail = detail.get("message", "Contenido inapropiado")
                 elif isinstance(detail, str):
                     error_detail = detail
 
@@ -187,8 +186,7 @@ class VacanteViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=http_status.HTTP_400_BAD_REQUEST)
 
         user = (
-            request.user if getattr(
-                request.user, "is_authenticated", False) else None
+            request.user if getattr(request.user, "is_authenticated", False) else None
         )
         # Calcula automáticamente el nombre de la empresa si el usuario tiene CompanyProfile
         company_name = ""
@@ -233,16 +231,51 @@ class VacanteViewSet(viewsets.ModelViewSet):
         serializer = ApplicationSerializer(application)
         return Response(serializer.data, status=http_status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=["get"], url_path="applications")
+    def applications(self, request, pk=None):
+        """Get all applications for a vacancy (company only)"""
+        vacancy = self.get_object()
+
+        # Only creator can see applications
+        if vacancy.created_by != request.user:
+            return Response(
+                {"detail": "No autorizado"}, status=http_status.HTTP_403_FORBIDDEN
+            )
+
+        apps = vacancy.applications.all()
+        serializer = ApplicationSerializer(apps, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["get"], url_path="my-applications/")
+    def my_applications(self, request):
+        """Get candidate's applications"""
+        user = request.user
+
+        if user.role != "candidate":
+            return Response(
+                {"detail": "Solo candidatos"}, status=http_status.HTTP_403_FORBIDDEN
+            )
+
+        apps = Application.objects.filter(candidate=user)
+        serializer = ApplicationSerializer(apps, many=True)
+        return Response(serializer.data)
+
     @action(detail=True, methods=["post"], url_path="generate-interview")
     def generate_interview(self, request, pk=None):
         """
+
         Generate interview questions based on vacancy requirements using AI
+
         AND send the questions to the interview-svc to start candidate chats.
+
         """
+
         vacancy = self.get_object()
 
         # Parse requirements
+
         requisitos = []
+
         if isinstance(vacancy.requisitos, str):
             requisitos = [
                 r.strip() for r in vacancy.requisitos.split("\n") if r.strip()
@@ -255,6 +288,7 @@ class VacanteViewSet(viewsets.ModelViewSet):
             )
 
         level = request.data.get("level", "intermedio")
+
         n_questions = int(request.data.get("n_questions", 4))
 
         ai_payload = {
@@ -266,13 +300,17 @@ class VacanteViewSet(viewsets.ModelViewSet):
 
         try:
             # FIX: Open the client context manager for the entire operation
+
             with httpx.Client(timeout=300.0) as client:
                 # --- 1. CALL AI-SERVICE TO GET QUESTIONS (Host: ai-service, Port: 8001) ---
+
                 ai_response = client.post(
                     "http://ai-service:8001/generate_interview",
                     json=ai_payload,
                 )
+
                 ai_response.raise_for_status()
+
                 ai_data = ai_response.json()
 
                 if not ai_data.get("ok"):
@@ -284,7 +322,9 @@ class VacanteViewSet(viewsets.ModelViewSet):
                 generated_interview = ai_data["interview"]
 
                 # --- 2. GET CANDIDATE LIST ---
+
                 applied_candidates = []
+
                 for app in vacancy.applications.all().select_related("candidate"):
                     applied_candidates.append(
                         {
@@ -300,6 +340,7 @@ class VacanteViewSet(viewsets.ModelViewSet):
                             vacancy.id
                         }. Skipping conversation start."
                     )
+
                     return Response(
                         {
                             "interview": generated_interview,
@@ -314,6 +355,7 @@ class VacanteViewSet(viewsets.ModelViewSet):
                     )
 
                 # --- 3. CALL INTERVIEW-SVC TO START CONVERSATIONS ---
+
                 interview_svc_payload = {
                     "vacancy_id": vacancy.id,
                     "vacancy_title": vacancy.puesto,
@@ -324,24 +366,27 @@ class VacanteViewSet(viewsets.ModelViewSet):
                 interview_svc_api_key = os.environ.get(
                     "AI_PUBLIC_API_KEY", "your-fallback-key"
                 )
+
                 interview_svc_headers = {"X-Api-Key": interview_svc_api_key}
 
-                # CRITICAL FIX: Changing host from 'interview-svc' to 'interview' (Docker service name)
-                # and internal port from 9000 to 8000 (common FastAPI default)
+                # CRITICAL FIX: Final correct path using Docker service name and matching path
+
                 INTERVIEW_SVC_URL = (
                     "http://interview:9000/ai/candidate-conversations/start"
                 )
 
                 interview_svc_response = client.post(
-                    INTERVIEW_SVC_URL,  # <--- Now targeting 'interview' on port 8000
+                    INTERVIEW_SVC_URL,  # <--- Now targeting 'interview' on port 9000
                     json=interview_svc_payload,
                     headers=interview_svc_headers,
                 )
 
                 interview_svc_response.raise_for_status()
+
                 chat_data = interview_svc_response.json()
 
                 # --- 4. RETURN FINAL RESPONSE ---
+
                 return Response(
                     {
                         "interview": generated_interview,
@@ -360,14 +405,158 @@ class VacanteViewSet(viewsets.ModelViewSet):
 
         except httpx.HTTPStatusError as e:
             # Handle error from AI-Service or Interview-Service
+
             return Response(
                 {"detail": f"Error en servicio de IA/Chat: {e.response.text}"},
                 status=http_status.HTTP_502_BAD_GATEWAY,
             )
+
         except Exception as e:
-            logger.error(
-                f"Error en el flujo de entrevista/chat: {e}", exc_info=True)
+            logger.error(f"Error en el flujo de entrevista/chat: {e}", exc_info=True)
+
             return Response(
                 {"detail": f"Error interno: {str(e)}"},
+                status=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def _get_ai_interview_data(
+        self, vacancy, level: str = "intermedio", n_questions: int = 4
+    ):
+        """Internal helper to call the AI service and get interview questions."""
+
+        # NOTE: Ensure vacancy.requisitos is a string for the splitlines() method
+        # if it's not automatically converted from the ListField representation on access.
+        # Your serializer handles the conversion, but here we enforce list parsing.
+        requisitos = []
+        if isinstance(vacancy.requisitos, str):
+            requisitos = [
+                r.strip() for r in vacancy.requisitos.splitlines() if r.strip()
+            ]
+        elif isinstance(vacancy.requisitos, list):
+            requisitos = [r.strip() for r in vacancy.requisitos if r.strip()]
+
+        if not requisitos:
+            raise ValueError("La vacante no tiene requisitos definidos.")
+
+        ai_payload = {
+            "vacancy_title": vacancy.puesto,
+            "requirements": requisitos,
+            "level": level,
+            "n_questions": n_questions,
+        }
+
+        try:
+            with httpx.Client(timeout=60.0) as client:
+                ai_response = client.post(
+                    "http://ai-service:8001/generate_interview",
+                    json=ai_payload,
+                )
+                ai_response.raise_for_status()
+                ai_data = ai_response.json()
+
+            if not ai_data.get("ok"):
+                # Handle cases where the AI service responds 200 but signals an internal error
+                raise Exception(
+                    f"AI Service internal error: {
+                        ai_data.get('detail', 'Unknown error')
+                    }"
+                )
+
+            return ai_data["interview"]
+
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Error calling AI service: {e.response.text}")
+            raise ConnectionError(
+                f"Error al generar entrevista en AI Service: {e.response.text}"
+            )
+        except Exception as e:
+            logger.error(f"Internal error during AI call: {e}")
+            # Note: If this fails, the question generation failed, so the chat can't start.
+            raise ConnectionError(f"Error interno al conectar con AI Service: {e}")
+
+    @action(detail=True, methods=["post"], url_path="start-candidate-chat")
+    def start_candidate_chat(self, request, pk=None):
+        """
+        Candidate calls this endpoint to start an individual AI interview session.
+        1. Gets interview questions from AI-Service.
+        2. Tells Interview-Service to start the individual session for this candidate.
+        """
+        vacancy = self.get_object()
+        user = request.user
+
+        if not user.is_authenticated or user.role != "candidate":
+            return Response(
+                {"detail": "Acceso denegado."},
+                status=http_status.HTTP_403_FORBIDDEN,
+            )
+
+        # Use default values provided by the Angular frontend
+        level = request.data.get("level", "intermedio")
+        n_questions = int(request.data.get("n_questions", 4))
+
+        try:
+            # 1. CALL AI-SERVICE TO GET QUESTIONS
+            generated_interview = self._get_ai_interview_data(
+                vacancy, level=level, n_questions=n_questions
+            )
+            questions = generated_interview["questions"]
+
+            # 2. CALL INTERVIEW-SVC TO START INDIVIDUAL CONVERSATION
+
+            # *** HYPOTHETICAL ENDPOINT USED HERE ***
+            # This assumes your interview service has a dedicated endpoint for single chat start.
+            INTERVIEW_SVC_URL = "http://interview:9000/ai/candidate-conversations/start"
+
+            interview_svc_payload = {
+                "vacancy_id": vacancy.id,
+                "vacancy_title": vacancy.puesto,
+                "interview_questions": questions,
+                "candidate": {
+                    "id": user.id,
+                    "email": user.email,
+                    "name": getattr(user, "name", user.email),
+                },
+            }
+
+            interview_svc_api_key = os.environ.get(
+                "AI_PUBLIC_API_KEY", "your-fallback-key"
+            )
+            interview_svc_headers = {"X-Api-Key": interview_svc_api_key}
+
+            with httpx.Client(timeout=60.0) as client:
+                interview_svc_response = client.post(
+                    INTERVIEW_SVC_URL,
+                    json=interview_svc_payload,
+                    headers=interview_svc_headers,
+                )
+                interview_svc_response.raise_for_status()
+                chat_data = interview_svc_response.json()
+
+            # CRITICAL: Return session ID and first message/questions for the frontend
+            return Response(
+                {
+                    "session_id": chat_data.get("session_id"),
+                    "initial_message": chat_data.get(
+                        "initial_message",
+                        "Hola, estoy listo para iniciar tu entrevista.",
+                    ),
+                    "questions": questions,
+                },
+                status=http_status.HTTP_200_OK,
+            )
+
+        except (ValueError, ConnectionError) as e:
+            # Error handling for known issues (missing requirements, connection failure)
+            logger.error(f"Error en el flujo de chat (Requisitos/Conexión): {e}")
+            return Response(
+                {"detail": f"Error: {e}"},
+                status=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        except Exception as e:
+            # Catch-all for unexpected issues
+            logger.error(f"Error inesperado al iniciar chat: {e}")
+            return Response(
+                {"detail": f"Error interno inesperado: {str(e)}"},
                 status=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

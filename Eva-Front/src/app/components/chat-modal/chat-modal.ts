@@ -27,6 +27,9 @@ export class ChatModal implements AfterViewChecked, OnChanges {
   @Input() open: boolean = false;
   @Input() vacancy: VacanteUI | null = null;
   @Input() interviewQuestions: InterviewQuestion[] | null = null; // New input for initial questions
+  @Input() sessionIdInput: string | null = null; // <--- NEW
+
+  @Input() initialMessageInput: string | null = null;
 
   @Output() close = new EventEmitter<void>();
 
@@ -45,14 +48,23 @@ export class ChatModal implements AfterViewChecked, OnChanges {
   // --- Lifecycle and State Management ---
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['open'] && changes['open'].currentValue === true) {
+    const wasOpened = changes['open'] && changes['open'].currentValue === true;
+    const sessionArrived = changes['sessionIdInput'] && this.sessionIdInput;
+
+    if (wasOpened) {
+      this.resetChat();
+      // When opened, we immediately set shouldScroll to true
       this.shouldScroll = true;
-      if (!this.isChatActive && this.interviewQuestions) {
-        this.startConversation();
-      }
-    } else if (changes['open'] && changes['open'].currentValue === false) {
-      // Optional: Reset state when closing, or keep history
-      // this.resetChat();
+    }
+
+    // LOGIC CHANGE: If the modal is open AND the session data is passed from the parent,
+    // initialize the chat without calling the service.
+    if (this.open && sessionArrived && this.initialMessageInput && !this.isChatActive) {
+      this.sessionId = this.sessionIdInput;
+      this.messages = []; // Clear the messages only here, just before adding the first real one.
+      this.addBotMessage(this.initialMessageInput, 0); // Add the initial message immediately (delay 0)
+      this.isChatActive = true;
+      this.isLoading = false;
     }
   }
 
@@ -64,7 +76,9 @@ export class ChatModal implements AfterViewChecked, OnChanges {
   }
 
   private resetChat(): void {
-    this.messages = [];
+    // We only reset the core state, but keep the messages if the chat was already started.
+    // If you want to clear history every time, uncomment the line below.
+    // this.messages = [];
     this.sessionId = null;
     this.draft = '';
     this.isLoading = false;
@@ -72,39 +86,6 @@ export class ChatModal implements AfterViewChecked, OnChanges {
   }
 
   // --- Chat Logic ---
-
-  private buildInitialPrompt(): string {
-    if (!this.interviewQuestions) return 'Inicia la conversación como un entrevistador amigable.';
-
-    const questions = this.interviewQuestions.map((q) => `- ${q.question}`).join('\n');
-    const systemInstruction = `Eres un entrevistador de IA. Tu tarea es guiar al candidato a través de las siguientes preguntas de la vacante '${this.vacancy?.puesto}':\n${questions}\n\nComienza la conversación con un saludo cálido, introduce la vacante y haz la primera pregunta de la lista.`;
-    return systemInstruction;
-  }
-
-  startConversation(): void {
-    this.isLoading = true;
-    this.messages = [{ from: 'bot', text: 'Preparando entrevista...', time: getCurrentTime() }];
-
-    const initialSystemPrompt = this.buildInitialPrompt();
-
-    // Call the service to get a session ID and the first message
-    this.chatService.startSession(initialSystemPrompt).subscribe({
-      next: (response) => {
-        this.sessionId = response.session_id;
-        this.messages.pop(); // Remove "Preparando entrevista..."
-        this.addBotMessage(response.message);
-        this.isChatActive = true;
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Error starting chat session:', err);
-        this.addBotMessage(
-          'Hubo un error al iniciar la conversación con la IA. Por favor, inténtalo de nuevo.',
-        );
-        this.isLoading = false;
-      },
-    });
-  }
 
   onSend(event: Event): void {
     event.preventDefault();
@@ -117,7 +98,7 @@ export class ChatModal implements AfterViewChecked, OnChanges {
     this.shouldScroll = true;
 
     this.chatService.sendMessage(this.sessionId, msg).subscribe({
-      next: (response) => {
+      next: (response: ChatMessageResponse) => {
         this.addBotMessage(response.message);
         this.isLoading = false;
       },
@@ -135,12 +116,13 @@ export class ChatModal implements AfterViewChecked, OnChanges {
     this.messages = [...this.messages, message];
   }
 
-  addBotMessage(text: string): void {
-    // Add a small delay to simulate processing time before showing the bot response
+  addBotMessage(text: string, delay: number = 500): void {
+    const effectiveDelay = delay === 0 ? 0 : 500;
+
     setTimeout(() => {
       this.messages = [...this.messages, { from: 'bot', text: text, time: getCurrentTime() }];
       this.shouldScroll = true;
-    }, 500);
+    }, effectiveDelay);
   }
 
   onDraftChange(value: string): void {
