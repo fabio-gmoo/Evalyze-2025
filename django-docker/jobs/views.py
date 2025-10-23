@@ -501,21 +501,25 @@ class VacanteViewSet(viewsets.ModelViewSet):
             )
             questions = generated_interview["questions"]
 
-            # 2. CALL INTERVIEW-SVC TO START INDIVIDUAL CONVERSATION
+            # 2. CALL INTERVIEW-SVC TO START INDIVIDUAL CONVERSATION (Using PLURAL KEY)
 
-            # *** HYPOTHETICAL ENDPOINT USED HERE ***
-            # This assumes your interview service has a dedicated endpoint for single chat start.
             INTERVIEW_SVC_URL = "http://interview:9000/ai/candidate-conversations/start"
 
             interview_svc_payload = {
                 "vacancy_id": vacancy.id,
                 "vacancy_title": vacancy.puesto,
+                # The Interview Service is likely expecting the structured question objects
                 "interview_questions": questions,
-                "candidate": {
-                    "id": user.id,
-                    "email": user.email,
-                    "name": getattr(user, "name", user.email),
-                },
+                # CRITICAL FIX: Wrap the single candidate in a list and use the PLURAL key 'candidates'
+                "candidates": [
+                    {
+                        "id": user.id,
+                        "email": user.email,
+                        # Fallback to email if first_name/last_name are empty
+                        "name": f"{user.first_name} {user.last_name}".strip()
+                        or user.email,
+                    }
+                ],
             }
 
             interview_svc_api_key = os.environ.get(
@@ -555,7 +559,7 @@ class VacanteViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             # Catch-all for unexpected issues
-            logger.error(f"Error inesperado al iniciar chat: {e}")
+            logger.error(f"Error inesperado al iniciar chat: {e}", exc_info=True)
             return Response(
                 {"detail": f"Error interno inesperado: {str(e)}"},
                 status=http_status.HTTP_500_INTERNAL_SERVER_ERROR,

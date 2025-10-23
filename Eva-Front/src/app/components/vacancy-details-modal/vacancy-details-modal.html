@@ -187,14 +187,6 @@
             } @else if (isStartingChat) {
               <div class="loader-small"></div>
               Postulación exitosa. Preparando entrevista...
-              <app-chat-modal
-                [open]="isChatModalOpen"
-                [vacancy]="vacancy"
-                [interviewQuestions]="activeInterviewQuestions"
-                [sessionIdInput]="activeChatSessionId"
-                [initialMessageInput]="activeInitialMessage"
-                (close)="isChatModalOpen = false"
-              ></app-chat-modal>
             } @else {
               Postular y Empezar Entrevista IA
             }
@@ -217,6 +209,19 @@
               </button>
             </div>
           }
+        }
+
+        <!-- CRITICAL FIX: The component tag must be closed before the @if block ends -->
+        @if (isChatModalOpen && vacancy) {
+          <app-chat-modal
+            [open]="isChatModalOpen"
+            [vacancy]="vacancy"
+            [interviewQuestions]="activeInterviewQuestions"
+            [sessionIdInput]="activeChatSessionId"
+            [initialMessageInput]="activeInitialMessage"
+            (close)="onChatModalClose()"
+          ></app-chat-modal>
+          <!-- <-- This closing tag was added -->
         }
       }
 

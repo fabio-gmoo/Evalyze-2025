@@ -86,20 +86,19 @@ export class VacancyDetailsModal implements OnInit {
     if (this.isStartingChat || !vacancyId) return;
 
     this.isStartingChat = true;
-    this.activeInterviewQuestions = null;
+    this.activeInterviewQuestions = []; // Reset before starting
     this.activeChatSessionId = null;
     this.activeInitialMessage = null;
 
-    // *** THIS IS THE KEY CHANGE ***
-    // Call the new dedicated candidate endpoint
     this.interviewService.startCandidateChat(vacancyId).subscribe({
       next: (response: CandidateChatStartResponse) => {
         // Set the chat state based on the backend response
-        this.activeInterviewQuestions = response.questions;
+        this.activeInterviewQuestions = response.questions; // Assign the full structured questions
         this.activeChatSessionId = response.session_id;
         this.activeInitialMessage = response.initial_message;
 
         this.isChatModalOpen = true; // Open the chat modal now
+        console.log('Chat session started successfully:', response);
       },
       error: (err) => {
         console.error('Error starting candidate chat session:', err);
@@ -112,17 +111,23 @@ export class VacancyDetailsModal implements OnInit {
   }
 
   handleCandidateApplication(): void {
-    if (!this.vacancy?.id || this.isApplying || this.isStartingChat || this.hasApplied) return;
+    if (!this.vacancy?.id || this.isApplying || this.isStartingChat) {
+      // Allow if hasApplied is true, as per the frontend logic (retaking interview)
+      if (this.hasApplied && this.vacancy?.id) {
+        this.startCandidateChatSession(this.vacancy.id);
+      }
+      return;
+    }
 
     this.isApplying = true;
 
     this.vacanciesService.apply(this.vacancy.id).subscribe({
       next: (applicationResponse) => {
-        // ... (Application successful logging) ...
+        console.log('Application successful:', applicationResponse);
         this.isApplying = false;
         this.hasApplied = true;
 
-        // CORRECT CALL for immediate chat start
+        // Automatically start chat session after successful application
         this.startCandidateChatSession(this.vacancy.id!);
       },
       error: (err) => {
@@ -133,7 +138,7 @@ export class VacancyDetailsModal implements OnInit {
         if (this.vacancy.id && err.status === 400 && detail.includes('postulado')) {
           this.hasApplied = true;
           // If already applied, still try to start the chat
-          this.startCandidateChatSession(this.vacancy.id!); // CORRECT CALL
+          this.startCandidateChatSession(this.vacancy.id!);
         } else if (err.status === 401) {
           alert('⚠️ Debes iniciar sesión para postular a esta vacante');
         } else if (err.status === 403) {
@@ -157,6 +162,14 @@ export class VacancyDetailsModal implements OnInit {
     }
 
     return baseTabs;
+  }
+
+  onChatModalClose(): void {
+    this.isChatModalOpen = false;
+    this.activeInterviewQuestions = [];
+    this.activeChatSessionId = null;
+    this.activeInitialMessage = null;
+    console.log('Chat modal closed and state reset.');
   }
 
   onClose() {
