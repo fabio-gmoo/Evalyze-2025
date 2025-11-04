@@ -6,7 +6,7 @@ import { VacancyTabs } from '@components/vacancy-tabs/vacancy-tabs';
 import { Tab, FormData } from '@interfaces/vacante-model';
 import { Interview } from '@services/interview';
 import { InterviewQuestion, InterviewSession, ChatMessage } from '@services/interview';
-import { ChatModal } from '@components/chat-modal/chat-modal';
+
 import { Vacancies } from '@services/vacancies';
 import { Observable, of } from 'rxjs';
 import { filter, map, catchError } from 'rxjs/operators';

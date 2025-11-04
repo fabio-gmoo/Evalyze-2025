@@ -73,15 +73,4 @@
     (preguntaRemove)="removePregunta($event)"
     (preguntaUpdate)="updatePregunta($event)"
   />
-
-  <!-- Chat drawer (postulante) -->
-  <app-chat-drawer
-    [open]="chatOpen()"
-    [messages]="chatMessages()"
-    [vacancy]="chatVacante()"
-    [draft]="chatDraft()"
-    (close)="closeChat()"
-    (send)="sendMessage($event)"
-    (draftChange)="updateChatDraft($event)"
-  />
 </div>

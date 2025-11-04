@@ -15,7 +15,7 @@ import { VacancyHeader } from '@components/vacancy-header/vacancy-header';
 import { StatsGrid } from '@components/stats-grid/stats-grid';
 import { VacancyList } from '@components/vacancy-list/vacancy-list';
 import { VacancyModal } from '@components/vacancy-modal/vacancy-modal';
-import { ChatDrawer } from '@components/chat-drawer/chat-drawer';
+
 import { VacancyDetailsModal } from '@components/vacancy-details-modal/vacancy-details-modal';
 
 // Models
@@ -35,15 +35,7 @@ import { mapVacancyToUI, getInitialFormData, getCurrentTime } from '@interfaces/
 @Component({
   selector: 'app-vacantes',
   standalone: true,
-  imports: [
-    CommonModule,
-    VacancyHeader,
-    StatsGrid,
-    VacancyList,
-    VacancyModal,
-    ChatDrawer,
-    VacancyDetailsModal,
-  ],
+  imports: [CommonModule, VacancyHeader, StatsGrid, VacancyList, VacancyModal, VacancyDetailsModal],
   templateUrl: './vacantes.html',
   styleUrls: ['./vacantes.scss'],
 })
