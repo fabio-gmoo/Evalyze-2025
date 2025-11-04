@@ -1,39 +1,32 @@
 <!-- src/app/components/vacancy-details-modal/vacancy-details-modal.html -->
-
 <div class="modal-backdrop" (click)="onBackdropClick($event)">
   <div class="modal-container">
+    <!-- Header -->
     <header class="modal-header">
       <div class="header-content">
         <div class="header-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-
             <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
           </svg>
         </div>
-
         <div class="header-info">
           <h2>{{ vacancy.puesto }}</h2>
-
-          <h3 class="company-subtitle">{{ vacancy.company_name }}</h3>
-
+          <h3>{{ vacancy.company_name }}</h3>
           <div class="header-meta">
             @if (vacancy.ubicacion) {
               <span class="meta-item">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-
                   <circle cx="12" cy="10" r="3" />
                 </svg>
                 {{ vacancy.ubicacion }}
               </span>
             }
-
             @if (vacancy.tipo_contrato) {
               <span class="meta-item">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-
                   <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
                 </svg>
                 {{ vacancy.tipo_contrato }}
@@ -46,26 +39,26 @@
       <button class="close-btn" (click)="onClose()" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18" />
-
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
     </header>
 
+    <!-- Tabs -->
     <app-vacancy-tabs [tabs]="tabs" [activeTab]="activeTab" (tabChange)="setActiveTab($event)" />
 
+    <!-- Content -->
     <div class="modal-body">
+      <!-- Detalles Tab -->
       @if (activeTab === 'detalles') {
         <div class="tab-content">
           <section class="content-section">
             <h3 class="section-title">Descripción del Puesto</h3>
-
             <p class="section-text">{{ vacancy.descripcion }}</p>
           </section>
 
           <section class="content-section">
             <h3 class="section-title">Información General</h3>
-
             <div class="info-grid">
               @if (vacancy.departamento) {
                 <div class="info-item">
@@ -73,28 +66,25 @@
                   <span class="info-value">{{ vacancy.departamento }}</span>
                 </div>
               }
-
               @if (vacancy.salario) {
                 <div class="info-item">
                   <span class="info-label">Salario</span>
                   <span class="info-value">{{ vacancy.salario }}</span>
                 </div>
               }
-
               @if (vacancy.tipo_contrato) {
                 <div class="info-item">
                   <span class="info-label">Tipo de Contrato</span>
                   <span class="info-value">{{ vacancy.tipo_contrato }}</span>
                 </div>
               }
-
               <div class="info-item">
                 <span class="info-label">Estado</span>
                 <span class="info-value">
                   @if (vacancy.activa) {
-                    <span class="status-badge activa"> Activa </span>
+                    <span class="status-badge">Activa</span>
                   } @else {
-                    <span class="status-badge cerrada"> Cerrada</span>
+                    <span class="status-badge inactive">Inactiva</span>
                   }
                 </span>
               </div>
@@ -103,10 +93,9 @@
 
           <section class="content-section">
             <h3 class="section-title">Requisitos del Puesto</h3>
-
-            @if (vacancy.requisitos && vacancy.requisitos.length) {
+            @if (vacancy.requisitos?.length) {
               <ul class="requirements-list">
-                @for (req of vacancy.requisitos; track $index) {
+                @for (req of vacancy.requisitos ?? []; track $index) {
                   <li class="requirement-item">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="20 6 9 17 4 12"></polyline>
@@ -122,46 +111,19 @@
         </div>
       }
 
-      @if (activeTab === 'requisitos') {
-        <div class="tab-content">
-          <section class="content-section">
-            <h3 class="section-title">Requisitos del Puesto</h3>
-
-            @if (vacancy.requisitos && vacancy.requisitos.length > 0) {
-              <ul class="requirements-list">
-                @for (req of vacancy.requisitos; track req) {
-                  <li class="requirement-item">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    {{ req }}
-                  </li>
-                }
-              </ul>
-            } @else {
-              <p class="empty-message">No hay requisitos especificados</p>
-            }
-          </section>
-        </div>
-      }
-
+      <!-- Candidatos Tab (Company view only) -->
       @if (activeTab === 'candidatos' && viewMode === 'company') {
         <div class="tab-content">
           <section class="content-section">
             <h3 class="section-title">Candidatos Postulados</h3>
-
             @if ((vacancy.candidatos || 0) > 0) {
               <div class="empty-message">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-
                   <circle cx="9" cy="7" r="4" />
-
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-
                   <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
-
                 <p>{{ vacancy.candidatos }} candidatos postulados</p>
                 <small>La lista de candidatos se mostrará próximamente</small>
               </div>
@@ -171,61 +133,132 @@
           </section>
         </div>
       }
+
+      <!-- Entrevista Tab (Candidate view only, after applying) -->
+      @if (activeTab === 'entrevista' && viewMode === 'candidate' && hasApplied) {
+        <div class="tab-content interview-tab">
+          @if (!sessionId()) {
+            <div class="no-session">
+              <p>No hay sesión de entrevista disponible</p>
+            </div>
+          } @else {
+            <!-- Session Info -->
+            @if (session()) {
+              <div class="session-info">
+                <div class="info-row">
+                  <span class="label">Estado:</span>
+                  <span class="status" [class]="'status-' + session()?.status">
+                    {{ getStatusLabel(session()?.status) }}
+                  </span>
+                </div>
+                @if (session()?.status === 'active') {
+                  <div class="info-row">
+                    <span class="label">Progreso:</span>
+                    <span class="value">
+                      Pregunta {{ (session()?.current_question_index || 0) + 1 }} de
+                      {{ totalQuestions() }}
+                    </span>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Messages -->
+            <div class="messages-area">
+              @for (msg of messages(); track $index) {
+                <div class="message" [class]="'message-' + msg.sender">
+                  <div class="message-content">{{ msg.content }}</div>
+                  <div class="message-time">{{ formatTime(msg.timestamp) }}</div>
+                  @if (msg.score) {
+                    <div class="message-score">Puntuación: {{ msg.score }}</div>
+                  }
+                </div>
+              }
+
+              @if (isTyping()) {
+                <div class="message message-ai">
+                  <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Input Area -->
+            @if (session()?.status === 'pending') {
+              <div class="start-area">
+                <button (click)="startInterview()" [disabled]="loading()" class="btn-start">
+                  {{ loading() ? 'Iniciando...' : 'Iniciar Entrevista' }}
+                </button>
+                <p class="hint">La entrevista constará de {{ totalQuestions() }} preguntas</p>
+              </div>
+            }
+
+            @if (session()?.status === 'active') {
+              <div class="input-area">
+                <textarea
+                  [value]="draft()"
+                  (input)="draft.set($any($event.target).value)"
+                  (keydown.control.enter)="sendMessage()"
+                  [disabled]="isTyping()"
+                  placeholder="Escribe tu respuesta... (Ctrl+Enter para enviar)"
+                  rows="3"
+                ></textarea>
+                <button
+                  (click)="sendMessage()"
+                  [disabled]="!draft().trim() || isTyping()"
+                  class="btn-send"
+                >
+                  Enviar
+                </button>
+              </div>
+            }
+
+            @if (session()?.status === 'completed') {
+              <div class="completed-area">
+                <div class="completed-icon">✓</div>
+                <h3>¡Entrevista Completada!</h3>
+                <p class="score">
+                  Puntuación: {{ session()?.total_score }} / {{ session()?.max_possible_score }}
+                </p>
+              </div>
+            }
+          }
+        </div>
+      }
     </div>
 
+    <!-- Footer -->
     <footer class="modal-footer">
-      @if (viewMode === 'candidate') {
-        @if (userIsCandidate && !hasApplied) {
-          <button
-            (click)="handleCandidateApplication()"
-            [disabled]="isApplying || isStartingChat"
-            class="btn btn-primary btn-full btn-apply"
-          >
-            @if (isApplying) {
-              <div class="loader-small"></div>
-              Postulando...
-            } @else if (isStartingChat) {
-              <div class="loader-small"></div>
-              Postulación exitosa. Preparando entrevista...
-            } @else {
-              Postular y Empezar Entrevista IA
-            }
-          </button>
-        } @else if (userIsCandidate && hasApplied) {
-          @if (vacancy.id) {
-            <div class="apply-status-box">
-              <span>✅ Ya postulaste a esta vacante.</span>
-              <button
-                (click)="startCandidateChatSession(vacancy.id)"
-                [disabled]="isStartingChat"
-                class="btn-retake"
-              >
-                @if (isStartingChat) {
-                  <div class="loader-small"></div>
-                  Cargando...
-                } @else {
-                  Retomar Entrevista IA
-                }
-              </button>
-            </div>
-          }
-        }
-
-        <!-- CRITICAL FIX: The component tag must be closed before the @if block ends -->
-        @if (isChatModalOpen && vacancy) {
-          <app-chat-modal
-            [open]="isChatModalOpen"
-            [vacancy]="vacancy"
-            [interviewQuestions]="activeInterviewQuestions"
-            [sessionIdInput]="activeChatSessionId"
-            [initialMessageInput]="activeInitialMessage"
-            (close)="onChatModalClose()"
-          ></app-chat-modal>
-          <!-- <-- This closing tag was added -->
-        }
+      @if (viewMode === 'candidate' && activeTab === 'detalles') {
+        <button type="button" class="btn btn-primary" (click)="onApply()" [disabled]="isApplying">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          {{
+            hasApplied ? 'Ver Entrevista' : isApplying ? 'Postulando...' : 'Postular a esta Vacante'
+          }}
+        </button>
       }
 
-      @if (viewMode === 'company') {
+      @if (activeTab === 'entrevista' && viewMode === 'candidate') {
+        <button type="button" class="btn btn-secondary" (click)="setActiveTab('detalles')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M19 12H5M5 12l7 7M5 12l7-7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
+          Volver a Detalles
+        </button>
+      }
+
+      @if (viewMode === 'company' && activeTab === 'detalles') {
         <button type="button" class="btn btn-secondary" (click)="onGenerateInterview()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -236,7 +269,6 @@
         <button type="button" class="btn btn-primary" (click)="onEdit()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
           </svg>
           Editar Vacante

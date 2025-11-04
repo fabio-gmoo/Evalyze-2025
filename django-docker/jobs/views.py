@@ -200,7 +200,9 @@ class VacanteViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="apply")
     def apply(self, request, pk=None):
-        """Candidate applies to a vacancy"""
+        """
+        Candidate applies to a vacancy and interview session is created
+        """
         vacancy = self.get_object()
         user = request.user
 
@@ -223,13 +225,108 @@ class VacanteViewSet(viewsets.ModelViewSet):
                 status=http_status.HTTP_400_BAD_REQUEST,
             )
 
+        # Check if vacancy has generated interview questions
+        # You might want to store these in a separate model or in the vacancy
+        # For now, we'll generate them on-the-fly if not exists
+        interview_questions = self._get_interview_questions(vacancy)
+
+        if not interview_questions:
+            return Response(
+                {
+                    "detail": "Esta vacante no tiene preguntas de entrevista configuradas"
+                },
+                status=http_status.HTTP_400_BAD_REQUEST,
+            )
+
         # Create application
         application = Application.objects.create(
             vacancy=vacancy, candidate=user, status="pending"
         )
 
-        serializer = ApplicationSerializer(application)
-        return Response(serializer.data, status=http_status.HTTP_201_CREATED)
+        # Create interview session
+        from .services.interview_service import InterviewService  # type: ignore
+
+        service = InterviewService()
+
+        try:
+            session = service.create_session_for_application(
+                application=application, interview_questions=interview_questions
+            )
+
+            return Response(
+                {
+                    "application": ApplicationSerializer(application).data,
+                    "interview_session": {
+                        "id": session.id,
+                        "status": session.status,
+                        "message": "Sesión de entrevista creada. Puedes iniciarla cuando estés listo.",
+                    },
+                },
+                status=http_status.HTTP_201_CREATED,
+            )
+
+        except Exception as e:
+            logger.error(f"Error creating interview session: {e}", exc_info=True)
+            # Still return success for application, but note the session error
+            return Response(
+                {
+                    "application": ApplicationSerializer(application).data,
+                    "interview_session": {
+                        "error": "No se pudo crear la sesión de entrevista",
+                        "detail": str(e),
+                    },
+                },
+                status=http_status.HTTP_201_CREATED,  # <-- ¡Esto nunca debería devolver 500!
+            )
+
+    def _get_interview_questions(self, vacancy):
+        """
+        Get interview questions that were previously generated for this vacancy
+        """
+        # Try to get from cache first
+        cache_key = f"interview_questions_vacancy_{vacancy.id}"
+
+        # INICIO DEL FIX
+        cached_questions = None
+        try:
+            # Intentar importar la caché. Si no está configurada, esto fallará
+            from django.core.cache import cache  # type: ignore
+
+            cached_questions = cache.get(cache_key)
+        except Exception:
+            logger.warning(
+                "Django cache not configured or failed to import. Skipping cache check."
+            )
+            pass  # Continuar si la caché falla
+        # FIN DEL FIX
+
+        if cached_questions:
+            logger.info(f"Using cached interview questions for vacancy {vacancy.id}")
+            return cached_questions
+
+        # Check if there's an InterviewTemplate model (you might want to create this)
+        # For now, we'll check if questions are stored in the Application model
+        # or in a separate field in the Vacancy model
+
+        # Option 1: Check if vacancy has a generated_interview field
+        if hasattr(vacancy, "generated_interview") and vacancy.generated_interview:
+            questions = vacancy.generated_interview.get("questions", [])
+            if questions:
+                # Cache for 1 hour
+                try:  # Aseguramos que la escritura en caché tampoco cause un 500
+                    from django.core.cache import cache  # type: ignore
+
+                    cache.set(cache_key, questions, 3600)
+                except Exception:
+                    pass  # Ignoramos el error de escritura de caché
+                return questions
+
+        # Option 2: Check the latest successful generate_interview call
+        # We need to retrieve from the last time generate-interview was called
+        # This would require storing the result somewhere
+
+        logger.warning(f"No interview questions found for vacancy {vacancy.id}")
+        return None
 
     @action(detail=True, methods=["get"], url_path="applications")
     def applications(self, request, pk=None):
@@ -263,19 +360,13 @@ class VacanteViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], url_path="generate-interview")
     def generate_interview(self, request, pk=None):
         """
-
         Generate interview questions based on vacancy requirements using AI
-
-        AND send the questions to the interview-svc to start candidate chats.
-
+        AND save them to the vacancy for later use
         """
-
         vacancy = self.get_object()
 
         # Parse requirements
-
         requisitos = []
-
         if isinstance(vacancy.requisitos, str):
             requisitos = [
                 r.strip() for r in vacancy.requisitos.split("\n") if r.strip()
@@ -288,7 +379,6 @@ class VacanteViewSet(viewsets.ModelViewSet):
             )
 
         level = request.data.get("level", "intermedio")
-
         n_questions = int(request.data.get("n_questions", 4))
 
         ai_payload = {
@@ -299,18 +389,13 @@ class VacanteViewSet(viewsets.ModelViewSet):
         }
 
         try:
-            # FIX: Open the client context manager for the entire operation
-
             with httpx.Client(timeout=300.0) as client:
-                # --- 1. CALL AI-SERVICE TO GET QUESTIONS (Host: ai-service, Port: 8001) ---
-
+                # --- 1. CALL AI-SERVICE TO GET QUESTIONS ---
                 ai_response = client.post(
                     "http://ai-service:8001/generate_interview",
                     json=ai_payload,
                 )
-
                 ai_response.raise_for_status()
-
                 ai_data = ai_response.json()
 
                 if not ai_data.get("ok"):
@@ -321,10 +406,25 @@ class VacanteViewSet(viewsets.ModelViewSet):
 
                 generated_interview = ai_data["interview"]
 
-                # --- 2. GET CANDIDATE LIST ---
+                # --- 2. SAVE INTERVIEW QUESTIONS TO VACANCY ---
+                vacancy.generated_interview = generated_interview
+                vacancy.save(update_fields=["generated_interview"])
 
+                logger.info(
+                    f"✅ Saved {
+                        len(generated_interview['questions'])
+                    } questions to vacancy {vacancy.id}"
+                )
+
+                # Cache the questions for quick access
+                cache_key = f"interview_questions_vacancy_{vacancy.id}"
+                from django.core.cache import cache  # type: ignore
+
+                # 1 hour
+                cache.set(cache_key, generated_interview["questions"], 3600)
+
+                # --- 3. GET CANDIDATE LIST (for immediate chat start if needed) ---
                 applied_candidates = []
-
                 for app in vacancy.applications.all().select_related("candidate"):
                     applied_candidates.append(
                         {
@@ -334,59 +434,6 @@ class VacanteViewSet(viewsets.ModelViewSet):
                         }
                     )
 
-                if not applied_candidates:
-                    logger.warning(
-                        f"No candidates applied to vacancy {
-                            vacancy.id
-                        }. Skipping conversation start."
-                    )
-
-                    return Response(
-                        {
-                            "interview": generated_interview,
-                            "vacancy": {
-                                "id": vacancy.id,
-                                "puesto": vacancy.puesto,
-                                "company": vacancy.company_name,
-                            },
-                            "chat_status": "No candidates to start conversations with.",
-                        },
-                        status=http_status.HTTP_200_OK,
-                    )
-
-                # --- 3. CALL INTERVIEW-SVC TO START CONVERSATIONS ---
-
-                interview_svc_payload = {
-                    "vacancy_id": vacancy.id,
-                    "vacancy_title": vacancy.puesto,
-                    "interview_questions": generated_interview["questions"],
-                    "candidates": applied_candidates,
-                }
-
-                interview_svc_api_key = os.environ.get(
-                    "AI_PUBLIC_API_KEY", "your-fallback-key"
-                )
-
-                interview_svc_headers = {"X-Api-Key": interview_svc_api_key}
-
-                # CRITICAL FIX: Final correct path using Docker service name and matching path
-
-                INTERVIEW_SVC_URL = (
-                    "http://interview:9000/ai/candidate-conversations/start"
-                )
-
-                interview_svc_response = client.post(
-                    INTERVIEW_SVC_URL,  # <--- Now targeting 'interview' on port 9000
-                    json=interview_svc_payload,
-                    headers=interview_svc_headers,
-                )
-
-                interview_svc_response.raise_for_status()
-
-                chat_data = interview_svc_response.json()
-
-                # --- 4. RETURN FINAL RESPONSE ---
-
                 return Response(
                     {
                         "interview": generated_interview,
@@ -395,25 +442,23 @@ class VacanteViewSet(viewsets.ModelViewSet):
                             "puesto": vacancy.puesto,
                             "company": vacancy.company_name,
                         },
-                        "chat_status": chat_data.get(
-                            "status", "Conversations initiated."
+                        "saved": True,
+                        "questions_count": len(
+                            generated_interview.get("questions", [])
                         ),
-                        "started_chats": chat_data.get("started_chats", []),
+                        "candidates_count": len(applied_candidates),
+                        "message": "Preguntas guardadas exitosamente. Los candidatos podrán usarlas al postular.",
                     },
                     status=http_status.HTTP_200_OK,
                 )
 
         except httpx.HTTPStatusError as e:
-            # Handle error from AI-Service or Interview-Service
-
             return Response(
-                {"detail": f"Error en servicio de IA/Chat: {e.response.text}"},
+                {"detail": f"Error en servicio de IA: {e.response.text}"},
                 status=http_status.HTTP_502_BAD_GATEWAY,
             )
-
         except Exception as e:
-            logger.error(f"Error en el flujo de entrevista/chat: {e}", exc_info=True)
-
+            logger.error(f"Error en generate_interview: {e}", exc_info=True)
             return Response(
                 {"detail": f"Error interno: {str(e)}"},
                 status=http_status.HTTP_500_INTERNAL_SERVER_ERROR,

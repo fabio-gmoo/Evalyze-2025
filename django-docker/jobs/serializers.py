@@ -2,6 +2,7 @@
 from rest_framework import serializers  # type: ignore
 from .models import Vacante, Application
 from django.contrib.auth import get_user_model  # type: ignore
+from .models import InterviewSession, ChatMessage
 
 User = get_user_model()
 
@@ -35,8 +36,7 @@ class CreatorSerializer(serializers.ModelSerializer):
 
 
 class VacanteSerializer(serializers.ModelSerializer):
-    requisitos = serializers.ListField(
-        child=serializers.CharField(), allow_empty=True)
+    requisitos = serializers.ListField(child=serializers.CharField(), allow_empty=True)
     salario = serializers.SerializerMethodField()
     company_name = serializers.CharField(read_only=True)
 
@@ -187,3 +187,38 @@ class ApplicationSerializer(serializers.ModelSerializer):
             "puesto": obj.vacancy.puesto,
             "company_name": obj.vacancy.company_name,
         }
+
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatMessage
+        fields = ["id", "sender", "content", "timestamp", "question_index", "score"]
+
+
+class InterviewSessionSerializer(serializers.ModelSerializer):
+    candidate_name = serializers.CharField(
+        source="application.candidate.name", read_only=True
+    )
+    vacancy_title = serializers.CharField(
+        source="application.vacancy.puesto", read_only=True
+    )
+    message_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = InterviewSession
+        fields = [
+            "id",
+            "status",
+            "current_question_index",
+            "started_at",
+            "completed_at",
+            "last_activity",
+            "total_score",
+            "max_possible_score",
+            "candidate_name",
+            "vacancy_title",
+            "message_count",
+        ]
+
+    def get_message_count(self, obj):
+        return obj.messages.count()

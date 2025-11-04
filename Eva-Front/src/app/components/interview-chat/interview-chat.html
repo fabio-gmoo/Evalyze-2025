@@ -1,0 +1,84 @@
+<div class="interview-chat-container">
+  @if (!sessionId) {
+    <div class="no-session">
+      <p>No hay sesión de entrevista disponible</p>
+    </div>
+  } @else {
+    <!-- Session Info -->
+    @if (session()) {
+      <div class="session-info">
+        <div class="info-row">
+          <span class="label">Estado:</span>
+          <span class="status" [class]="'status-' + session()?.status">
+            {{ getStatusLabel(session()?.status) }}
+          </span>
+        </div>
+        @if (session()?.status === 'active') {
+          <div class="info-row">
+            <span class="label">Progreso:</span>
+            <span class="value">
+              Pregunta {{ (session()?.current_question_index || 0) + 1 }} de {{ totalQuestions() }}
+            </span>
+          </div>
+        }
+      </div>
+    }
+    <!-- Messages -->
+    <div class="messages-area" #messagesContainer>
+      @for (msg of messages(); track $index) {
+        <div class="message" [class]="'message-' + msg.sender">
+          <div class="message-content">{{ msg.content }}</div>
+          <div class="message-time">{{ formatTime(msg.timestamp) }}</div>
+          @if (msg.score) {
+            <div class="message-score">Puntuación: {{ msg.score }}</div>
+          }
+        </div>
+      }
+
+      @if (isTyping()) {
+        <div class="message message-ai">
+          <div class="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Input Area -->
+    @if (session()?.status === 'pending') {
+      <div class="start-area">
+        <button (click)="startInterview()" [disabled]="loading()" class="btn-start">
+          {{ loading() ? 'Iniciando...' : 'Iniciar Entrevista' }}
+        </button>
+        <p class="hint">La entrevista constará de {{ totalQuestions() }} preguntas</p>
+      </div>
+    }
+
+    @if (session()?.status === 'active') {
+      <div class="input-area">
+        <textarea
+          [(ngModel)]="draft"
+          (keydown.ctrl.enter)="sendMessage()"
+          [disabled]="isTyping()"
+          placeholder="Escribe tu respuesta... (Ctrl+Enter para enviar)"
+          rows="3"
+        ></textarea>
+        <button (click)="sendMessage()" [disabled]="!draft().trim() || isTyping()" class="btn-send">
+          Enviar
+        </button>
+      </div>
+    }
+
+    @if (session()?.status === 'completed') {
+      <div class="completed-area">
+        <div class="completed-icon">✓</div>
+        <h3>¡Entrevista Completada!</h3>
+        <p class="score">
+          Puntuación: {{ session()?.total_score }} / {{ session()?.max_possible_score }}
+        </p>
+      </div>
+    }
+  }
+</div>

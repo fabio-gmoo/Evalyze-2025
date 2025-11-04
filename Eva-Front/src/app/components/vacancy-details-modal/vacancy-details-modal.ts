@@ -1,11 +1,11 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VacanteUI } from '@interfaces/vacante-model';
 import { VacancyTabs } from '@components/vacancy-tabs/vacancy-tabs';
 import { Tab, FormData } from '@interfaces/vacante-model';
-import { Interview, CandidateChatStartResponse } from '@services/interview';
-import { InterviewQuestion, GenerateInterviewResponse } from '@services/interview';
+import { Interview } from '@services/interview';
+import { InterviewQuestion, InterviewSession, ChatMessage } from '@services/interview';
 import { ChatModal } from '@components/chat-modal/chat-modal';
 import { Vacancies } from '@services/vacancies';
 import { Observable, of } from 'rxjs';
@@ -13,9 +13,11 @@ import { filter, map, catchError } from 'rxjs/operators';
 import { Auth } from '@services/auth';
 import { Me } from '@interfaces/token-types-dto';
 
+import { InterviewChat } from '@components/interview-chat/interview-chat';
+
 @Component({
   selector: 'app-vacancy-details-modal',
-  imports: [CommonModule, FormsModule, VacancyTabs, ChatModal],
+  imports: [CommonModule, FormsModule, VacancyTabs, InterviewChat],
   templateUrl: './vacancy-details-modal.html',
   styleUrl: './vacancy-details-modal.scss',
 })
@@ -32,162 +34,146 @@ export class VacancyDetailsModal implements OnInit {
   @Output() generateInterview = new EventEmitter<number>();
 
   activeTab = 'detalles';
+  isApplying = false;
+  hasApplied = false;
 
-  isChatModalOpen = false;
-  activeInterviewQuestions: InterviewQuestion[] | null = null;
-  activeChatSessionId: string | null = null; // Store session ID
-  activeInitialMessage: string | null = null;
+  // Interview state
+  sessionId = signal<number | null>(null);
+  session = signal<InterviewSession | null>(null);
+  messages = signal<ChatMessage[]>([]);
+  draft = signal('');
+  isTyping = signal(false);
+  loading = signal(false);
+  totalQuestions = signal(0);
+  private scrollScheduled = false;
 
-  isApplying: boolean = false;
-  isStartingChat: boolean = false;
-  hasApplied: boolean = false;
-
-  userIsCandidate: boolean = false;
-
-  ngOnInit() {
-    // Prevent body scroll when modal is open
-    document.body.style.overflow = 'hidden';
-    this.checkUserStatusAndApplication();
-  }
-
-  ngOnDestroy() {
-    document.body.style.overflow = '';
-  }
-
-  private checkUserStatusAndApplication(): void {
-    this.authService.me$
-      .pipe(
-        filter((me: Me | null): me is Me => !!me && !!this.vacancy?.id),
-
-        map((me: Me) => me.role === 'candidate'),
-      )
-      .subscribe((isCandidate) => {
-        this.userIsCandidate = isCandidate;
-        if (isCandidate) {
-          this.vacanciesService
-            .getMyApplications()
-            .pipe(
-              map((applications) =>
-                applications.some((app: any) => app.vacancy_info.id === this.vacancy.id),
-              ),
-              catchError(() => {
-                console.error('Failed to retrieve application status.');
-                return of(false);
-              }),
-            )
-            .subscribe((applied) => {
-              this.hasApplied = applied;
-            });
-        }
-      });
-  }
-
-  startCandidateChatSession(vacancyId: number): void {
-    if (this.isStartingChat || !vacancyId) return;
-
-    this.isStartingChat = true;
-    this.activeInterviewQuestions = []; // Reset before starting
-    this.activeChatSessionId = null;
-    this.activeInitialMessage = null;
-
-    this.interviewService.startCandidateChat(vacancyId).subscribe({
-      next: (response: CandidateChatStartResponse) => {
-        // Set the chat state based on the backend response
-        this.activeInterviewQuestions = response.questions; // Assign the full structured questions
-        this.activeChatSessionId = response.session_id;
-        this.activeInitialMessage = response.initial_message;
-
-        this.isChatModalOpen = true; // Open the chat modal now
-        console.log('Chat session started successfully:', response);
-      },
-      error: (err) => {
-        console.error('Error starting candidate chat session:', err);
-        alert('Error al iniciar la entrevista. Revisa los logs de los servicios.');
-      },
-      complete: () => {
-        this.isStartingChat = false;
-      },
-    });
-  }
-
-  handleCandidateApplication(): void {
-    if (!this.vacancy?.id || this.isApplying || this.isStartingChat) {
-      // Allow if hasApplied is true, as per the frontend logic (retaking interview)
-      if (this.hasApplied && this.vacancy?.id) {
-        this.startCandidateChatSession(this.vacancy.id);
-      }
-      return;
-    }
-
-    this.isApplying = true;
-
-    this.vacanciesService.apply(this.vacancy.id).subscribe({
-      next: (applicationResponse) => {
-        console.log('Application successful:', applicationResponse);
-        this.isApplying = false;
-        this.hasApplied = true;
-
-        // Automatically start chat session after successful application
-        this.startCandidateChatSession(this.vacancy.id!);
-      },
-      error: (err) => {
-        this.isApplying = false; // Reset loading state
-
-        const detail = err.error?.detail || '';
-
-        if (this.vacancy.id && err.status === 400 && detail.includes('postulado')) {
-          this.hasApplied = true;
-          // If already applied, still try to start the chat
-          this.startCandidateChatSession(this.vacancy.id!);
-        } else if (err.status === 401) {
-          alert('⚠️ Debes iniciar sesión para postular a esta vacante');
-        } else if (err.status === 403) {
-          alert('⚠️ Solo los candidatos pueden postular a vacantes');
-        } else {
-          console.error('Unhandled error during application:', err);
-          alert('❌ Error al postular. Por favor, intenta de nuevo.');
-        }
-      },
-    });
-  }
   get tabs(): Tab[] {
     const baseTabs: Tab[] = [{ id: 'detalles', label: 'Detalles' }];
 
     if (this.viewMode === 'company') {
-      const candidateCount = this.vacancy.applications_count || this.vacancy.candidatos || 0;
+      baseTabs.push(
+        {
+          id: 'candidatos',
+          label: `Candidatos (${this.vacancy.candidatos || 0})`,
+        },
+        {
+          id: 'ranking',
+          label: 'Ranking',
+        },
+      );
+    } else if (this.viewMode === 'candidate' && this.hasApplied) {
+      // Add chat tab only if candidate has applied
       baseTabs.push({
-        id: 'candidatos',
-        label: `Candidatos (${candidateCount})`,
+        id: 'entrevista',
+        label: 'Entrevista',
       });
     }
 
     return baseTabs;
   }
 
-  onChatModalClose(): void {
-    this.isChatModalOpen = false;
-    this.activeInterviewQuestions = [];
-    this.activeChatSessionId = null;
-    this.activeInitialMessage = null;
-    console.log('Chat modal closed and state reset.');
+  ngOnInit() {
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden';
+
+    // Check if candidate has an active interview session
+    if (this.viewMode === 'candidate') {
+      this.checkApplicationStatus();
+    }
   }
 
+  ngOnDestroy() {
+    document.body.style.overflow = '';
+  }
+
+  checkApplicationStatus() {
+    // Check if user has applied to this vacancy
+    this.interviewService.getActiveSession().subscribe({
+      next: (data) => {
+        if (data.session) {
+          const sessionVacancyTitle = data.session.vacancy_title;
+          if (sessionVacancyTitle === this.vacancy.puesto) {
+            this.hasApplied = true;
+            this.sessionId.set(data.session.id);
+            this.session.set(data.session);
+            this.loadMessages();
+          }
+        }
+      },
+      error: (err) => console.error('Error checking application status:', err),
+    });
+  }
   onClose() {
     this.close.emit();
   }
 
   onApply() {
-    this.apply.emit(this.vacancy);
-  }
+    if (this.hasApplied) {
+      // Already applied, switch to interview tab
+      this.activeTab = 'entrevista';
+      return;
+    }
 
+    // Apply to vacancy
+    if (!this.vacancy.id) return;
+
+    this.isApplying = true;
+
+    this.vacanciesService.apply(this.vacancy.id).subscribe({
+      next: (response) => {
+        console.log('Application successful:', response);
+
+        // Check if interview session was created
+        if (response.interview_session && response.interview_session.id) {
+          this.sessionId.set(response.interview_session.id);
+          this.session.set({
+            id: response.interview_session.id,
+            status: 'pending',
+            current_question_index: 0,
+            last_activity: new Date().toISOString(),
+            total_score: 0,
+            max_possible_score: 100,
+            candidate_name: '',
+            vacancy_title: this.vacancy.puesto,
+            message_count: 0,
+          } as InterviewSession);
+          this.hasApplied = true;
+
+          // Load the interview data
+          this.loadSession();
+
+          // Show success and switch to interview tab
+          alert('¡Postulación exitosa! Puedes iniciar tu entrevista en la pestaña "Entrevista".');
+          this.activeTab = 'entrevista';
+        } else if (response.interview_session?.error) {
+          alert(`Postulación exitosa, pero: ${response.interview_session.error}`);
+        } else {
+          alert('Postulación enviada exitosamente.');
+          this.onClose();
+        }
+
+        this.isApplying = false;
+      },
+      error: (err) => {
+        console.error('Error applying:', err);
+        const errorMsg = err.error?.detail || 'Error al postular';
+        alert(errorMsg);
+        this.isApplying = false;
+      },
+    });
+  }
   onEdit() {
     this.edit.emit(this.vacancy);
   }
 
   setActiveTab(tab: string) {
     this.activeTab = tab;
-  }
 
+    // If switching to interview tab, scroll to bottom
+    if (tab === 'entrevista' && this.messages().length > 0) {
+      setTimeout(() => this.scrollToBottom(), 100);
+    }
+  }
   onBackdropClick(event: MouseEvent) {
     if (event.target === event.currentTarget) {
       this.onClose();
@@ -196,7 +182,152 @@ export class VacancyDetailsModal implements OnInit {
 
   onGenerateInterview() {
     if (!this.vacancy.id) return;
-
     this.generateInterview.emit(this.vacancy.id);
+  }
+
+  loadSession() {
+    const id = this.sessionId();
+    if (!id) return;
+
+    this.interviewService.getSession(id).subscribe({
+      next: (data) => {
+        this.session.set(data);
+        this.loadMessages();
+      },
+      error: (err) => {
+        console.error('Error loading session:', err);
+      },
+    });
+  }
+
+  loadMessages() {
+    const id = this.sessionId();
+    if (!id) return;
+
+    this.interviewService.getMessages(id).subscribe({
+      next: (data) => {
+        this.messages.set(data.messages || []);
+        this.totalQuestions.set(data.total_questions || 0);
+        this.scheduleScroll();
+      },
+      error: (err) => {
+        console.error('Error loading messages:', err);
+      },
+    });
+  }
+
+  startInterview() {
+    const id = this.sessionId();
+    if (!id) return;
+
+    this.loading.set(true);
+
+    this.interviewService.startSession(id).subscribe({
+      next: (data) => {
+        this.loading.set(false);
+
+        // Add first message
+        if (data.first_message) {
+          const firstMsg: ChatMessage = {
+            sender: 'ai',
+            content: data.first_message,
+            timestamp: new Date().toISOString(),
+          };
+          this.messages.update((msgs) => [...msgs, firstMsg]);
+        }
+
+        // Update session status
+        this.session.update((s) => (s ? { ...s, status: 'active' } : null));
+
+        this.scheduleScroll();
+      },
+      error: (err) => {
+        this.loading.set(false);
+        console.error('Error starting interview:', err);
+        alert('Error al iniciar la entrevista');
+      },
+    });
+  }
+
+  sendMessage() {
+    const message = this.draft().trim();
+    const id = this.sessionId();
+    if (!message || !id) return;
+
+    // Add candidate message immediately
+    const candidateMsg: ChatMessage = {
+      sender: 'candidate',
+      content: message,
+      timestamp: new Date().toISOString(),
+    };
+    this.messages.update((msgs) => [...msgs, candidateMsg]);
+    this.draft.set('');
+    this.isTyping.set(true);
+    this.scheduleScroll();
+
+    this.interviewService.sendMessage(id, message).subscribe({
+      next: (data) => {
+        this.isTyping.set(false);
+
+        // Add AI response
+        const aiMsg: ChatMessage = {
+          sender: 'ai',
+          content: data.message,
+          timestamp: new Date().toISOString(),
+        };
+        this.messages.update((msgs) => [...msgs, aiMsg]);
+
+        // Update session
+        if (data.is_complete) {
+          this.session.update((s) => (s ? { ...s, status: 'completed' } : null));
+        } else {
+          this.session.update((s) =>
+            s ? { ...s, current_question_index: data.current_question } : null,
+          );
+        }
+
+        this.scheduleScroll();
+      },
+      error: (err) => {
+        this.isTyping.set(false);
+        console.error('Error sending message:', err);
+        alert('Error al enviar el mensaje');
+      },
+    });
+  }
+
+  getStatusLabel(status?: string): string {
+    const labels: Record<string, string> = {
+      pending: 'Pendiente',
+      active: 'En Progreso',
+      completed: 'Completada',
+      abandoned: 'Abandonada',
+    };
+    return labels[status || ''] || status || '';
+  }
+
+  formatTime(timestamp: string): string {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  private scheduleScroll() {
+    if (!this.scrollScheduled) {
+      this.scrollScheduled = true;
+      setTimeout(() => {
+        this.scrollToBottom();
+        this.scrollScheduled = false;
+      }, 100);
+    }
+  }
+
+  private scrollToBottom() {
+    const messagesArea = document.querySelector('.messages-area');
+    if (messagesArea) {
+      messagesArea.scrollTop = messagesArea.scrollHeight;
+    }
   }
 }
