@@ -225,7 +225,8 @@ def chat_start(req: StartReq):
         )
     except Exception as e:
         logger.error(f"Error in chat_start: {e}")
-        raise HTTPException(status_code=502, detail=f"Ollama error (start): {e}")
+        raise HTTPException(
+            status_code=502, detail=f"Ollama error (start): {e}")
     SESSIONS[sid]["history"].append(("[start]", first))
     return {"session_id": sid, "message": first}
 
@@ -239,7 +240,7 @@ def chat_message(req: MsgReq):
     system = session["system"]
     history = session["history"]
 
-    turns = history[-2:]
+    turns = history[:]
     prompt = [f"<system>{system}</system>"]
     for u, a in turns:
         if u != "[start]":
@@ -250,7 +251,8 @@ def chat_message(req: MsgReq):
         reply = chat_once("\n".join(prompt), model=req.model)
     except Exception as e:
         logger.error(f"Error in chat_message: {e}")
-        raise HTTPException(status_code=502, detail=f"Ollama error (message): {e}")
+        raise HTTPException(
+            status_code=502, detail=f"Ollama error (message): {e}")
 
     history.append((req.text, reply))
     return {"message": reply, "turns": len(history)}
@@ -343,7 +345,8 @@ def generate_interview(req: GenerateInterviewReq):
                 if not q.get("type"):
                     raise ValueError(f"Question {i} missing 'type' field")
                 if not isinstance(q.get("expected_keywords"), list):
-                    raise ValueError(f"Question {i} missing 'expected_keywords' list")
+                    raise ValueError(
+                        f"Question {i} missing 'expected_keywords' list")
 
             logger.info(f"✅ Interview generated successfully")
             return {"ok": True, "interview": data, "raw_response": response}

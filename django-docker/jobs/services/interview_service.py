@@ -29,6 +29,7 @@ class InterviewService:
                 "questions": interview_questions,
                 "vacancy_id": application.vacancy.id,
                 "vacancy_title": application.vacancy.puesto,
+                "company_name": application.vacancy.created_by.name,
             },
             max_possible_score=sum(q.get("weight", 0) for q in interview_questions),
         )
@@ -167,6 +168,7 @@ class InterviewService:
         config = session.interview_config
         questions = config.get("questions", [])
         vacancy_title = config.get("vacancy_title", "esta posición")
+        company_name = config.get("company_name", "la empresa")
 
         questions_text = "\n".join(
             [
@@ -181,19 +183,22 @@ class InterviewService:
 
 VACANTE: {vacancy_title}
 
+EMPRESA: {company_name}
+
 TU MISIÓN:
 1. Conducir una entrevista profesional y amigable
-2. Hacer las siguientes preguntas una por una
+2. Realizar una entrevista estructurada basada en las preguntas proporcionadas.
 3. Escuchar atentamente las respuestas del candidato
 4. Hacer preguntas de seguimiento cuando sea apropiado
-5. Evaluar las respuestas basándote en las palabras clave esperadas
+5. Indicar al candidato cuando la entrevista haya concluido
 
 PREGUNTAS DE LA ENTREVISTA:
 {questions_text}
 
 INSTRUCCIONES:
 - Empieza con un saludo cálido y preséntate
-- Haz UNA pregunta a la vez
+- Se claro sobre el proceso de la entrevista y que tus respuestas o preguntas sean cortas, simulando una entrevista real
+- Considera siempre el contexto de este prompt y las respuestas que te da el candidato
 - Espera la respuesta antes de continuar
 - Sé empático y profesional
 - Al final, agradece al candidato por su tiempo
