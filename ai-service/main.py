@@ -19,11 +19,11 @@ logger = logging.getLogger(__name__)
 try:
     from rag_retrieve import Retriever
 
-    retriever = Retriever()
+    retriever: Optional[Retriever] = Retriever()
     HAS_RETRIEVER = True
     logger.info("✅ Retriever loaded successfully")
 except Exception as e:
-    retriever = None
+    retriever: Optional[Retriever] = None
     HAS_RETRIEVER = False
     logger.warning(f"⚠️ Retriever not available: {e}")
 
@@ -37,13 +37,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-SESSIONS: Dict[str, List[Tuple[str, str]]] = {}
-SYSTEM = (
-    "Eres **Evalyze Assistant**, el asistente oficial de la plataforma Evalyze. "
-    "Preséntate como 'Evalyze Assistant' al iniciar. "
-    "Ayudas a crear y revisar entrevistas/exámenes técnicos. "
-    "Sé claro, profesional y breve. Responde en español."
-)
+SESSIONS: Dict[str, Dict] = {}
+
 
 # Use a model that should be available
 DEFAULT_CHAT_MODEL = "llama3.2"
@@ -217,8 +212,9 @@ def ollama_status():
 @app.post("/chat/start")
 def chat_start(req: StartReq):
     sid = str(uuid4())
-    SESSIONS[sid] = []
-    system = req.system or SYSTEM
+
+    system = req.system
+    SESSIONS[sid] = {"system": system, "history": []}
     # fmt:off
     prompt = f"<system>{system}</system>\n<user>Inicia la conversación con un saludo breve.</user>\n<assistant>"
     # fmt: on
@@ -230,7 +226,7 @@ def chat_start(req: StartReq):
     except Exception as e:
         logger.error(f"Error in chat_start: {e}")
         raise HTTPException(status_code=502, detail=f"Ollama error (start): {e}")
-    SESSIONS[sid].append(("[start]", first))
+    SESSIONS[sid]["history"].append(("[start]", first))
     return {"session_id": sid, "message": first}
 
 
@@ -238,18 +234,24 @@ def chat_start(req: StartReq):
 def chat_message(req: MsgReq):
     if req.session_id not in SESSIONS:
         raise HTTPException(status_code=404, detail="session not found")
-    history = SESSIONS[req.session_id]
+
+    session = SESSIONS[req.session_id]
+    system = session["system"]
+    history = session["history"]
+
     turns = history[-2:]
-    prompt = [f"<system>{SYSTEM}</system>"]
+    prompt = [f"<system>{system}</system>"]
     for u, a in turns:
         if u != "[start]":
             prompt.append(f"<user>{u}</user>\n<assistant>{a}</assistant>")
     prompt.append(f"<user>{req.text}</user>\n<assistant>")
+
     try:
         reply = chat_once("\n".join(prompt), model=req.model)
     except Exception as e:
         logger.error(f"Error in chat_message: {e}")
         raise HTTPException(status_code=502, detail=f"Ollama error (message): {e}")
+
     history.append((req.text, reply))
     return {"message": reply, "turns": len(history)}
 
@@ -275,7 +277,11 @@ def generate_exam(req: GenerateExamReq):
             detail="Retriever not available. Cannot generate exam without knowledge base.",
         )
 
+    assert retriever is not None
+
+    # fmt:off
     query = f"{req.role} {req.level} examen preguntas opciones rúbrica SQL Node pagos"
+    # fmt:on
     ctx = "\n\n".join(d["text"] for d in retriever.topk(query, 6))
     prompt = build_exam_prompt(ctx, req.role, req.n, req.level)
     try:
@@ -368,7 +374,9 @@ def generate_interview(req: GenerateInterviewReq):
                 logger.error(f"Failed to fix JSON: {fix_error}")
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Failed to parse interview response: {parse_error}",
+                    # fmt:off
+                    detail=f"Failed to parse interview response:{parse_error}",
+                    # fmt:on
                 )
 
     except Exception as e:
