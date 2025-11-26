@@ -18,8 +18,7 @@ class Vacante(models.Model):
     departamento = models.CharField(max_length=120, blank=True, default="")
     company_name = models.CharField(max_length=200, blank=True, default="")
 
-    created_at = models.DateTimeField(
-        default=timezone.now)  # Changed from auto_now_add
+    created_at = models.DateTimeField(default=timezone.now)  # Changed from auto_now_add
 
     created_by = models.ForeignKey(
         User,
@@ -59,8 +58,7 @@ class Application(models.Model):
     candidate = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="applications"
     )
-    status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default="pending")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     applied_at = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(blank=True, default="")
 
@@ -90,8 +88,7 @@ class InterviewSession(models.Model):
 
     interview_config = models.JSONField(default=dict)
 
-    status = models.CharField(
-        max_length=20, choices=STATUS_CHOICES, default="pending")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     current_question_index = models.IntegerField(default=0)
 
     started_at = models.DateTimeField(null=True, blank=True)
@@ -101,6 +98,14 @@ class InterviewSession(models.Model):
     total_score = models.FloatField(default=0.0)
     max_possible_score = models.FloatField(default=100.0)
     company_name = models.CharField(max_length=200, blank=True, default="")
+
+    analysis_report = models.JSONField(
+        null=True, blank=True, help_text="SWOT analysis report with quantitative score"
+    )
+
+    analyzed_at = models.DateTimeField(
+        null=True, blank=True, help_text="When the analysis was generated"
+    )
 
     class Meta:
         ordering = ["-started_at"]

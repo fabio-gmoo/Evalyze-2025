@@ -1,0 +1,197 @@
+<div class="report-container">
+  @if (loading()) {
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Cargando análisis...</p>
+    </div>
+  } @else if (error()) {
+    <div class="error-state">
+      <svg viewBox="0 0 24 24" width="48" height="48">
+        <path
+          fill="currentColor"
+          d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
+        />
+      </svg>
+      <p>{{ error() }}</p>
+    </div>
+  } @else if (report()) {
+    <!-- Header -->
+    <div class="report-header">
+      <div class="header-content">
+        <h2>Análisis de Entrevista</h2>
+        <div class="candidate-info">
+          <span class="name">{{ report()!.candidate_name }}</span>
+          <span class="email">{{ report()!.candidate_email }}</span>
+          <span class="vacancy">{{ report()!.vacancy_title }}</span>
+        </div>
+      </div>
+
+      <div class="score-card" [class]="'score-' + report()!.score_category.toLowerCase()">
+        <div class="score-value">{{ report()!.quantitative_score }}%</div>
+        <div class="score-label">{{ report()!.score_category }}</div>
+      </div>
+    </div>
+
+    <!-- Metadata -->
+    <div class="metadata">
+      <div class="meta-item">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+        <span>{{ report()!.metadata.duration_minutes }} min</span>
+      </div>
+      <div class="meta-item">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+        <span>{{ report()!.metadata.total_questions }} preguntas</span>
+      </div>
+      <div class="meta-item">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+        <span>{{ formatDate(report()!.interview_date) }}</span>
+      </div>
+    </div>
+
+    <!-- SWOT Analysis -->
+    <div class="swot-section">
+      <h3>Análisis SWOT</h3>
+      <div class="swot-grid">
+        <!-- Strengths -->
+        <div class="swot-card strengths">
+          <div class="swot-header">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            <h4>Fortalezas</h4>
+            <span class="count">{{ report()!.swot_analysis.strengths.length }}</span>
+          </div>
+          <ul class="swot-list">
+            @for (item of report()!.swot_analysis.strengths; track $index) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        </div>
+
+        <!-- Weaknesses -->
+        <div class="swot-card weaknesses">
+          <div class="swot-header">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+            <h4>Debilidades</h4>
+            <span class="count">{{ report()!.swot_analysis.weaknesses.length }}</span>
+          </div>
+          <ul class="swot-list">
+            @for (item of report()!.swot_analysis.weaknesses; track $index) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        </div>
+
+        <!-- Opportunities -->
+        <div class="swot-card opportunities">
+          <div class="swot-header">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor">
+              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+              <polyline points="2 17 12 22 22 17" />
+              <polyline points="2 12 12 17 22 12" />
+            </svg>
+            <h4>Oportunidades</h4>
+            <span class="count">{{ report()!.swot_analysis.opportunities.length }}</span>
+          </div>
+          <ul class="swot-list">
+            @for (item of report()!.swot_analysis.opportunities; track $index) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        </div>
+
+        <!-- Threats -->
+        <div class="swot-card threats">
+          <div class="swot-header">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor">
+              <path
+                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+              />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            <h4>Amenazas</h4>
+            <span class="count">{{ report()!.swot_analysis.threats.length }}</span>
+          </div>
+          <ul class="swot-list">
+            @for (item of report()!.swot_analysis.threats; track $index) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cross-SWOT -->
+    <div class="cross-swot-section">
+      <h3>Estrategias Cross-SWOT</h3>
+      <div class="cross-swot-grid">
+        <div class="strategy-card so">
+          <h4>SO - Explotar Fortalezas</h4>
+          <ul>
+            @for (item of report()!.cross_swot.so_strategies; track $index) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        </div>
+
+        <div class="strategy-card wo">
+          <h4>WO - Superar Debilidades</h4>
+          <ul>
+            @for (item of report()!.cross_swot.wo_strategies; track $index) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        </div>
+
+        <div class="strategy-card st">
+          <h4>ST - Afrontar Amenazas</h4>
+          <ul>
+            @for (item of report()!.cross_swot.st_strategies; track $index) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        </div>
+
+        <div class="strategy-card wt">
+          <h4>WT - Minimizar Riesgos</h4>
+          <ul>
+            @for (item of report()!.cross_swot.wt_strategies; track $index) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="recommendations-section">
+      <h3>Recomendaciones</h3>
+      <ul class="recommendations-list">
+        @for (rec of report()!.recommendations; track $index) {
+          <li [class]="getRecommendationClass(rec)">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
+              <path d="M9 11l3 3L22 4" />
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            </svg>
+            <span>{{ rec }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+  }
+</div>
