@@ -1,3 +1,5 @@
+<!-- Eva-Front/src/app/components/interview-chat/interview-chat.html -->
+
 <div class="interview-chat-container">
   @if (!sessionId) {
     <div class="no-session">
@@ -23,7 +25,8 @@
         }
       </div>
     }
-    <!-- Messages -->
+
+    <!-- Messages Area -->
     <div class="messages-area" #messagesContainer>
       @for (msg of messages(); track $index) {
         <div class="message" [class]="'message-' + msg.sender">
@@ -46,7 +49,7 @@
       }
     </div>
 
-    <!-- Input Area -->
+    <!-- Start Interview Button (Pending State) -->
     @if (session()?.status === 'pending') {
       <div class="start-area">
         <button (click)="startInterview()" [disabled]="loading()" class="btn-start">
@@ -56,6 +59,7 @@
       </div>
     }
 
+    <!-- Input Area (Active State) -->
     @if (session()?.status === 'active') {
       <div class="input-area">
         <textarea
@@ -71,6 +75,21 @@
       </div>
     }
 
+    <!-- Finalize Button (Active State - Show when ready) -->
+    @if (session()?.status === 'active' && totalQuestions() > 0) {
+      <div class="finalize-area">
+        <button (click)="showFinalizeDialog()" [disabled]="isFinalizing()" class="btn-finalize">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          {{ isFinalizing() ? 'Finalizando...' : 'Finalizar Entrevista' }}
+        </button>
+        <p class="hint">Completa todas las preguntas antes de finalizar</p>
+      </div>
+    }
+
+    <!-- Completed State -->
     @if (session()?.status === 'completed') {
       <div class="completed-area">
         <div class="completed-icon">✓</div>
@@ -78,7 +97,93 @@
         <p class="score">
           Puntuación: {{ session()?.total_score }} / {{ session()?.max_possible_score }}
         </p>
+        <button
+          class="btn-view-results"
+          (click)="router.navigate(['/interview-results', sessionId])"
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+          </svg>
+          Ver Resultados Completos
+        </button>
       </div>
     }
   }
 </div>
+
+<!-- Finalize Confirmation Dialog -->
+@if (showFinalizeConfirm()) {
+  <div class="modal-overlay" (click)="cancelFinalize()">
+    <div class="confirm-dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-icon">
+        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+          <polyline points="22 4 12 14.01 9 11.01" />
+        </svg>
+      </div>
+
+      <h3>¿Finalizar Entrevista?</h3>
+
+      <p>
+        Una vez finalizada, tu entrevista será analizada por IA y recibirás un informe completo con:
+      </p>
+
+      <ul class="benefits-list">
+        <li>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Análisis SWOT de tu desempeño
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Puntuación cuantitativa (0-100%)
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Recomendaciones personalizadas
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Estrategias de desarrollo profesional
+        </li>
+      </ul>
+
+      <div class="warning-box">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
+          <path
+            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+          />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+        <span>Esta acción no se puede deshacer.</span>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="btn-cancel" (click)="cancelFinalize()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+          Cancelar
+        </button>
+        <button class="btn-confirm" (click)="finalizeInterview()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Sí, Finalizar
+        </button>
+      </div>
+    </div>
+  </div>
+}

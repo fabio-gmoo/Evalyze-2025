@@ -9,4 +9,16 @@ export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: '/home' },
   { path: 'auth', component: Auth },
   { path: 'vacantes', component: Vacantes, canActivate: [authGuard] },
+  {
+    path: 'company-dashboard',
+    component: CompanyDashboard,
+    canActivate: [authGuard],
+  },
+  // Optional: Interview results page for candidates
+  {
+    path: 'interview-results/:id',
+    loadComponent: () =>
+      import('@components/interview-report/interview-report').then((m) => m.InterviewReport),
+    canActivate: [authGuard],
+  },
 ];
