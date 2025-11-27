@@ -19,7 +19,7 @@ export const routes: Routes = [
   {
     path: 'interview-results/:id',
     loadComponent: () =>
-      import('@components/interview-report/interview-report').then((m) => m.InterviewReport),
+      import('@components/interview-report/interview-report').then((m) => m.InterviewReportC),
     canActivate: [authGuard],
   },
 ];

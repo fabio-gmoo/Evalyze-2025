@@ -8,7 +8,7 @@ import { Analysis, InterviewReport } from '@services/analysis';
   templateUrl: './interview-report.html',
   styleUrl: './interview-report.scss',
 })
-export class InterviewReport implements OnInit {
+export class InterviewReportC implements OnInit {
   private analysisService = inject(Analysis);
 
   @Input() sessionId: number | null = null;

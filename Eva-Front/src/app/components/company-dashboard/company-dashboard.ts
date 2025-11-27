@@ -3,13 +3,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Analysis, CandidateInfo, RankedCandidate, GlobalReport } from '@services/analysis';
-import { InterviewReport } from '@components/interview-report/interview-report';
+import { InterviewReportC } from '@components/interview-report/interview-report';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-company-dashboard',
   standalone: true,
-  imports: [CommonModule, InterviewReport],
+  imports: [CommonModule, InterviewReportC],
   templateUrl: './company-dashboard.html',
   styleUrl: './company-dashboard.scss',
 })

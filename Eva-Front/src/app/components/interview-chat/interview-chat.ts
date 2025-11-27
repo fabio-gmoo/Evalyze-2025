@@ -31,7 +31,7 @@ export class InterviewChat implements OnInit, OnDestroy, AfterViewChecked {
 
   private interviewService = inject(Interview);
   private analysisService = inject(Analysis);
-  private router = inject(Router);
+  public router = inject(Router);
 
   // Signals
   session = signal<InterviewSession | null>(null);
