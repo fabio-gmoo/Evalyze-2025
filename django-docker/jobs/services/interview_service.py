@@ -31,11 +31,13 @@ class InterviewService:
                 "vacancy_title": application.vacancy.puesto,
                 "company_name": application.vacancy.created_by.name,
             },
-            max_possible_score=sum(q.get("weight", 0) for q in interview_questions),
+            max_possible_score=sum(q.get("weight", 0)
+                                   for q in interview_questions),
         )
 
         logger.info(
-            f"Created interview session {session.id} for application {application.id}"
+            f"Created interview session {
+                session.id} for application {application.id}"
         )
         return session
 
@@ -72,7 +74,8 @@ class InterviewService:
             )
 
             logger.info(
-                f"Started AI session {ai_session_id} for interview {session.id}"
+                f"Started AI session {
+                    ai_session_id} for interview {session.id}"
             )
 
             return {
@@ -126,7 +129,8 @@ class InterviewService:
             )
 
             # Check if we should move to next question
-            total_questions = len(session.interview_config.get("questions", []))
+            total_questions = len(
+                session.interview_config.get("questions", []))
             if session.current_question_index < total_questions - 1:
                 session.current_question_index += 1
                 session.save()
@@ -179,11 +183,11 @@ class InterviewService:
             ]
         )
 
-        prompt = f"""Eres un entrevistador profesional de IA para Evalyze.
+        prompt = f"""Eres un entrevistador profesional de IA para Evalyze y te llamas Ariana.
 
-VACANTE: {vacancy_title}
+NOMBRE DE VACANTE: {vacancy_title}
 
-EMPRESA: {company_name}
+NOMBRE DE EMPRESA QUE CREO LA VACANTE: {company_name}
 
 TU MISIÓN:
 1. Conducir una entrevista profesional y amigable
