@@ -36,8 +36,7 @@ class CreatorSerializer(serializers.ModelSerializer):
 
 
 class VacanteSerializer(serializers.ModelSerializer):
-    requisitos = serializers.ListField(
-        child=serializers.CharField(), allow_empty=True)
+    requisitos = serializers.ListField(child=serializers.CharField(), allow_empty=True)
     salario = serializers.SerializerMethodField()
     company_name = serializers.CharField(read_only=True)
 
@@ -193,8 +192,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
 class ChatMessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatMessage
-        fields = ["id", "sender", "content",
-                  "timestamp", "question_index", "score"]
+        fields = ["id", "sender", "content", "timestamp", "question_index", "score"]
 
 
 class InterviewSessionSerializer(serializers.ModelSerializer):
@@ -203,6 +201,9 @@ class InterviewSessionSerializer(serializers.ModelSerializer):
     )
     vacancy_title = serializers.CharField(
         source="application.vacancy.puesto", read_only=True
+    )
+    vacancy_id = serializers.IntegerField(
+        source="application.vacancy.id", read_only=True
     )
     message_count = serializers.SerializerMethodField()
 
@@ -219,8 +220,10 @@ class InterviewSessionSerializer(serializers.ModelSerializer):
             "max_possible_score",
             "candidate_name",
             "vacancy_title",
+            "vacancy_id",
             "message_count",
             "company_name",
+            "analysis_report",
         ]
 
     def get_message_count(self, obj):
