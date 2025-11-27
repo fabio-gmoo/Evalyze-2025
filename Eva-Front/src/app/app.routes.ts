@@ -4,6 +4,7 @@ import { Auth } from '@pages/auth/auth';
 import { authGuard } from './auth-guard';
 import { Vacantes } from '@pages/vacantes/vacantes';
 import { CompanyDashboard } from '@components/company-dashboard/company-dashboard';
+import { InterviewChat } from '@components/interview-chat/interview-chat';
 
 export const routes: Routes = [
   { path: 'home', component: Home },
@@ -15,7 +16,12 @@ export const routes: Routes = [
     component: CompanyDashboard,
     canActivate: [authGuard],
   },
-  // Optional: Interview results page for candidates
+  {
+    path: 'interview-session/:sessionId',
+    component: InterviewChat,
+    canActivate: [authGuard],
+  },
+
   {
     path: 'interview-results/:id',
     loadComponent: () =>
