@@ -1,7 +1,5 @@
-<!-- src/app/components/vacancy-details-modal/vacancy-details-modal.html -->
 <div class="modal-backdrop" (click)="onBackdropClick($event)">
   <div class="modal-container">
-    <!-- Header -->
     <header class="modal-header">
       <div class="header-content">
         <div class="header-icon">
@@ -44,12 +42,9 @@
       </button>
     </header>
 
-    <!-- Tabs -->
     <app-vacancy-tabs [tabs]="tabs" [activeTab]="activeTab" (tabChange)="setActiveTab($event)" />
 
-    <!-- Content -->
-    <div class="modal-body">
-      <!-- Detalles Tab -->
+    <div class="modal-body" [class.chat-mode]="activeTab === 'entrevista'">
       @if (activeTab === 'detalles') {
         <div class="tab-content">
           <section class="content-section">
@@ -111,7 +106,6 @@
         </div>
       }
 
-      <!-- Candidatos Tab (Company view only) -->
       @if (activeTab === 'candidatos' && viewMode === 'company') {
         <div class="tab-content">
           <section class="content-section">
@@ -134,146 +128,36 @@
         </div>
       }
 
-      <!-- Entrevista Tab (Candidate view only, after applying) -->
       @if (activeTab === 'entrevista' && viewMode === 'candidate' && hasApplied) {
         <div class="tab-content interview-tab">
-          @if (!sessionId()) {
-            <div class="no-session">
-              <p>No hay sesión de entrevista disponible</p>
-            </div>
-          } @else {
-            <!-- Session Info -->
-            @if (session()) {
-              <div class="session-info">
-                <div class="info-row">
-                  <span class="label">Estado:</span>
-                  <span class="status" [class]="'status-' + session()?.status">
-                    {{ getStatusLabel(session()?.status) }}
-                  </span>
-                </div>
-                @if (session()?.status === 'active') {
-                  <div class="info-row">
-                    <span class="label">Progreso:</span>
-                    <span class="value">
-                      Pregunta {{ (session()?.current_question_index || 0) + 1 }} de
-                      {{ totalQuestions() }}
-                    </span>
-                  </div>
-                }
-              </div>
-            }
-
-            <!-- Messages -->
-            <div class="messages-area">
-              @for (msg of messages(); track $index) {
-                <div class="message" [class]="'message-' + msg.sender">
-                  <div class="message-content">{{ msg.content }}</div>
-                  <div class="message-time">{{ formatTime(msg.timestamp) }}</div>
-                  @if (msg.score) {
-                    <div class="message-score">Puntuación: {{ msg.score }}</div>
-                  }
-                </div>
-              }
-
-              @if (isTyping()) {
-                <div class="message message-ai">
-                  <div class="typing-indicator">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                  </div>
-                </div>
-              }
-            </div>
-
-            <!-- Input Area -->
-            @if (session()?.status === 'pending') {
-              <div class="start-area">
-                <button (click)="startInterview()" [disabled]="loading()" class="btn-start">
-                  {{ loading() ? 'Iniciando...' : 'Iniciar Entrevista' }}
-                </button>
-                <p class="hint">La entrevista constará de {{ totalQuestions() }} preguntas</p>
-              </div>
-            }
-
-            @if (session()?.status === 'active') {
-              <div class="input-area">
-                <textarea
-                  [value]="draft()"
-                  (input)="draft.set($any($event.target).value)"
-                  (keydown.control.enter)="sendMessage()"
-                  [disabled]="isTyping()"
-                  placeholder="Escribe tu respuesta... (Ctrl+Enter para enviar)"
-                  rows="3"
-                ></textarea>
-                <button
-                  (click)="sendMessage()"
-                  [disabled]="!draft().trim() || isTyping()"
-                  class="btn-send"
-                >
-                  Enviar
-                </button>
-              </div>
-            }
-
-            @if (session()?.status === 'completed') {
-              <div class="completed-area">
-                <div class="completed-icon">✓</div>
-                <h3>¡Entrevista Completada!</h3>
-                <p class="score">
-                  Puntuación: {{ session()?.total_score }} / {{ session()?.max_possible_score }}
-                </p>
-              </div>
-            }
-          }
+          <app-interview-chat [sessionId]="sessionId()" [vacancy]="vacancy"> </app-interview-chat>
         </div>
       }
     </div>
+    @if (activeTab !== 'entrevista') {
+      <footer class="modal-footer">
+        @if (viewMode === 'candidate' && activeTab === 'detalles') {
+          <button class="btn btn-primary" (click)="onApply()">
+            {{ hasApplied ? 'Ir a Entrevista' : 'Postular' }}
+          </button>
+        }
+        @if (viewMode === 'company' && activeTab === 'detalles') {
+          <button type="button" class="btn btn-secondary" (click)="onGenerateInterview()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            Generar Entrevista IA
+          </button>
 
-    <!-- Footer -->
-    <footer class="modal-footer">
-      @if (viewMode === 'candidate' && activeTab === 'detalles') {
-        <button type="button" class="btn btn-primary" (click)="onApply()" [disabled]="isApplying">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-            <polyline points="22 4 12 14.01 9 11.01" />
-          </svg>
-          {{
-            hasApplied ? 'Ver Entrevista' : isApplying ? 'Postulando...' : 'Postular a esta Vacante'
-          }}
-        </button>
-      }
-
-      @if (activeTab === 'entrevista' && viewMode === 'candidate') {
-        <button type="button" class="btn btn-secondary" (click)="setActiveTab('detalles')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path
-              d="M19 12H5M5 12l7 7M5 12l7-7"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-          </svg>
-          Volver a Detalles
-        </button>
-      }
-
-      @if (viewMode === 'company' && activeTab === 'detalles') {
-        <button type="button" class="btn btn-secondary" (click)="onGenerateInterview()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
-          Generar Entrevista IA
-        </button>
-
-        <button type="button" class="btn btn-primary" (click)="onEdit()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-          </svg>
-          Editar Vacante
-        </button>
-      }
-    </footer>
+          <button type="button" class="btn btn-primary" (click)="onEdit()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            Editar Vacante
+          </button>
+        }
+      </footer>
+    }
   </div>
 </div>

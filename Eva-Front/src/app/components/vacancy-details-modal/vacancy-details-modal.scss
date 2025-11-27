@@ -16,15 +16,16 @@
 }
 
 .modal-container {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
-  border-radius: 16px;
-  width: 100%;
-  max-width: 900px;
-  max-height: 90vh;
-  display: flex;
+  background: #0f172a;
+  width: 90%;
+  max-width: 800px;
+  height: 85vh; /* Altura fija importante para el chat */
+  border-radius: 12px;
+  position: relative;
+  display: flex; /* Flexbox para organizar header/body/footer */
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
 }
 
 .modal-header {
@@ -141,16 +142,27 @@
 }
 
 .modal-body {
-  flex: 1;
+  padding: 1.5rem;
   overflow-y: auto;
-  padding: 2rem;
-  min-height: 300px; /* Ensure minimum height */
-  max-height: calc(90vh - 300px);
+  flex: 1;
 
   .tab-content {
     animation: fadeIn 0.3s ease;
   }
+  &.chat-mode {
+    padding: 0 !important; /* Sin bordes blancos */
+    overflow: hidden !important; /* El modal NO scrollea, scrollea el chat */
+    display: flex;
+    flex-direction: column;
 
+    /* Forzar al contenedor del componente a llenar el hueco */
+    .tab-content.interview-tab {
+      height: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+  }
   .content-section {
     margin-bottom: 2rem;
 
