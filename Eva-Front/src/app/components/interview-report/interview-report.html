@@ -1,37 +1,41 @@
 <div class="report-container">
   @if (loading()) {
-    <div class="loading">
-      <div class="spinner"></div>
-      <p>Cargando análisis...</p>
+    <div class="empty-state">
+      <div class="icon-box">⏳</div>
+      <h2>Análisis en Proceso</h2>
+      <p>
+        La inteligencia artificial está evaluando esta entrevista. Por favor vuelve en unos
+        momentos.
+      </p>
+      <button class="btn-primary" (click)="ngOnInit()">Recargar</button>
     </div>
   } @else if (error()) {
-    <div class="error-state">
-      <svg viewBox="0 0 24 24" width="48" height="48">
-        <path
-          fill="currentColor"
-          d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"
-        />
-      </svg>
+    <div class="empty-state error-state">
+      <div class="icon-box" style="background: rgba(239, 68, 68, 0.1); color: #ef4444">⚠️</div>
+      <h2>No se pudo cargar el reporte</h2>
       <p>{{ error() }}</p>
+      <button class="btn-primary" (click)="loadReport()">Intentar de nuevo</button>
     </div>
   } @else if (report()) {
     <!-- Header -->
-    <div class="report-header">
+    <header class="report-header">
       <div class="header-content">
         <h2>Análisis de Entrevista</h2>
         <div class="candidate-info">
-          <span class="name">{{ report()!.candidate_name }}</span>
-          <span class="email">{{ report()!.candidate_email }}</span>
-          <span class="vacancy">{{ report()!.vacancy_title }}</span>
+          <span class="name">{{ report()?.candidate_name || 'Candidato' }}</span>
+          <span class="email">{{ report()?.candidate_email || 'Sin email' }}</span>
+          <span class="vacancy">{{ report()?.vacancy_title || 'Vacante' }}</span>
         </div>
       </div>
 
-      <div class="score-card" [class]="'score-' + report()!.score_category.toLowerCase()">
-        <div class="score-value">{{ report()!.quantitative_score }}%</div>
-        <div class="score-label">{{ report()!.score_category }}</div>
+      <div
+        class="score-card"
+        [class]="'score-' + (report()?.score_category?.toLowerCase() || 'unknown')"
+      >
+        <div class="score-value">{{ report()?.quantitative_score || 0 }}%</div>
+        <div class="score-label">{{ report()?.score_category || 'N/A' }}</div>
       </div>
-    </div>
-
+    </header>
     <!-- Metadata -->
     <div class="metadata">
       <div class="meta-item">

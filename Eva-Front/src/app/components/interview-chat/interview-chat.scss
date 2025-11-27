@@ -1,12 +1,17 @@
 // Eva-Front/src/app/components/interview-chat/interview-chat.scss
 
+:host {
+  display: block; /* Importante: para que acepte altura */
+  height: 100%; /* Ocupar todo el espacio del padre (el modal) */
+  width: 100%;
+}
+
 .interview-chat-container {
   display: flex;
   flex-direction: column;
-  height: 600px;
-  background: #0f172a;
-  border-radius: 12px;
-  overflow: hidden;
+  height: 100%; /* Ocupar el 100% del :host */
+  background: #0f172a; /* Color de fondo oscuro */
+  overflow: hidden; /* Evitar que se desborde el contenedor principal */
 }
 
 .no-session {
@@ -70,10 +75,12 @@
 }
 
 .messages-area {
-  flex: 1;
-  overflow-y: auto;
+  flex: 1; /* Ocupar todo el espacio disponible */
+  overflow-y: auto; /* ACTIVAR SCROLL AQUÍ */
   padding: 1.5rem;
-  scroll-behavior: smooth;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -215,11 +222,14 @@
 }
 
 .input-area {
-  display: flex;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
+  flex-shrink: 0; /* No encogerse nunca */
+  padding: 1rem;
   background: #1e293b;
-  border-top: 1px solid #334155;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  display: flex; /* Alinear elementos en fila */
+  gap: 10px; /* Espacio entre el input y el botón */
+  align-items: center;
 }
 
 textarea {

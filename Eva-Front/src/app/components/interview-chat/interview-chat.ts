@@ -8,6 +8,7 @@ import {
   ViewChild,
   ElementRef,
   AfterViewChecked,
+  numberAttribute,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -24,7 +25,7 @@ import { Router } from '@angular/router';
   styleUrl: './interview-chat.scss',
 })
 export class InterviewChat implements OnInit, OnDestroy, AfterViewChecked {
-  @Input() sessionId: number | null = null;
+  @Input({ transform: numberAttribute }) sessionId: number | null = null;
   @Input() vacancy: VacanteUI | null = null;
 
   @ViewChild('messagesContainer') messagesContainer?: ElementRef<HTMLDivElement>;
