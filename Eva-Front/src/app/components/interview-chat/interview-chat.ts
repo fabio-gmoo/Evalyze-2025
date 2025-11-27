@@ -14,7 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { interval, Subscription } from 'rxjs';
 import { VacanteUI } from '@interfaces/vacante-model';
 import { Interview, InterviewSession, ChatMessage } from '@services/interview';
-import { AnalysisService } from '@services/analysis.service';
+import { Analysis } from '@services/analysis';
 import { Router } from '@angular/router';
 
 @Component({
@@ -30,7 +30,7 @@ export class InterviewChat implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('messagesContainer') messagesContainer?: ElementRef<HTMLDivElement>;
 
   private interviewService = inject(Interview);
-  private analysisService = inject(AnalysisService);
+  private analysisService = inject(Analysis);
   private router = inject(Router);
 
   // Signals

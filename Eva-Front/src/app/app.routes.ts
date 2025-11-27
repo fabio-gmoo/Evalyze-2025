@@ -3,6 +3,7 @@ import { Home } from '@pages/home/home';
 import { Auth } from '@pages/auth/auth';
 import { authGuard } from './auth-guard';
 import { Vacantes } from '@pages/vacantes/vacantes';
+import { CompanyDashboard } from '@components/company-dashboard/company-dashboard';
 
 export const routes: Routes = [
   { path: 'home', component: Home },

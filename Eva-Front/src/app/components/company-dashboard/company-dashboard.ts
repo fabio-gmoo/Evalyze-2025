@@ -2,12 +2,7 @@
 
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import {
-  AnalysisService,
-  CandidateInfo,
-  RankedCandidate,
-  GlobalReport,
-} from '@services/analysis.service';
+import { Analysis, CandidateInfo, RankedCandidate, GlobalReport } from '@services/analysis';
 import { InterviewReport } from '@components/interview-report/interview-report';
 import { Router } from '@angular/router';
 
@@ -19,7 +14,7 @@ import { Router } from '@angular/router';
   styleUrl: './company-dashboard.scss',
 })
 export class CompanyDashboard implements OnInit {
-  private analysisService = inject(AnalysisService);
+  private analysisService = inject(Analysis);
   private router = inject(Router);
 
   activeTab = signal<'candidates' | 'ranking' | 'global'>('candidates');

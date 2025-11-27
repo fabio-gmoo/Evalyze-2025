@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AnalysisService, InterviewReport } from '@services/analysis.service';
+import { Analysis, InterviewReport } from '@services/analysis';
 
 @Component({
   selector: 'app-interview-report',
@@ -9,7 +9,7 @@ import { AnalysisService, InterviewReport } from '@services/analysis.service';
   styleUrl: './interview-report.scss',
 })
 export class InterviewReport implements OnInit {
-  private analysisService = inject(AnalysisService);
+  private analysisService = inject(Analysis);
 
   @Input() sessionId: number | null = null;
   @Input() reportData: InterviewReport | null = null;
