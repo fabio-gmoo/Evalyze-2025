@@ -5,7 +5,7 @@ import logging
 from typing import Dict, List, Any
 from django.utils import timezone  # type: ignore
 from collections import Counter
-from models import InterviewSession
+from jobs.models import InterviewSession
 
 logger = logging.getLogger(__name__)
 

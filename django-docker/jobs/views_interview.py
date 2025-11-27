@@ -131,26 +131,37 @@ class InterviewSessionViewSet(viewsets.ReadOnlyModelViewSet):
         """
         Get candidate's active session (if any)
         """
-        if request.user.role != "candidate":
+        try:
+            if request.user.role != "candidate":
+                return Response(
+                    {"detail": "Solo candidatos pueden acceder"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            # Try to get active session
+            active_session = (
+                InterviewSession.objects.filter(
+                    application__candidate=request.user,
+                    status__in=["pending", "active"],
+                )
+                .select_related("application__candidate", "application__vacancy")
+                .order_by("-started_at", "-id")
+                .first()
+            )
+
+            if not active_session:
+                return Response({"session": None}, status=status.HTTP_200_OK)
+
+            serializer = self.get_serializer(active_session)
+            return Response({"session": serializer.data}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Error in my_active_session: {e}", exc_info=True)
+            # Return empty session instead of 500 error
             return Response(
-                {"detail": "Solo candidatos pueden acceder"},
-                status=status.HTTP_403_FORBIDDEN,
+                {"session": None, "error": "Unable to fetch session"},
+                status=status.HTTP_200_OK,
             )
-
-        active_session = (
-            InterviewSession.objects.filter(
-                application__candidate=request.user,
-                status__in=["pending", "active"],  # ← FIXED: Include pending
-            )
-            .order_by("-started_at", "-id")  # Get the most recent
-            .first()
-        )
-
-        if not active_session:
-            return Response({"session": None})
-
-        serializer = self.get_serializer(active_session)
-        return Response({"session": serializer.data})
 
     @action(detail=True, methods=["post"], url_path="finalize")
     def finalize_interview(self, request, pk=None):
