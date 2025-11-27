@@ -37,14 +37,10 @@ SIMPLE_JWT = {
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-$j$giv2eqwqm!6*rrhx*&8v0a_0vd+)g9irhir+a2hyr2-nsza"
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+
+DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "evalyze-production.up.railway.app"]
 
@@ -59,10 +55,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "jobs",
     "django_extensions",
     "users",
-    "corsheaders",
     "rest_framework",
 ]
 
@@ -87,6 +83,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://loacalhost:4200",
     "http://127.0.0.1:4200",
 ]
+
+CORS_ALLOW_CREDENTIALS = True
 
 TEMPLATES = [
     {
@@ -177,5 +175,4 @@ STATIC_URL = "static/"
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
