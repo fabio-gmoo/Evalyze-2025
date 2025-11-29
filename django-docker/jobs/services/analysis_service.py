@@ -2,6 +2,9 @@
 
 import httpx  # type: ignore
 import logging
+import os
+import re
+import json
 from typing import Dict, List, Any
 from django.utils import timezone  # type: ignore
 from collections import Counter
@@ -9,7 +12,7 @@ from jobs.models import InterviewSession
 
 logger = logging.getLogger(__name__)
 
-AI_SERVICE_URL = "http://ai-service:8001"
+AI_SERVICE_URL = os.getenv("AI_SERVICE_URL", "http://ai-service:8001")
 
 
 class InterviewAnalysisService:
@@ -114,10 +117,11 @@ class InterviewAnalysisService:
 
         try:
             with httpx.Client(timeout=120.0) as client:
+                # 1. Start Chat Session
                 response = client.post(
                     f"{self.ai_url}/chat/start",
                     json={
-                        "system": "You are an expert HR analyst specializing in SWOT analysis of job interviews.",
+                        "system": "You are an expert HR analyst specializing in SWOT analysis.",
                         "model": "llama3.2",
                     },
                 )
@@ -125,7 +129,7 @@ class InterviewAnalysisService:
                 session_data = response.json()
                 session_id = session_data.get("session_id")
 
-                # Send analysis request
+                # 2. Send Analysis Request
                 analysis_response = client.post(
                     f"{self.ai_url}/chat/message",
                     json={
@@ -137,14 +141,12 @@ class InterviewAnalysisService:
                 analysis_response.raise_for_status()
                 result = analysis_response.json()
 
-                # Parse SWOT from AI response
+                # 3. Parse Response with Robust Cleaner
                 swot = self._parse_swot_response(result.get("message", ""))
-
                 return swot
 
         except Exception as e:
             logger.error(f"Error generating SWOT analysis: {e}", exc_info=True)
-            # Fallback to basic SWOT
             return self._generate_fallback_swot(interview_data)
 
     def _build_swot_prompt(self, data: Dict[str, Any]) -> str:
@@ -190,27 +192,43 @@ Each point should be:
 Respond ONLY with the JSON structure, no additional text."""
 
     def _parse_swot_response(self, response: str) -> Dict[str, List[str]]:
-        """Parse SWOT analysis from AI response"""
-        import json
-        import re
+        """
+        FIX 2: Robust Markdown Cleaning and JSON Parsing
+        Strips ```json code blocks that cause parsing errors.
+        """
+        logger.info(f"Raw AI Response: {response}")
 
-        # Try to extract JSON from response
         try:
-            # Find JSON block
-            start = response.find("{")
-            end = response.rfind("}") + 1
+            # A. Regex to extract content inside ```json ... ``` or just ``` ... ```
+            # This handles Llama 3.2's tendency to wrap responses
+            pattern = r"```(?:json)?\s*(.*?)\s*```"
+            match = re.search(pattern, response, re.DOTALL)
+
+            if match:
+                clean_text = match.group(1)
+            else:
+                clean_text = response.strip()
+
+            # B. Attempt to find JSON object bounds if extra text exists
+            start = clean_text.find("{")
+            end = clean_text.rfind("}") + 1
+
             if start >= 0 and end > start:
-                json_str = response[start:end]
+                json_str = clean_text[start:end]
                 swot = json.loads(json_str)
 
-                # Validate structure
+                # C. Validate Structure
                 required_keys = ["strengths", "weaknesses", "opportunities", "threats"]
+                # Normalize keys to lowercase just in case
+                swot = {k.lower(): v for k, v in swot.items()}
+
                 if all(key in swot for key in required_keys):
                     return swot
-        except Exception as e:
-            logger.warning(f"Failed to parse SWOT JSON: {e}")
 
-        # Fallback: parse manually
+        except Exception as e:
+            logger.warning(f"Failed to clean/parse SWOT JSON: {e}")
+
+        # Fallback if parsing fails completely
         return self._parse_swot_manually(response)
 
     def _parse_swot_manually(self, text: str) -> Dict[str, List[str]]:

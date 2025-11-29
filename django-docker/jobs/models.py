@@ -142,6 +142,25 @@ class InterviewSession(models.Model):
 
         return True
 
+    def has_analysis(self) -> bool:
+        """Check if the session has a generated analysis report"""
+        return bool(self.analysis_report)
+
+    def get_score_percentage(self) -> float:
+        """
+        Get the final score percentage.
+        Returns the quantitative score from the analysis report if available,
+        otherwise calculates the raw interview score percentage.
+        """
+        # If analyzed, return the comprehensive score (includes SWOT balance)
+        if self.analysis_report and "quantitative_score" in self.analysis_report:
+            return float(self.analysis_report.get("quantitative_score", 0.0))
+
+        # Fallback: return raw interview score
+        if self.max_possible_score > 0:
+            return round((self.total_score / self.max_possible_score) * 100, 2)
+        return 0.0
+
 
 class ChatMessage(models.Model):
     """Individual chat messages in an interview session"""
