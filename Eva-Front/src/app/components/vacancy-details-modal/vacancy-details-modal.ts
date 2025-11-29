@@ -28,6 +28,7 @@ export class VacancyDetailsModal implements OnInit {
 
   @Input() vacancy!: VacanteUI;
   @Input() viewMode: 'company' | 'candidate' = 'company';
+  @Input() loading: boolean = false;
 
   @Output() close = new EventEmitter<void>();
   @Output() apply = new EventEmitter<VacanteUI>();
