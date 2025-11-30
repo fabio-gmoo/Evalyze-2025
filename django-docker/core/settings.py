@@ -12,16 +12,39 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
 
 
-def _read(path: str) -> bytes:
-    with open(path, "rb") as f:
-        return f.read()
+def get_key(file_path, env_var_name):
+    """
+    1. Intenta leer el archivo (Para Docker Local).
+    2. Si falla, lee la variable de entorno (Para Railway).
+    """
+    try:
+        # Intento Local: Busca el archivo físico
+        with open(file_path, "rb") as f:
+            return f.read()
+    except FileNotFoundError:
+        # Intento Producción: El archivo no existe, buscamos la variable en Railway
+        key_content = os.environ.get(env_var_name)
+        if key_content:
+            # Railway a veces da problemas con los saltos de línea, esto lo arregla:
+            return key_content.replace("\\n", "\n").encode("utf-8")
+
+        # Si no está en ninguno de los dos lados, lanzamos error
+        raise ValueError(
+            f"FATAL: No se encontró la clave {
+                env_var_name
+            } ni como archivo ni como variable."
+        )
 
 
-PRIVATE_KEY = _read("/run/secrets/jwt_private.pem")
-PUBLIC_KEY = _read("/run/secrets/jwt_public.pem")
+# --- CAMBIA ESTAS LÍNEAS ---
+# Ahora la función pide dos cosas: ("ruta del archivo", "NOMBRE_VARIABLE_RAILWAY")
 
+
+PRIVATE_KEY = get_key("/run/secrets/jwt_private.pem", "JWT_PRIVATE_KEY")
+PUBLIC_KEY = get_key("/run/secrets/jwt_public.pem", "JWT_PUBLIC_KEY")
 SIMPLE_JWT = {
     "ALGORITHM": "RS256",
     "SIGNING_KEY": PRIVATE_KEY,
