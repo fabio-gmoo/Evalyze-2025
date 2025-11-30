@@ -1,98 +1,89 @@
-.title {
-  margin: 8px 0 4px;
-  font-size: 26px;
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #020617; /* Fondo oscuro general */
 }
-.subtitle {
-  margin: 0 0 18px;
-  color: #7a8095;
+
+/* Diseño de 2 columnas */
+.register-layout {
+  display: flex;
+  min-height: 100vh;
 }
-.signup {
-  display: grid;
-  grid-template-columns: 90% 30%;
-  align-items: center;
-  place-items: center;
-  width: min(980px, 96%);
-}
-.card {
-  color: var(--text);
-  width: min(520px, 92%);
-  background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px 20px 16px;
-  text-align: left;
-  box-shadow: var(--shadow);
-}
-.card-title {
-  margin: 0 0 4px;
-  text-align: center;
-}
-.card-sub {
-  margin: 0 0 16px;
-  text-align: center;
-  color: #7a8095;
-}
-.swap {
-  margin: 14px 0 0;
-  text-align: center;
-  color: #777;
-}
-.swap a {
-  color: #5b46ff;
-  text-decoration: none;
-  cursor: pointer;
-}
-.why {
-  background: linear-gradient(180deg, #3b82ff, #8a2be2);
-  flex: 0 0 260px; // ancho fijo razonable en lugar de 20%
+
+/* PANEL IZQUIERDO (Texto) */
+.left-panel {
+  flex: 1; /* Ocupa espacio disponible */
+  /* Fondo con gradiente sutil */
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+  padding: 4rem;
   color: #fff;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 10px 28px rgba(60, 40, 160, 0.25);
-  text-align: left;
-  overflow: hidden; // evita scroll
-}
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
 
-.why h4 {
-  margin: 0 0 12px;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
+  /* Decoración de fondo (Opcional) */
+  &::before {
+    content: ''; position: absolute; top: -20%; left: -20%; width: 150%; height: 150%;
+    background: radial-gradient(circle at center, rgba(99, 102, 241, 0.1) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  
+  .brand {
+    font-size: 1.5rem; font-weight: 700; margin-bottom: 3rem; display: flex; align-items: center; gap: 10px;
+  }
 
-.why ul {
-  margin: 0 0 16px;
-  padding-left: 1.2em;
-  list-style: none;
+  h1 {
+    font-size: 3rem; font-weight: 800; margin: 0 0 1rem 0;
+    /* Gradiente en texto */
+    background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  
+  .subtitle { font-size: 1.2rem; color: #94a3b8; margin-bottom: 3rem; max-width: 400px; }
 
-  li {
-    margin-bottom: 8px;
-    position: relative;
-    padding-left: 20px;
-
-    &::before {
-      content: '✔';
-      position: absolute;
-      left: 0;
-      color: #fff;
-      font-size: 0.9rem;
+  /* Lista de Beneficios */
+  .benefits-list {
+    list-style: none; padding: 0; margin: 0 0 3rem 0; display: flex; flex-direction: column; gap: 1.5rem;
+    
+    li {
+      display: flex; gap: 1rem;
+      .icon { font-size: 1.5rem; }
+      strong { display: block; color: #f1f5f9; margin-bottom: 0.2rem; }
+      p { margin: 0; color: #94a3b8; font-size: 0.95rem; }
     }
   }
-}
-
-.box {
-  background: rgba(255, 255, 255, 0.15);
-  padding: 14px;
-  border-radius: 12px;
-  font-size: 0.9rem;
-
-  strong {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 600;
+  
+  /* Testimonio */
+  .mini-testimonial {
+    background: rgba(255,255,255,0.05);
+    padding: 1.5rem; border-radius: 12px; font-style: italic; color: #cbd5e1; max-width: 450px;
+    span { display: block; margin-top: 10px; font-style: normal; font-weight: 600; color: #818cf8; }
   }
 }
-@media (max-width: 960px) {
-  .signup {
-    grid-template-columns: 1fr;
+
+/* PANEL DERECHO (Formulario) */
+.right-panel {
+  flex: 1; /* Ocupa el otro 50% */
+  display: flex;
+  align-items: center; /* Centrado vertical */
+  justify-content: center; /* Centrado horizontal */
+  padding: 2rem;
+  background: #020617;
+  
+  /* Asegura que el formulario no se estire de más */
+  app-registerform {
+    width: 100%;
+    max-width: 480px;
   }
+}
+
+/* Responsivo: En móviles se apilan */
+@media (max-width: 900px) {
+  .register-layout { flex-direction: column; }
+  .left-panel { padding: 3rem 2rem; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .right-panel { padding: 3rem 2rem; }
+  .left-panel h1 { font-size: 2.5rem; }
 }

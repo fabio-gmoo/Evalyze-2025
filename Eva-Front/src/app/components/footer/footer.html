@@ -1,53 +1,53 @@
 <footer class="site-footer">
-  <div class="container footer__top">
-    <div class="footer__brand">
-      <div class="logo">🤖</div>
-      <p>
-        La plataforma de reclutamiento con IA que está transformando cómo las empresas encuentran
-        talento.
-      </p>
-    </div>
-
-    <div class="footer__cols">
-      <div class="col">
-        <h4>Producto</h4>
-        <ul>
-          @for (l of product(); track l.label) {
-            <li>
-              <a [href]="l.href">{{ l.label }}</a>
-            </li>
-          }
-        </ul>
+  <div class="container">
+    <div class="footer__top">
+      <div class="footer__brand">
+        <div class="logo">
+          <span>🤖</span>
+        </div>
+        <h3>Evalyze</h3>
+        <p>
+          Revolucionando la selección de talento con inteligencia artificial ética y eficiente.
+        </p>
       </div>
 
-      <div class="col">
-        <h4>Empresa</h4>
-        <ul>
-          @for (l of company(); track l.label) {
-            <li>
-              <a [href]="l.href">{{ l.label }}</a>
-            </li>
-          }
-        </ul>
-      </div>
-
-      <div class="col">
-        <h4>Soporte</h4>
-        <ul>
-          @for (l of support(); track l.label) {
-            <li>
-              <a [href]="l.href">{{ l.label }}</a>
-            </li>
-          }
-        </ul>
+      <div class="footer__cols">
+        <div class="col">
+          <h4>Producto</h4>
+          <ul>
+            <li><a href="#">Características</a></li>
+            <li><a href="#">Seguridad</a></li>
+            <li><a href="#">Roadmap</a></li>
+            <li><a href="#">Precios</a></li>
+          </ul>
+        </div>
+        <div class="col">
+          <h4>Compañía</h4>
+          <ul>
+            <li><a href="#">Nosotros</a></li>
+            <li><a href="#">Blog</a></li>
+            <li><a href="#">Carreras</a></li>
+            <li><a href="#">Contacto</a></li>
+          </ul>
+        </div>
+        <div class="col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="#">Privacidad</a></li>
+            <li><a href="#">Términos</a></li>
+            <li><a href="#">Cookies</a></li>
+          </ul>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="container footer__bottom">
     <hr />
-    <div class="footer__copyright">
-      <small>© {{ year() }} Evalyze. Todos los derechos reservados.</small>
+
+    <div class="footer__bottom">
+      <p class="footer__copyright">
+        © 2025 Evalyze AI. Todos los derechos reservados.
+      </p>
+      
     </div>
   </div>
 </footer>

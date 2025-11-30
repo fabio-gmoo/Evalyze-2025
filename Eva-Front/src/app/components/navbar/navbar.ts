@@ -1,9 +1,10 @@
 import { Component, Output, EventEmitter, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router'; // <--- 1. Importamos RouterLink
 
 @Component({
   selector: 'app-navbar',
-  imports: [],
+  standalone: true,
+  imports: [RouterLink], // <--- 2. Lo agregamos aquí para poder usarlo en el HTML
   templateUrl: './navbar.html',
   styleUrl: './navbar.scss',
 })
@@ -11,7 +12,6 @@ export class Navbar {
   menuOpen = false;
   private router = inject(Router);
 
-  // Cambiar los nombres para que coincidan con home.html
   @Output() openLogin = new EventEmitter<void>();
   @Output() openSignup = new EventEmitter<void>();
 
@@ -24,15 +24,13 @@ export class Navbar {
   }
 
   handleLogin() {
-    //this.openLogin.emit();
-    //this.closeMenu();
-    this.router.navigate(['/auth']);
+    this.closeMenu();
+    this.router.navigate(['/auth']); // Ruta para Iniciar Sesión
   }
 
   handleSignup() {
-    //this.openSignup.emit();
-
-    //this.closeMenu();
-    this.router.navigate(['/auth']);
+    this.closeMenu();
+    // 3. CAMBIO: Redirigir a la ruta de registro en lugar de auth
+    this.router.navigate(['/register']); 
   }
 }

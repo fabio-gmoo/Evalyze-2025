@@ -11,14 +11,72 @@
       Evalyze utiliza IA conversacional para automatizar entrevistas, evaluar candidatos y generar
       rankings precisos para mejores decisiones de contratación.
     </p>
-    
-    <div class="hero__cta">
-      <button class="btn btn--primary" (click)="openSignup.emit()">
-        Registrarse
-      </button>
-      
-      </div>
 
+    <div class="hero__visual">
+      <div class="visual-glow"></div>
+      
+      <div class="visual-interface">
+        <div class="interface-header">
+          <div class="dots">
+            <span></span><span></span><span></span>
+          </div>
+          <div class="address-bar">
+            <span class="lock">🔒</span> evalyze.ai/dashboard/candidates
+          </div>
+          <div class="user-circle"></div>
+        </div>
+        
+        <div class="interface-body">
+          <div class="sidebar">
+            <div class="sidebar-item active"><div class="icon-sq"></div></div>
+            <div class="sidebar-item"><div class="icon-sq"></div></div>
+            <div class="sidebar-item"><div class="icon-sq"></div></div>
+            <div class="sidebar-spacer"></div>
+            <div class="sidebar-item"><div class="icon-sq"></div></div>
+          </div>
+
+          <div class="content">
+            <div class="content-header">
+              <div class="line w-40 h-lg"></div>
+              <div class="line w-20"></div>
+            </div>
+
+            <div class="chart-container">
+              <div class="bar" style="--h: 40%"></div>
+              <div class="bar" style="--h: 70%"></div>
+              <div class="bar active" style="--h: 90%">
+                <div class="tooltip">98% Match</div>
+              </div>
+              <div class="bar" style="--h: 60%"></div>
+              <div class="bar" style="--h: 50%"></div>
+              <div class="bar" style="--h: 30%"></div>
+            </div>
+
+            <div class="grid-mock">
+              <div class="card-mock-row">
+                <div class="avatar"></div>
+                <div class="lines-group">
+                  <div class="line w-30"></div>
+                  <div class="line w-50"></div>
+                </div>
+                <div class="badge green"></div>
+              </div>
+              <div class="card-mock-row">
+                <div class="avatar"></div>
+                <div class="lines-group">
+                  <div class="line w-40"></div>
+                  <div class="line w-60"></div>
+                </div>
+                <div class="badge yellow"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="scan-line"></div>
+      </div>
     </div>
+  </div>
+  
   <div class="hero__bg"></div>
 </section>

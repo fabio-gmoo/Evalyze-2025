@@ -1,11 +1,13 @@
 <section class="cta">
   <div class="container cta__inner">
-    <h2 class="cta__title">{{ title() }}</h2>
-    <p class="cta__subtitle">{{ subtitle() }}</p>
+    <h2 class="cta__title">¿Listo para transformar tu selección?</h2>
+    <p class="cta__subtitle">Únete a las empresas que ya usan IA para contratar mejor.</p>
     <div class="cta__actions">
-      <button class="btn btn--primary" (click)="openSignup.emit()">
+      
+      <button class="btn btn--primary" routerLink="/register">
         Registrarse Ahora
       </button>
-      </div>
+      
+    </div>
   </div>
 </section>
