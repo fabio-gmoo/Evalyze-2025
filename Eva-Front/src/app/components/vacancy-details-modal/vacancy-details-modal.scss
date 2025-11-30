@@ -17,45 +17,57 @@
 
 .modal-container {
   background: #0f172a;
-  width: 90%;
-  max-width: 800px;
-  height: 85vh; /* Altura fija importante para el chat */
+  width: 95%;
+  max-width: 1200px;
+  height: 90vh; /* Altura fija importante para el chat */
   border-radius: 12px;
   position: relative;
   display: flex; /* Flexbox para organizar header/body/footer */
   flex-direction: column;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   animation: slideUp 0.3s ease-out;
+  gap: 0 !important;
+  app-vacancy-tabs {
+  display: block;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  flex-shrink: 0;
+  background: #0f172a; /* Mismo color del fondo para que no se note corte */
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
 }
-
+}
+//
 .modal-header {
-  padding: 2rem;
+  padding: 0.5rem 2rem;
   border-bottom: 1px solid rgba(148, 163, 184, 0.15);
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 1rem;
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
-
+  height: auto;
+  min-height: 60;
+  flex-shrink: 0;
   .header-content {
     display: flex;
     gap: 1rem;
+    align-items: center;
     flex: 1;
   }
 
   .header-icon {
-    width: 56px;
-    height: 56px;
+    width: 36px;
+    height: 36px;
     background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    border-radius: 14px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
 
     svg {
-      width: 28px;
-      height: 28px;
+      width: 18px;
+      height: 18px;
       color: white;
     }
   }
@@ -65,26 +77,28 @@
     min-width: 0;
 
     h2 {
-      font-size: 1.75rem;
-      font-weight: 600;
+      font-size: 1.8rem;
+      font-weight: 700;
       color: #f1f5f9;
-      margin: 0 0 0.5rem 0;
-      line-height: 1.3;
+      letter-spacing: -0.5px;
+      margin: 0;
+      line-height: 1;
+      transform: translateY(10px);
     }
 
     .company-subtitle {
-      font-size: 1.125rem;
+      font-size: 0.8rem;
       font-weight: 500;
       color: #a78bfa;
-      margin: 0 0 0.75rem 0;
-      display: flex;
+      margin: 0;
+      display: none;
       align-items: center;
       gap: 0.5rem;
 
       &::before {
         content: '';
         width: 4px;
-        height: 20px;
+        height: 14px;
         background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
         border-radius: 2px;
       }
@@ -92,7 +106,7 @@
   }
 
   .header-meta {
-    display: flex;
+    display: none;
     flex-wrap: wrap;
     gap: 1rem;
     font-size: 0.875rem;
@@ -112,8 +126,8 @@
   }
 
   .close-btn {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     background: rgba(100, 116, 139, 0.2);
     border: 1px solid rgba(148, 163, 184, 0.2);
     border-radius: 10px;
@@ -125,8 +139,8 @@
     flex-shrink: 0;
 
     svg {
-      width: 20px;
-      height: 20px;
+      width: 16px;
+      height: 16px;
       color: #cbd5e1;
     }
 
@@ -140,20 +154,64 @@
     }
   }
 }
-
+//
 .modal-body {
-  padding: 1.5rem;
-  overflow-y: auto;
   flex: 1;
-
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-top: 0 !important;  /* Esto elimina la barra invisible externa */
+  padding-top: 0 !important; /* Sin relleno externo */
   .tab-content {
+    .content-section:first-child .section-title {
+  margin-top: 0 !important; /* Quita el margen superior solo al primer título */
+}
+    flex: 1;          /* Ocupa todo el espacio disponible */
+    overflow-y: auto; /* ¡ACTIVA EL SCROLL! */
+    padding: 1rem 2.5rem 2rem 2.5rem !important;  /* ¡SEPARA EL TEXTO DE LOS BORDES! (Antes estaba en 0) */
+    
+    /* Animación suave al entrar */
     animation: fadeIn 0.3s ease;
+    height: 100%;
+    /* Para Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: #6366f1 rgba(15, 23, 42, 0.3);
+
+  /* Para Chrome, Edge y Safari */
+  &::-webkit-scrollbar {
+    width: 8px; /* Más delgado y moderno */
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.3); /* Fondo oscuro sutil */
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    /* Usamos el mismo gradiente azul/morado de tus botones */
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border-radius: 10px;
+    border: 2px solid transparent; /* Truco para darle "padding" al scroll */
+    background-clip: padding-box;
+
+    &:hover {
+      /* Un poco más brillante al pasar el mouse */
+      background: linear-gradient(135deg, #7c7ef8 0%, #9e7ef8 100%);
+    }
+  }
+    /* EXCEPCIÓN: Si es la pestaña de la entrevista (Chat), quitamos el padding y scroll */
+    &.interview-tab {
+      padding: 0;
+      overflow: hidden; /* El chat maneja su propio scroll interno */
+    }
   }
   &.chat-mode {
     padding: 0 !important; /* Sin bordes blancos */
     overflow: hidden !important; /* El modal NO scrollea, scrollea el chat */
     display: flex;
     flex-direction: column;
+    height: 100%;
+    max-height: 80vh;
 
     /* Forzar al contenedor del componente a llenar el hueco */
     .tab-content.interview-tab {

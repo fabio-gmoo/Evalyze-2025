@@ -1,66 +1,161 @@
+:host {
+  display: block;
+}
+
 .nav {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(15, 15, 23, 0.7);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--line);
+  /* Fondo oscuro moderno con blur (efecto cristal) */
+  background: rgba(2, 6, 23, 0.8); 
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
+
 .nav__inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 0;
+  padding: 1rem 0; /* Un poco más de aire */
+  height: 70px;
 }
+
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-weight: 800;
+  gap: 12px;
+  text-decoration: none;
+  
+  &__logo {
+    font-size: 24px;
+  }
+  
+  &__name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    letter-spacing: -0.5px;
+  }
 }
-.brand__logo {
-  font-size: 22px;
-}
-.brand__name {
-  font-size: 18px;
-}
+
 .nav__links {
   display: flex;
-  gap: 24px;
+  gap: 32px;
+
+  a {
+    color: #94a3b8; /* Gris suave */
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: #fff;
+    }
+  }
 }
-.nav__links a {
-  color: var(--muted);
-}
-.nav__links a:hover {
-  color: var(--text);
-}
+
 .nav__actions {
   display: flex;
-  gap: 10px;
+  gap: 16px;
   align-items: center;
 }
+
+/* --- ESTILOS DE BOTONES --- */
+.btn {
+  padding: 0.6rem 1.25rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  font-family: inherit;
+}
+
+/* Botón Ghost (Registrarse) - Solo texto gris claro */
+.btn--ghost {
+  background: transparent;
+  color: #cbd5e1;
+  
+  &:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* Botón Primary (Iniciar Sesión) - AZUL Y LINDO */
+.btn--primary {
+  /* Gradiente Azul/Morado moderno */
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); /* Resplandor azul */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.5);
+    filter: brightness(1.1);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+/* Burger Menu (Móvil) */
 .nav__burger {
   display: none;
   background: none;
   border: 0;
-  color: var(--text);
-  font-size: 22px;
+  color: #f1f5f9;
+  cursor: pointer;
+  padding: 4px;
 }
+
+/* Menú Móvil */
 .nav__mobile {
   display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
   flex-direction: column;
-  gap: 12px;
-  padding: 12px 4%;
-  border-top: 1px solid var(--line);
-  background: #0f0f17;
+  background: #020617;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1.5rem;
+  gap: 1.5rem;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+
+  &.open {
+    display: flex;
+    animation: slideDown 0.2s ease-out;
+  }
+
+  a {
+    color: #cbd5e1;
+    text-decoration: none;
+    font-size: 1.1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .mobile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+  
+  .w-100 { width: 100%; }
 }
-.nav__mobile.open {
-  display: flex;
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-.w-100 {
-  width: 100%;
-}
-@media (max-width: 760px) {
+
+@media (max-width: 768px) {
   .nav__links,
   .nav__actions {
     display: none;

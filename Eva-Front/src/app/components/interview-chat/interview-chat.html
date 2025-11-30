@@ -8,20 +8,22 @@
   } @else {
     <!-- Session Info -->
     @if (session()) {
-      <div class="session-info">
-        <div class="info-row">
-          <span class="label">Estado:</span>
-          <span class="status" [class]="'status-' + session()?.status">
-            {{ getStatusLabel(session()?.status) }}
-          </span>
-        </div>
-        @if (session()?.status === 'active') {
-          <div class="info-row">
-            <span class="label">Progreso:</span>
-            <span class="value">
-              Pregunta {{ (session()?.current_question_index || 0) + 1 }} de {{ totalQuestions() }}
-            </span>
+      <div class="chat-header-compact">
+        <div class="header-left">
+          <span class="status-dot" [class]="session()?.status"></span>
+          <div class="header-text">
+            <span class="title">Entrevista Técnica</span>
+            <span class="subtitle">{{ session()?.company_name || 'Asistente IA' }}</span>
           </div>
+        </div>
+
+        @if (session()?.status === 'active') {
+          <button (click)="showFinalizeDialog()" [disabled]="isFinalizing()" class="btn-finalize-mini">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            </svg>
+            Finalizar
+          </button>
         }
       </div>
     }
@@ -55,62 +57,31 @@
         <button (click)="startInterview()" [disabled]="loading()" class="btn-start">
           {{ loading() ? 'Iniciando...' : 'Iniciar Entrevista' }}
         </button>
-        <p class="hint">La entrevista constará de {{ totalQuestions() }} preguntas</p>
       </div>
     }
 
     <!-- Input Area (Active State) -->
     @if (session()?.status === 'active') {
-      <div class="input-area">
+      <div class="input-area compact">
         <textarea
           [(ngModel)]="draft"
           (keydown.ctrl.enter)="sendMessage()"
           [disabled]="isTyping()"
-          placeholder="Escribe tu respuesta... (Ctrl+Enter para enviar)"
-          rows="3"
+          placeholder="Escribe tu respuesta..."
+          rows="1"
         ></textarea>
-        <button (click)="sendMessage()" [disabled]="!draft().trim() || isTyping()" class="btn-send">
-          Enviar
+        <button (click)="sendMessage()" [disabled]="!draft().trim() || isTyping()" class="btn-send-round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+             <line x1="22" y1="2" x2="11" y2="13"></line>
+             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
         </button>
       </div>
     }
 
-    <!-- Finalize Button (Active State - Show when ready) -->
-    @if (session()?.status === 'active' && totalQuestions() > 0) {
-      <div class="finalize-area">
-        <button (click)="showFinalizeDialog()" [disabled]="isFinalizing()" class="btn-finalize">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-            <polyline points="22 4 12 14.01 9 11.01" />
-          </svg>
-          {{ isFinalizing() ? 'Finalizando...' : 'Finalizar Entrevista' }}
-        </button>
-        <p class="hint">Completa todas las preguntas antes de finalizar</p>
-      </div>
-    }
 
     <!-- Completed State -->
-    @if (session()?.status === 'completed') {
-      <div class="completed-area">
-        <div class="completed-icon">✓</div>
-        <h3>¡Entrevista Completada!</h3>
-        <p class="score">
-          Puntuación: {{ session()?.total_score }} / {{ session()?.max_possible_score }}
-        </p>
-        <button
-          class="btn-view-results"
-          (click)="router.navigate(['/interview-results', sessionId])"
-        >
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="16" y1="13" x2="8" y2="13" />
-            <line x1="16" y1="17" x2="8" y2="17" />
-          </svg>
-          Ver Resultados Completos
-        </button>
-      </div>
-    }
+    
   }
 </div>
 
@@ -177,11 +148,16 @@
           </svg>
           Cancelar
         </button>
-        <button class="btn-confirm" (click)="finalizeInterview()">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-          Sí, Finalizar
+        <button class="btn-confirm" (click)="finalizeInterview()" [disabled]="isFinalizing()">
+          @if (isFinalizing()) {
+            <span class="spinner-small"></span>
+            Procesando...
+          } @else {
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Sí, Finalizar
+          }
         </button>
       </div>
     </div>

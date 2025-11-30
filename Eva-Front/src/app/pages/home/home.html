@@ -1,12 +1,48 @@
 <app-navbar (openLogin)="openAuth('login')" (openSignup)="openAuth('signup')"></app-navbar>
+
 <app-hero (openSignup)="openAuth('signup')"></app-hero>
+
+<section id="proceso" class="section workflow">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Tu proceso de selección, <span class="text-gradient">simplificado</span></h2>
+      <p class="section-subtitle">Olvídate de coordinar agendas. Evalyze trabaja 24/7 por ti.</p>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">01</div>
+        <div class="step-icon">📝</div>
+        <h3>Define la Vacante</h3>
+        <p>Configura el perfil, los requisitos técnicos y deja que nuestra IA genere las preguntas clave automáticamente.</p>
+      </div>
+
+      <div class="step-connector">→</div>
+
+      <div class="step-card highlight">
+        <div class="step-number">02</div>
+        <div class="step-icon">🤖</div>
+        <h3>Entrevista Autónoma</h3>
+        <p>Evalyze entrevista a cada candidato en tiempo real, evaluando habilidades técnicas y blandas sin sesgos.</p>
+      </div>
+
+      <div class="step-connector">→</div>
+
+      <div class="step-card">
+        <div class="step-number">03</div>
+        <div class="step-icon">📊</div>
+        <h3>Ranking y Decisión</h3>
+        <p>Recibe un reporte detallado con puntuaciones y análisis FODA. Entrevista solo a los mejores.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <app-features></app-features>
 <app-benefits></app-benefits>
-<app-testimonials></app-testimonials>
 <app-cta (openSignup)="openAuth('signup')"></app-cta>
 <app-footer></app-footer>
 
-<!-- Modal de autenticación con overlay -->
 @if (showAuth()) {
   <div class="modal-overlay" (click)="closeAuth()">
     <div class="modal-wrapper" (click)="$event.stopPropagation()">
