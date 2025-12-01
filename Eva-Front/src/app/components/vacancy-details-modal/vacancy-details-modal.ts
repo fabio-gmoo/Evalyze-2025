@@ -7,6 +7,7 @@ import {
   OnDestroy,
   inject,
   signal,
+  ChangeDetectorRef, // 1. Importar ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -25,6 +26,7 @@ import { Vacancies } from '@services/vacancies';
 export class VacancyDetailsModal implements OnInit {
   private interviewService = inject(Interview);
   private vacanciesService = inject(Vacancies);
+  private cd = inject(ChangeDetectorRef); // 2. Inyectar el detector de cambios
 
   @Input() vacancy!: VacanteUI;
   @Input() viewMode: 'company' | 'candidate' = 'company';
@@ -75,6 +77,7 @@ export class VacancyDetailsModal implements OnInit {
           if (data.session.vacancy_id === this.vacancy.id) {
             this.hasApplied = true;
             this.sessionId.set(data.session.id);
+            this.cd.markForCheck(); // Actualizar vista si ya estaba postulado
           }
         }
       },
@@ -97,10 +100,16 @@ export class VacancyDetailsModal implements OnInit {
         // Verificar si se creó la sesión
         if (response.interview_session && response.interview_session.id) {
           this.sessionId.set(response.interview_session.id);
-          this.hasApplied = true;
+          
+          // --- AQUÍ ESTÁ EL CAMBIO CLAVE ---
+          this.hasApplied = true; 
+          this.activeTab = 'entrevista'; // Cambiamos la pestaña inmediatamente
+          
+          // Forzamos a Angular a detectar los cambios para que aparezca la pestaña "Entrevista"
+          this.cd.detectChanges(); 
 
           alert('¡Postulación exitosa! Puedes iniciar tu entrevista en la pestaña "Entrevista".');
-          this.activeTab = 'entrevista';
+          
         } else if (response.interview_session?.error) {
           alert(`Postulación exitosa, pero: ${response.interview_session.error}`);
         } else {
@@ -108,12 +117,14 @@ export class VacancyDetailsModal implements OnInit {
           this.onClose();
         }
         this.isApplying = false;
+        this.cd.markForCheck(); // Asegurar estado final del loader
       },
       error: (err) => {
         console.error('Error applying:', err);
         const errorMsg = err.error?.detail || 'Error al postular';
         alert(errorMsg);
         this.isApplying = false;
+        this.cd.markForCheck();
       },
     });
   }

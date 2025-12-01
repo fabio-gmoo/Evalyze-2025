@@ -8,7 +8,9 @@ import {
   ViewChild,
   ElementRef,
   AfterViewChecked,
-  numberAttribute,
+  numberAttribute, 
+  Output, 
+  EventEmitter,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
