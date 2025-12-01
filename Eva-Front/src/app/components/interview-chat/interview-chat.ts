@@ -8,9 +8,9 @@ import {
   ViewChild,
   ElementRef,
   AfterViewChecked,
-  numberAttribute, 
-  Output, 
-  EventEmitter,
+  numberAttribute,
+  Output,      // <--- IMPORTANTE
+  EventEmitter // <--- IMPORTANTE
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,6 +18,7 @@ import { interval, Subscription } from 'rxjs';
 import { VacanteUI } from '@interfaces/vacante-model';
 import { Interview, InterviewSession, ChatMessage } from '@services/interview';
 import { Analysis } from '@services/analysis';
+// Router ya no es necesario para navegar, pero lo dejamos por si acaso
 import { Router } from '@angular/router';
 
 @Component({
@@ -29,6 +30,9 @@ import { Router } from '@angular/router';
 export class InterviewChat implements OnInit, OnDestroy, AfterViewChecked {
   @Input({ transform: numberAttribute }) sessionId: number | null = null;
   @Input() vacancy: VacanteUI | null = null;
+
+  // EVENTO PARA AVISAR AL PADRE (EL MODAL)
+  @Output() finished = new EventEmitter<void>();
 
   @ViewChild('messagesContainer') messagesContainer?: ElementRef<HTMLDivElement>;
 
@@ -44,7 +48,7 @@ export class InterviewChat implements OnInit, OnDestroy, AfterViewChecked {
   loading = signal(false);
   totalQuestions = signal(0);
 
-  // NEW: Finalization state
+  // Finalization state
   isFinalizing = signal(false);
   showFinalizeConfirm = signal(false);
 
@@ -158,7 +162,6 @@ export class InterviewChat implements OnInit, OnDestroy, AfterViewChecked {
     });
   }
 
-  // NEW: Finalize interview methods
   showFinalizeDialog() {
     this.showFinalizeConfirm.set(true);
   }
@@ -180,11 +183,9 @@ export class InterviewChat implements OnInit, OnDestroy, AfterViewChecked {
         // Update session status
         this.session.update((s) => (s ? { ...s, status: 'completed' } : null));
 
-        // Show success message
-        alert(`¡Entrevista finalizada! Tu puntuación: ${response.score}%`);
-
-        // Navigate to results
-        this.router.navigate(['/interview-results', this.sessionId]);
+        // CAMBIO CLAVE: Ya no usamos alert ni router.navigate
+        // Emitimos el evento y dejamos que el modal muestre el reporte
+        this.finished.emit();
       },
       error: (err) => {
         this.isFinalizing.set(false);

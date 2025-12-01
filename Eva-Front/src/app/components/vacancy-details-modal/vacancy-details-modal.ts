@@ -7,26 +7,27 @@ import {
   OnDestroy,
   inject,
   signal,
-  ChangeDetectorRef, // 1. Importar ChangeDetectorRef
+  ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VacanteUI, Tab } from '@interfaces/vacante-model';
 import { VacancyTabs } from '@components/vacancy-tabs/vacancy-tabs';
 import { InterviewChat } from '@components/interview-chat/interview-chat';
+import { InterviewReportC } from '@components/interview-report/interview-report';
 import { Interview } from '@services/interview';
 import { Vacancies } from '@services/vacancies';
 
 @Component({
   selector: 'app-vacancy-details-modal',
-  imports: [CommonModule, FormsModule, VacancyTabs, InterviewChat],
+  imports: [CommonModule, FormsModule, VacancyTabs, InterviewChat, InterviewReportC],
   templateUrl: './vacancy-details-modal.html',
   styleUrl: './vacancy-details-modal.scss',
 })
 export class VacancyDetailsModal implements OnInit {
   private interviewService = inject(Interview);
   private vacanciesService = inject(Vacancies);
-  private cd = inject(ChangeDetectorRef); // 2. Inyectar el detector de cambios
+  private cd = inject(ChangeDetectorRef);
 
   @Input() vacancy!: VacanteUI;
   @Input() viewMode: 'company' | 'candidate' = 'company';
@@ -40,8 +41,10 @@ export class VacancyDetailsModal implements OnInit {
   activeTab = 'detalles';
   isApplying = false;
   hasApplied = false;
+  
+  // ✅ CAMBIO: Usamos signal para asegurar reactividad
+  showResults = signal(false);
 
-  // Solo necesitamos el ID para pasarlo al componente hijo
   sessionId = signal<number | null>(null);
 
   get tabs(): Tab[] {
@@ -54,6 +57,11 @@ export class VacancyDetailsModal implements OnInit {
       );
     } else if (this.viewMode === 'candidate' && this.hasApplied) {
       baseTabs.push({ id: 'entrevista', label: 'Entrevista' });
+    }
+    
+    // ✅ CAMBIO: Leemos la señal con paréntesis ()
+    if (this.showResults()) {
+      baseTabs.push({ id: 'resultados', label: 'Resultados' });
     }
 
     return baseTabs;
@@ -77,7 +85,13 @@ export class VacancyDetailsModal implements OnInit {
           if (data.session.vacancy_id === this.vacancy.id) {
             this.hasApplied = true;
             this.sessionId.set(data.session.id);
-            this.cd.markForCheck(); // Actualizar vista si ya estaba postulado
+            
+            // ✅ CAMBIO: Actualizamos la señal
+            if (data.session.status === 'completed') {
+              this.showResults.set(true);
+            }
+            
+            this.cd.markForCheck();
           }
         }
       },
@@ -97,19 +111,12 @@ export class VacancyDetailsModal implements OnInit {
 
     this.vacanciesService.apply(this.vacancy.id).subscribe({
       next: (response) => {
-        // Verificar si se creó la sesión
         if (response.interview_session && response.interview_session.id) {
           this.sessionId.set(response.interview_session.id);
-          
-          // --- AQUÍ ESTÁ EL CAMBIO CLAVE ---
-          this.hasApplied = true; 
-          this.activeTab = 'entrevista'; // Cambiamos la pestaña inmediatamente
-          
-          // Forzamos a Angular a detectar los cambios para que aparezca la pestaña "Entrevista"
-          this.cd.detectChanges(); 
-
+          this.hasApplied = true;
+          this.activeTab = 'entrevista';
+          this.cd.detectChanges();
           alert('¡Postulación exitosa! Puedes iniciar tu entrevista en la pestaña "Entrevista".');
-          
         } else if (response.interview_session?.error) {
           alert(`Postulación exitosa, pero: ${response.interview_session.error}`);
         } else {
@@ -117,7 +124,7 @@ export class VacancyDetailsModal implements OnInit {
           this.onClose();
         }
         this.isApplying = false;
-        this.cd.markForCheck(); // Asegurar estado final del loader
+        this.cd.markForCheck();
       },
       error: (err) => {
         console.error('Error applying:', err);
@@ -127,6 +134,14 @@ export class VacancyDetailsModal implements OnInit {
         this.cd.markForCheck();
       },
     });
+  }
+
+  // ✅ CAMBIO: Método reactivo
+  onInterviewFinished() {
+    console.log('Evento finished recibido, mostrando resultados...');
+    this.showResults.set(true); // Activamos la señal
+    this.activeTab = 'resultados'; // Cambiamos pestaña
+    this.cd.detectChanges(); // Forzamos actualización visual
   }
 
   setActiveTab(tab: string) {

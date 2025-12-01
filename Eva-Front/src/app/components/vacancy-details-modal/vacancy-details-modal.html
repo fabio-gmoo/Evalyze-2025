@@ -130,11 +130,22 @@
 
       @if (activeTab === 'entrevista' && viewMode === 'candidate' && hasApplied) {
         <div class="tab-content interview-tab">
-          <app-interview-chat [sessionId]="sessionId()" [vacancy]="vacancy"> </app-interview-chat>
+          <app-interview-chat 
+            [sessionId]="sessionId()" 
+            [vacancy]="vacancy"
+            (finished)="onInterviewFinished()"> 
+          </app-interview-chat>
+        </div>
+      }
+
+      @if (activeTab === 'resultados') {
+        <div class="tab-content results-tab" style="padding: 0; height: 100%; overflow-y: auto;">
+          <app-interview-report [sessionId]="sessionId()"></app-interview-report>
         </div>
       }
     </div>
-    @if (activeTab !== 'entrevista') {
+
+    @if (activeTab !== 'entrevista' && activeTab !== 'resultados') {
       <footer class="modal-footer">
         @if (viewMode === 'candidate' && activeTab === 'detalles') {
           <button class="btn btn-primary" (click)="onApply()">
