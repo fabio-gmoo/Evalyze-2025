@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 class VacanteViewSet(viewsets.ModelViewSet):
     queryset = Vacante.objects.all().order_by("-created_at")
     serializer_class = VacanteSerializer
-    # ajusta a tu auth si ya la tienes
     permission_classes = [permissions.AllowAny]
 
     def perform_create(self, serializer):
@@ -27,40 +26,26 @@ class VacanteViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], url_path="all-vacancies")
     def all_vacancies(self, request):
-        """
-        Obtiene todas las vacantes del usuario autenticado.
-        Parámetros opcionales:
-        - active: true/false (filtrar por estado activo)
-        - search: texto para buscar en título o descripción
-        - ordering: campo para ordenar (ej: -created_at, titulo)
-        """
-        # Filtrar vacantes del usuario autenticado
         queryset = self.get_queryset()
-
-        # Filtro opcional: solo activas
         active = request.query_params.get("active", None)
         if active is not None:
             is_active = active.lower() == "true"
             queryset = queryset.filter(activo=is_active)
 
-        # Filtro opcional: búsqueda
         search = request.query_params.get("search", None)
         if search:
             queryset = queryset.filter(
                 Q(titulo__icontains=search) | Q(descripcion__icontains=search)
             )
 
-        # Ordenamiento opcional (default: más recientes primero)
         ordering = request.query_params.get("ordering", "-created_at")
         queryset = queryset.order_by(ordering)
 
-        # Paginación
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        # Sin paginación
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=200)
 
@@ -78,7 +63,7 @@ class VacanteViewSet(viewsets.ModelViewSet):
         qs = self.get_queryset()
         data = {
             "active": qs.filter(activa=True).count(),
-            "candidates": 247,  # si luego conectas con postulantes reales, reemplaza
+            "candidates": Application.objects.count(),  # Fix: usar conteo real
             "interviews": 89,
             "hires": 23,
         }
@@ -138,8 +123,6 @@ class VacanteViewSet(viewsets.ModelViewSet):
                     json=payload,
                 )
                 response.raise_for_status()
-
-                # Si llegamos aquí, fue exitoso
                 fastapi_data = response.json()
                 frontend_data = {
                     "descripcion": fastapi_data.get("descripcion_sugerida", ""),
@@ -150,27 +133,17 @@ class VacanteViewSet(viewsets.ModelViewSet):
                 return Response(frontend_data, status=200)
 
         except httpx.HTTPStatusError as e:
-            # ESTE ES EL PROBLEMA - FastAPI devuelve 400 pero tu frontend no lo maneja
             error_detail = "Error al generar contenido"
-
             try:
                 error_data = e.response.json()
                 detail = error_data.get("detail", {})
-
                 if isinstance(detail, dict):
-                    # Error de moderación estructurado
                     error_detail = detail.get("message", "Contenido inapropiado")
                 elif isinstance(detail, str):
                     error_detail = detail
-
             except:
                 error_detail = e.response.text
-
-            # CRÍTICO: Devolver el error correctamente
-            return Response(
-                {"error": error_detail},  # ← Cambiar "detail" a "error"
-                status=400,
-            )
+            return Response({"error": error_detail}, status=400)
 
         except Exception as e:
             return Response({"error": f"Error de conexión: {str(e)}"}, status=500)
@@ -188,7 +161,6 @@ class VacanteViewSet(viewsets.ModelViewSet):
         user = (
             request.user if getattr(request.user, "is_authenticated", False) else None
         )
-        # Calcula automáticamente el nombre de la empresa si el usuario tiene CompanyProfile
         company_name = ""
         if user and hasattr(user, "company_profile"):
             company_name = user.company_profile.company_name
@@ -200,9 +172,6 @@ class VacanteViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="apply")
     def apply(self, request, pk=None):
-        """
-        Candidate applies to a vacancy and interview session is created
-        """
         vacancy = self.get_object()
         user = request.user
 
@@ -218,18 +187,13 @@ class VacanteViewSet(viewsets.ModelViewSet):
                 status=http_status.HTTP_403_FORBIDDEN,
             )
 
-        # Check if already applied
         if Application.objects.filter(vacancy=vacancy, candidate=user).exists():
             return Response(
                 {"detail": "Ya has postulado a esta vacante"},
                 status=http_status.HTTP_400_BAD_REQUEST,
             )
 
-        # Check if vacancy has generated interview questions
-        # You might want to store these in a separate model or in the vacancy
-        # For now, we'll generate them on-the-fly if not exists
         interview_questions = self._get_interview_questions(vacancy)
-
         if not interview_questions:
             return Response(
                 {
@@ -238,13 +202,11 @@ class VacanteViewSet(viewsets.ModelViewSet):
                 status=http_status.HTTP_400_BAD_REQUEST,
             )
 
-        # Create application
         application = Application.objects.create(
             vacancy=vacancy, candidate=user, status="pending"
         )
 
-        # Create interview session
-        from .services.interview_service import InterviewService  # type: ignore
+        from .services.interview_service import InterviewService
 
         service = InterviewService()
 
@@ -252,7 +214,6 @@ class VacanteViewSet(viewsets.ModelViewSet):
             session = service.create_session_for_application(
                 application=application, interview_questions=interview_questions
             )
-
             return Response(
                 {
                     "application": ApplicationSerializer(application).data,
@@ -267,7 +228,6 @@ class VacanteViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             logger.error(f"Error creating interview session: {e}", exc_info=True)
-            # Still return success for application, but note the session error
             return Response(
                 {
                     "application": ApplicationSerializer(application).data,
@@ -276,96 +236,74 @@ class VacanteViewSet(viewsets.ModelViewSet):
                         "detail": str(e),
                     },
                 },
-                status=http_status.HTTP_201_CREATED,  # <-- ¡Esto nunca debería devolver 500!
+                status=http_status.HTTP_201_CREATED,
             )
 
     def _get_interview_questions(self, vacancy):
-        """
-        Get interview questions that were previously generated for this vacancy
-        """
-        # Try to get from cache first
         cache_key = f"interview_questions_vacancy_{vacancy.id}"
-
-        # INICIO DEL FIX
         cached_questions = None
         try:
-            # Intentar importar la caché. Si no está configurada, esto fallará
             from django.core.cache import cache  # type: ignore
 
             cached_questions = cache.get(cache_key)
         except Exception:
-            logger.warning(
-                "Django cache not configured or failed to import. Skipping cache check."
-            )
-            pass  # Continuar si la caché falla
-        # FIN DEL FIX
+            pass
 
         if cached_questions:
-            logger.info(f"Using cached interview questions for vacancy {vacancy.id}")
             return cached_questions
 
-        # Check if there's an InterviewTemplate model (you might want to create this)
-        # For now, we'll check if questions are stored in the Application model
-        # or in a separate field in the Vacancy model
-
-        # Option 1: Check if vacancy has a generated_interview field
         if hasattr(vacancy, "generated_interview") and vacancy.generated_interview:
             questions = vacancy.generated_interview.get("questions", [])
             if questions:
-                # Cache for 1 hour
-                try:  # Aseguramos que la escritura en caché tampoco cause un 500
+                try:
                     from django.core.cache import cache  # type: ignore
 
                     cache.set(cache_key, questions, 3600)
                 except Exception:
-                    pass  # Ignoramos el error de escritura de caché
+                    pass
                 return questions
-
-        # Option 2: Check the latest successful generate_interview call
-        # We need to retrieve from the last time generate-interview was called
-        # This would require storing the result somewhere
 
         logger.warning(f"No interview questions found for vacancy {vacancy.id}")
         return None
 
     @action(detail=True, methods=["get"], url_path="applications")
     def applications(self, request, pk=None):
-        """Get all applications for a vacancy (company only)"""
+        """Obtiene todas las postulaciones para una vacante (solo empresa)"""
         vacancy = self.get_object()
 
-        # Only creator can see applications
+        # Validación de seguridad: Solo el creador ve los candidatos
         if vacancy.created_by != request.user:
             return Response(
                 {"detail": "No autorizado"}, status=http_status.HTTP_403_FORBIDDEN
             )
 
-        apps = vacancy.applications.all()
+        # Optimización: Traemos candidato y la sesión de entrevista (reverse relationship)
+        # 'interview_session' es el related_name en Application -> InterviewSession
+        apps = (
+            vacancy.applications.all()
+            .select_related("candidate")
+            .prefetch_related("interview_session")
+        )
+
         serializer = ApplicationSerializer(apps, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=["get"], url_path="my-applications/")
     def my_applications(self, request):
-        """Get candidate's applications"""
         user = request.user
-
         if user.role != "candidate":
             return Response(
                 {"detail": "Solo candidatos"}, status=http_status.HTTP_403_FORBIDDEN
             )
-
-        apps = Application.objects.filter(candidate=user)
+        apps = Application.objects.filter(candidate=user).select_related(
+            "vacancy", "interview_session"
+        )
         serializer = ApplicationSerializer(apps, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=["post"], url_path="generate-interview")
     def generate_interview(self, request, pk=None):
-        """
-        Generate interview questions based on vacancy requirements using AI
-        AND save them to the vacancy for later use
-        """
         vacancy = self.get_object()
-
-        # Parse requirements
         requisitos = []
         if isinstance(vacancy.requisitos, str):
             requisitos = [
@@ -390,7 +328,6 @@ class VacanteViewSet(viewsets.ModelViewSet):
 
         try:
             with httpx.Client(timeout=300.0) as client:
-                # --- 1. CALL AI-SERVICE TO GET QUESTIONS ---
                 ai_response = client.post(
                     "http://ai-service:8001/generate_interview",
                     json=ai_payload,
@@ -405,25 +342,14 @@ class VacanteViewSet(viewsets.ModelViewSet):
                     )
 
                 generated_interview = ai_data["interview"]
-
-                # --- 2. SAVE INTERVIEW QUESTIONS TO VACANCY ---
                 vacancy.generated_interview = generated_interview
                 vacancy.save(update_fields=["generated_interview"])
 
-                logger.info(
-                    f"✅ Saved {
-                        len(generated_interview['questions'])
-                    } questions to vacancy {vacancy.id}"
-                )
-
-                # Cache the questions for quick access
                 cache_key = f"interview_questions_vacancy_{vacancy.id}"
                 from django.core.cache import cache  # type: ignore
 
-                # 1 hour
                 cache.set(cache_key, generated_interview["questions"], 3600)
 
-                # --- 3. GET CANDIDATE LIST (for immediate chat start if needed) ---
                 applied_candidates = []
                 for app in vacancy.applications.all().select_related("candidate"):
                     applied_candidates.append(
@@ -447,7 +373,7 @@ class VacanteViewSet(viewsets.ModelViewSet):
                             generated_interview.get("questions", [])
                         ),
                         "candidates_count": len(applied_candidates),
-                        "message": "Preguntas guardadas exitosamente. Los candidatos podrán usarlas al postular.",
+                        "message": "Preguntas guardadas exitosamente.",
                     },
                     status=http_status.HTTP_200_OK,
                 )
@@ -467,11 +393,6 @@ class VacanteViewSet(viewsets.ModelViewSet):
     def _get_ai_interview_data(
         self, vacancy, level: str = "intermedio", n_questions: int = 4
     ):
-        """Internal helper to call the AI service and get interview questions."""
-
-        # NOTE: Ensure vacancy.requisitos is a string for the splitlines() method
-        # if it's not automatically converted from the ListField representation on access.
-        # Your serializer handles the conversion, but here we enforce list parsing.
         requisitos = []
         if isinstance(vacancy.requisitos, str):
             requisitos = [
@@ -500,7 +421,6 @@ class VacanteViewSet(viewsets.ModelViewSet):
                 ai_data = ai_response.json()
 
             if not ai_data.get("ok"):
-                # Handle cases where the AI service responds 200 but signals an internal error
                 raise Exception(
                     f"AI Service internal error: {
                         ai_data.get('detail', 'Unknown error')
@@ -516,16 +436,10 @@ class VacanteViewSet(viewsets.ModelViewSet):
             )
         except Exception as e:
             logger.error(f"Internal error during AI call: {e}")
-            # Note: If this fails, the question generation failed, so the chat can't start.
             raise ConnectionError(f"Error interno al conectar con AI Service: {e}")
 
     @action(detail=True, methods=["post"], url_path="start-candidate-chat")
     def start_candidate_chat(self, request, pk=None):
-        """
-        Candidate calls this endpoint to start an individual AI interview session.
-        1. Gets interview questions from AI-Service.
-        2. Tells Interview-Service to start the individual session for this candidate.
-        """
         vacancy = self.get_object()
         user = request.user
 
@@ -535,32 +449,24 @@ class VacanteViewSet(viewsets.ModelViewSet):
                 status=http_status.HTTP_403_FORBIDDEN,
             )
 
-        # Use default values provided by the Angular frontend
         level = request.data.get("level", "intermedio")
         n_questions = int(request.data.get("n_questions", 4))
 
         try:
-            # 1. CALL AI-SERVICE TO GET QUESTIONS
             generated_interview = self._get_ai_interview_data(
                 vacancy, level=level, n_questions=n_questions
             )
             questions = generated_interview["questions"]
 
-            # 2. CALL INTERVIEW-SVC TO START INDIVIDUAL CONVERSATION (Using PLURAL KEY)
-
             INTERVIEW_SVC_URL = "http://interview:9000/ai/candidate-conversations/start"
-
             interview_svc_payload = {
                 "vacancy_id": vacancy.id,
                 "vacancy_title": vacancy.puesto,
-                # The Interview Service is likely expecting the structured question objects
                 "interview_questions": questions,
-                # CRITICAL FIX: Wrap the single candidate in a list and use the PLURAL key 'candidates'
                 "candidates": [
                     {
                         "id": user.id,
                         "email": user.email,
-                        # Fallback to email if first_name/last_name are empty
                         "name": f"{user.first_name} {user.last_name}".strip()
                         or user.email,
                     }
@@ -581,7 +487,6 @@ class VacanteViewSet(viewsets.ModelViewSet):
                 interview_svc_response.raise_for_status()
                 chat_data = interview_svc_response.json()
 
-            # CRITICAL: Return session ID and first message/questions for the frontend
             return Response(
                 {
                     "session_id": chat_data.get("session_id"),
@@ -595,15 +500,12 @@ class VacanteViewSet(viewsets.ModelViewSet):
             )
 
         except (ValueError, ConnectionError) as e:
-            # Error handling for known issues (missing requirements, connection failure)
             logger.error(f"Error en el flujo de chat (Requisitos/Conexión): {e}")
             return Response(
                 {"detail": f"Error: {e}"},
                 status=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
         except Exception as e:
-            # Catch-all for unexpected issues
             logger.error(f"Error inesperado al iniciar chat: {e}", exc_info=True)
             return Response(
                 {"detail": f"Error interno inesperado: {str(e)}"},

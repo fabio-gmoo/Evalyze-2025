@@ -31,7 +31,6 @@ class CreatorSerializer(serializers.ModelSerializer):
         fields = ["id", "email", "name", "role"]
 
     def get_name(self, obj):
-        # Explicitly call the name attribute/property on the User instance
         return obj.name
 
 
@@ -62,8 +61,8 @@ class VacanteSerializer(serializers.ModelSerializer):
             "salariomax",
             "company_name",
             "created_at",
-            "created_by_info",  # NEW
-            "applications_count",  # NEW
+            "created_by_info",
+            "applications_count",
             "applied_candidates",
         ]
         read_only_fields = (
@@ -84,24 +83,18 @@ class VacanteSerializer(serializers.ModelSerializer):
         return "A convenir"
 
     def get_created_by_info(self, obj):
-        """Return creator information"""
         if obj.created_by:
             return {
                 "id": obj.created_by.id,
                 "email": obj.created_by.email,
-                "name": obj.created_by.name,  # Uses the @property from User model
+                "name": obj.created_by.name,
                 "role": obj.created_by.role,
             }
         return None
 
     def get_applied_candidates(self, obj):
-        # Retrieve all Application objects for this Vacante
         applications = obj.applications.all().select_related("candidate")
-
-        # Extract the list of candidate users
         candidates = [app.candidate for app in applications]
-
-        # Use the new CandidateInfoSerializer to format the output
         return CandidateInfoSerializer(candidates, many=True).data
 
     def get_applications_count(self, obj):
@@ -109,12 +102,10 @@ class VacanteSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         data = dict(data)
-
         if "requisitos" in data and isinstance(data["requisitos"], str):
             data["requisitos"] = [
                 r.strip() for r in data["requisitos"].splitlines() if r.strip()
             ]
-
         sal = data.get("salario")
         if isinstance(sal, str) and "-" in sal:
             parts = [p.strip() for p in sal.split("-", 1)]
@@ -125,7 +116,6 @@ class VacanteSerializer(serializers.ModelSerializer):
                 data["salariomin"] = data.pop("salarioMin")
             if "salarioMax" in data:
                 data["salariomax"] = data.pop("salarioMax")
-
         return super().to_internal_value(data)
 
     def to_representation(self, instance):
@@ -146,19 +136,21 @@ class VacanteSerializer(serializers.ModelSerializer):
         req_list = validated_data.pop("requisitos", None)
         if req_list is not None and isinstance(req_list, list):
             instance.requisitos = "\n".join(req_list)
-
         for k, v in validated_data.items():
             setattr(instance, k, v)
-
         instance.save()
         return instance
 
 
 class ApplicationSerializer(serializers.ModelSerializer):
-    """Serializer for job applications"""
+    """Serializer for job applications including interview results"""
 
-    candidate_info = serializers.SerializerMethodField()
-    vacancy_info = serializers.SerializerMethodField()
+    candidate_name = serializers.CharField(source="candidate.name", read_only=True)
+    candidate_email = serializers.CharField(source="candidate.email", read_only=True)
+    vacancy_title = serializers.CharField(source="vacancy.puesto", read_only=True)
+
+    # Nuevo campo para traer los datos de la entrevista
+    interview_session = serializers.SerializerMethodField()
 
     class Meta:
         model = Application
@@ -166,27 +158,37 @@ class ApplicationSerializer(serializers.ModelSerializer):
             "id",
             "vacancy",
             "candidate",
+            "candidate_name",
+            "candidate_email",
+            "vacancy_title",
             "status",
             "applied_at",
             "notes",
-            "candidate_info",
-            "vacancy_info",
+            "interview_session",  # Incluimos el campo nuevo
         ]
-        read_only_fields = ("applied_at", "candidate_info", "vacancy_info")
+        read_only_fields = (
+            "applied_at",
+            "candidate_name",
+            "candidate_email",
+            "vacancy_title",
+            "interview_session",
+        )
 
-    def get_candidate_info(self, obj):
-        return {
-            "id": obj.candidate.id,
-            "email": obj.candidate.email,
-            "name": obj.candidate.name,
-        }
-
-    def get_vacancy_info(self, obj):
-        return {
-            "id": obj.vacancy.id,
-            "puesto": obj.vacancy.puesto,
-            "company_name": obj.vacancy.company_name,
-        }
+    def get_interview_session(self, obj):
+        """
+        Recupera los detalles clave de la entrevista asociada a esta postulación.
+        """
+        if hasattr(obj, "interview_session"):
+            session = obj.interview_session
+            return {
+                "id": session.id,
+                "status": session.status,
+                "score": session.get_score_percentage(),  # Usamos el método del modelo
+                "has_report": session.has_analysis(),
+                "started_at": session.started_at,
+                "completed_at": session.completed_at,
+            }
+        return None
 
 
 class ChatMessageSerializer(serializers.ModelSerializer):
