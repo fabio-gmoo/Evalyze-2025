@@ -110,36 +110,29 @@
         <div class="tab-content">
           <section class="content-section">
             <h3 class="section-title">Candidatos Postulados</h3>
-            @if ((vacancy.candidatos || 0) > 0) {
-              <div class="empty-message">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-                <p>{{ vacancy.candidatos }} candidatos postulados</p>
-                <small>La lista de candidatos se mostrará próximamente</small>
-              </div>
-            } @else {
-              <p class="empty-message">Aún no hay candidatos postulados</p>
+            @if (vacancy.id) {
+              <app-candidate-list
+                [vacancyId]="vacancy.id"
+                (viewReport)="onViewCandidateReport($event)"
+              >
+              </app-candidate-list>
             }
           </section>
         </div>
       }
-
       @if (activeTab === 'entrevista' && viewMode === 'candidate' && hasApplied) {
         <div class="tab-content interview-tab">
-          <app-interview-chat 
-            [sessionId]="sessionId()" 
+          <app-interview-chat
+            [sessionId]="sessionId()"
             [vacancy]="vacancy"
-            (finished)="onInterviewFinished()"> 
+            (finished)="onInterviewFinished()"
+          >
           </app-interview-chat>
         </div>
       }
 
       @if (activeTab === 'resultados') {
-        <div class="tab-content results-tab" style="padding: 0; height: 100%; overflow-y: auto;">
+        <div class="tab-content results-tab" style="padding: 0; height: 100%; overflow-y: auto">
           <app-interview-report [sessionId]="sessionId()"></app-interview-report>
         </div>
       }
@@ -182,3 +175,4 @@
     }
   </div>
 </div>
+

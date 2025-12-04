@@ -15,12 +15,13 @@ import { VacanteUI, Tab } from '@interfaces/vacante-model';
 import { VacancyTabs } from '@components/vacancy-tabs/vacancy-tabs';
 import { InterviewChat } from '@components/interview-chat/interview-chat';
 import { InterviewReportC } from '@components/interview-report/interview-report';
+import { CandidateList } from '@components/candidate-list/candidate-list';
 import { Interview } from '@services/interview';
 import { Vacancies } from '@services/vacancies';
 
 @Component({
   selector: 'app-vacancy-details-modal',
-  imports: [CommonModule, FormsModule, VacancyTabs, InterviewChat, InterviewReportC],
+  imports: [CommonModule, FormsModule, VacancyTabs, InterviewChat, InterviewReportC, CandidateList],
   templateUrl: './vacancy-details-modal.html',
   styleUrl: './vacancy-details-modal.scss',
 })
@@ -41,7 +42,7 @@ export class VacancyDetailsModal implements OnInit {
   activeTab = 'detalles';
   isApplying = false;
   hasApplied = false;
-  
+
   // ✅ CAMBIO: Usamos signal para asegurar reactividad
   showResults = signal(false);
 
@@ -58,7 +59,7 @@ export class VacancyDetailsModal implements OnInit {
     } else if (this.viewMode === 'candidate' && this.hasApplied) {
       baseTabs.push({ id: 'entrevista', label: 'Entrevista' });
     }
-    
+
     // ✅ CAMBIO: Leemos la señal con paréntesis ()
     if (this.showResults()) {
       baseTabs.push({ id: 'resultados', label: 'Resultados' });
@@ -78,6 +79,13 @@ export class VacancyDetailsModal implements OnInit {
     document.body.style.overflow = '';
   }
 
+  onViewCandidateReport(sessionId: number) {
+    this.sessionId.set(sessionId);
+    this.showResults.set(true);
+    this.activeTab = 'resultados';
+    this.cd.detectChanges();
+  }
+
   checkApplicationStatus() {
     this.interviewService.getActiveSession().subscribe({
       next: (data) => {
@@ -85,12 +93,12 @@ export class VacancyDetailsModal implements OnInit {
           if (data.session.vacancy_id === this.vacancy.id) {
             this.hasApplied = true;
             this.sessionId.set(data.session.id);
-            
+
             // ✅ CAMBIO: Actualizamos la señal
             if (data.session.status === 'completed') {
               this.showResults.set(true);
             }
-            
+
             this.cd.markForCheck();
           }
         }
