@@ -1,29 +1,55 @@
+// --- Variables Dark Mode (Slate Palette) ---
+$primary-color: #3b82f6; // Azul brillante
+$text-primary: #f8fafc; // Blanco casi puro
+$text-secondary: #cbd5e1; // Gris claro
+$text-light: #94a3b8; // Gris medio
+$border-color: #334155; // Borde gris azulado oscuro
+$bg-card: #1e293b; // Fondo de tarjeta oscuro
+$bg-hover: #334155; // Fondo al pasar el mouse
+$bg-container: #0f172a; // Fondo más oscuro (opcional)
+
 .candidates-container {
-  padding: 1rem 0;
+  padding: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
+/* --- Estados de Carga y Vacío --- */
 .loading-state,
 .empty-state {
-  text-align: center;
-  padding: 3rem;
-  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: $text-light;
+  background: rgba(30, 41, 59, 0.5); // Usamos transparencia para integración suave
+  border-radius: 1rem;
+  border: 1px dashed $border-color;
 
   svg {
     width: 48px;
     height: 48px;
     margin-bottom: 1rem;
-    opacity: 0.5;
+    stroke: $text-light;
+    opacity: 0.6;
+  }
+
+  p {
+    font-size: 0.95rem;
+    font-weight: 500;
   }
 }
 
 .spinner {
-  width: 24px;
-  height: 24px;
-  border: 3px solid #e2e8f0;
-  border-top-color: #3b82f6;
+  width: 28px;
+  height: 28px;
+  border: 3px solid $border-color;
+  border-top-color: $primary-color;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
+  animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  margin-bottom: 1rem;
 }
 
 @keyframes spin {
@@ -32,6 +58,7 @@
   }
 }
 
+/* --- Lista de Candidatos --- */
 .candidates-list {
   display: flex;
   flex-direction: column;
@@ -42,16 +69,29 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
-  transition: all 0.2s;
+  padding: 1.25rem;
+
+  // CORRECCIÓN: Usar variable oscura, no 'white'
+  background: $bg-card;
+  border: 1px solid $border-color;
+  border-radius: 1rem;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  overflow: hidden;
 
   &:hover {
-    border-color: #cbd5e1;
-    background: white;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border-color: #475569; // Un tono más claro que el borde normal
+    background: lighten($bg-card, 3%); // Ligeramente más claro al hover
+    transform: translateY(-2px);
+    box-shadow:
+      0 10px 15px -3px rgba(0, 0, 0, 0.5),
+      0 4px 6px -2px rgba(0, 0, 0, 0.3);
+
+    .btn-report {
+      background: $bg-hover;
+      border-color: #475569;
+      color: $text-primary;
+    }
   }
 }
 
@@ -61,64 +101,93 @@
   gap: 1rem;
 
   .avatar-placeholder {
-    width: 40px;
-    height: 40px;
-    background: #3b82f6;
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    border: 2px solid $bg-card; // Anillo del color del fondo para separar
+    flex-shrink: 0;
   }
 
   .details {
     display: flex;
     flex-direction: column;
+    gap: 0.25rem;
 
     h4 {
       margin: 0;
+      font-size: 1rem;
       font-weight: 600;
-      color: #1e293b;
+      color: $text-primary;
+      line-height: 1.2;
     }
 
     .email {
       font-size: 0.875rem;
-      color: #64748b;
+      color: $text-secondary;
     }
 
     .date {
       font-size: 0.75rem;
-      color: #94a3b8;
-      margin-top: 0.25rem;
+      color: $text-light;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+
+      &::before {
+        content: '';
+        display: block;
+        width: 4px;
+        height: 4px;
+        background: currentColor;
+        border-radius: 50%;
+        opacity: 0.7;
+      }
     }
   }
 }
 
+/* --- Acciones y Badges --- */
 .candidate-actions {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
+// CORRECCIÓN: Badges translúcidos para fondo oscuro
 .status-badge {
   font-size: 0.75rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-weight: 500;
+  padding: 0.35rem 0.85rem;
+  border-radius: 2rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
 
   &.completed {
-    background: #dcfce7;
-    color: #166534;
+    background: rgba(16, 185, 129, 0.2); // Verde translúcido
+    color: #34d399; // Verde claro brillante
+    border: 1px solid rgba(16, 185, 129, 0.3);
   }
+
   &.pending {
-    background: #dbeafe;
-    color: #1e40af;
+    background: rgba(59, 130, 246, 0.2); // Azul translúcido
+    color: #60a5fa; // Azul claro brillante
+    border: 1px solid rgba(59, 130, 246, 0.3);
   }
+
   &.new {
-    background: #f1f5f9;
-    color: #475569;
+    background: rgba(148, 163, 184, 0.2); // Gris translúcido
+    color: #cbd5e1; // Gris claro
+    border: 1px solid rgba(148, 163, 184, 0.3);
   }
 }
 
@@ -126,29 +195,64 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.5rem;
-  background: white;
-  color: #475569;
+  padding: 0.6rem 1.25rem;
+  border: 1px solid $border-color;
+  border-radius: 0.75rem;
+
+  // CORRECCIÓN: Fondo transparente o oscuro
+  background: transparent;
+  color: $text-secondary;
+
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
 
   svg {
     width: 16px;
     height: 16px;
+    stroke-width: 2;
+    color: inherit;
   }
 
   &:hover:not(:disabled) {
-    background: #f8fafc;
-    border-color: #cbd5e1;
-    color: #1e293b;
+    background: $bg-hover;
+    border-color: #475569;
+    color: white; // Texto blanco al hover
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* --- Responsive --- */
+@media (max-width: 640px) {
+  .candidate-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+
+  .candidate-actions {
+    width: 100%;
+    justify-content: space-between;
+    border-top: 1px solid $border-color;
+    padding-top: 1rem;
+  }
+
+  .candidate-info .avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
   }
 }
