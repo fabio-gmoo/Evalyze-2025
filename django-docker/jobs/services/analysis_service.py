@@ -121,7 +121,7 @@ class InterviewAnalysisService:
                 response = client.post(
                     f"{self.ai_url}/chat/start",
                     json={
-                        "system": "You are an expert HR analyst specializing in SWOT analysis.",
+                        "system": "Eres un experto analista de RRHH especializado en análisis FODA (SWOT). Tu idioma principal es el ESPAÑOL.",
                         "model": "llama3.2",
                     },
                 )
@@ -150,7 +150,7 @@ class InterviewAnalysisService:
             return self._generate_fallback_swot(interview_data)
 
     def _build_swot_prompt(self, data: Dict[str, Any]) -> str:
-        """Build prompt for SWOT analysis"""
+        """Build prompt for SWOT analysis in Spanish"""
 
         conversation_text = "\n".join(
             [
@@ -163,33 +163,37 @@ class InterviewAnalysisService:
             [f"- {req}" for req in data["vacancy_requirements"]]
         )
 
-        return f"""Analyze this job interview using SWOT methodology.
+        # Mantenemos las claves del JSON en inglés (strengths, weaknesses...) para que el código Python
+        # siga funcionando sin cambios, pero pedimos que el CONTENIDO (los valores) sea en ESPAÑOL.
+        return f"""Analiza esta entrevista de trabajo utilizando la metodología FODA (SWOT).
 
-VACANCY: {data["vacancy_title"]}
+VACANTE: {data["vacancy_title"]}
 
-REQUIREMENTS:
+REQUISITOS:
 {requirements_text}
 
-INTERVIEW CONVERSATION:
+CONVERSACIÓN DE LA ENTREVISTA:
 {conversation_text}
 
-INTERVIEW SCORE: {data["total_score"]}/{data["max_possible_score"]}
+PUNTAJE DE ENTREVISTA: {data["total_score"]}/{data["max_possible_score"]}
 
-Please provide a comprehensive SWOT analysis in the following JSON format:
+Por favor proporciona un análisis FODA completo en el siguiente formato JSON estricto.
+IMPORTANTE: El contenido del texto dentro de las listas debe estar en ESPAÑOL.
+
 {{
-  "strengths": ["list of 4-6 specific strengths demonstrated"],
-  "weaknesses": ["list of 4-6 specific weaknesses or gaps"],
-  "opportunities": ["list of 4-6 opportunities for growth/development"],
-  "threats": ["list of 4-6 potential risks or concerns"]
+  "strengths": ["lista de 4-6 fortalezas específicas demostradas (en español)"],
+  "weaknesses": ["lista de 4-6 debilidades o brechas específicas (en español)"],
+  "opportunities": ["lista de 4-6 oportunidades de crecimiento (en español)"],
+  "threats": ["lista de 4-6 riesgos potenciales (en español)"]
 }}
 
-Each point should be:
-- Specific to this candidate's interview
-- Actionable and measurable where possible
-- Directly related to the vacancy requirements
-- Supported by evidence from the conversation
+Cada punto debe ser:
+- Específico para la entrevista de este candidato
+- Accionable y medible donde sea posible
+- Directamente relacionado con los requisitos de la vacante
+- Respaldado por evidencia de la conversación
 
-Respond ONLY with the JSON structure, no additional text."""
+Responde SOLAMENTE con la estructura JSON, sin texto adicional."""
 
     def _parse_swot_response(self, response: str) -> Dict[str, List[str]]:
         """
@@ -200,7 +204,6 @@ Respond ONLY with the JSON structure, no additional text."""
 
         try:
             # A. Regex to extract content inside ```json ... ``` or just ``` ... ```
-            # This handles Llama 3.2's tendency to wrap responses
             pattern = r"```(?:json)?\s*(.*?)\s*```"
             match = re.search(pattern, response, re.DOTALL)
 
@@ -232,7 +235,7 @@ Respond ONLY with the JSON structure, no additional text."""
         return self._parse_swot_manually(response)
 
     def _parse_swot_manually(self, text: str) -> Dict[str, List[str]]:
-        """Manually parse SWOT from text"""
+        """Manually parse SWOT from text (Updated for Spanish keywords)"""
         swot = {"strengths": [], "weaknesses": [], "opportunities": [], "threats": []}
 
         current_section = None
@@ -242,14 +245,15 @@ Respond ONLY with the JSON structure, no additional text."""
             if not line:
                 continue
 
-            # Detect section headers
-            if "strength" in line.lower():
+            # Detect section headers (English and Spanish support)
+            lower_line = line.lower()
+            if "strength" in lower_line or "fortaleza" in lower_line:
                 current_section = "strengths"
-            elif "weakness" in line.lower():
+            elif "weakness" in lower_line or "debilidad" in lower_line:
                 current_section = "weaknesses"
-            elif "opportunit" in line.lower():
+            elif "opportunit" in lower_line or "oportunidad" in lower_line:
                 current_section = "opportunities"
-            elif "threat" in line.lower():
+            elif "threat" in lower_line or "amenaza" in lower_line:
                 current_section = "threats"
             elif current_section and (line.startswith("-") or line.startswith("•")):
                 point = line.lstrip("-•").strip()
@@ -259,7 +263,7 @@ Respond ONLY with the JSON structure, no additional text."""
         return swot
 
     def _generate_fallback_swot(self, data: Dict[str, Any]) -> Dict[str, List[str]]:
-        """Generate basic SWOT based on interview data"""
+        """Generate basic SWOT based on interview data (Translated to Spanish)"""
         score_percentage = (
             (data["total_score"] / data["max_possible_score"] * 100)
             if data["max_possible_score"] > 0
@@ -268,28 +272,30 @@ Respond ONLY with the JSON structure, no additional text."""
 
         return {
             "strengths": [
-                f"Completed all {len(data['questions'])} interview questions",
-                f"Achieved {score_percentage:.1f}% overall score",
-                "Demonstrated engagement throughout the interview",
-                "Provided detailed responses to technical questions",
+                f"Completó todas las {
+                    len(data['questions'])
+                } preguntas de la entrevista",
+                f"Obtuvo un puntaje general de {score_percentage:.1f}%",
+                "Demostró compromiso durante la entrevista",
+                "Proporcionó respuestas a las preguntas técnicas",
             ],
             "weaknesses": [
-                "Some responses could be more specific",
-                "Limited depth in certain technical areas",
-                "Could benefit from more concrete examples",
-                "Some answers lacked structure",
+                "Algunas respuestas podrían ser más específicas",
+                "Profundidad limitada en ciertas áreas técnicas",
+                "Podría beneficiarse de ejemplos más concretos",
+                "Algunas respuestas carecían de estructura",
             ],
             "opportunities": [
-                "Strong potential for skill development",
-                "Opportunity to deepen technical knowledge",
-                "Can expand experience in key areas",
-                "Room for growth in communication skills",
+                "Potencial para desarrollo de habilidades",
+                "Oportunidad de profundizar conocimientos técnicos",
+                "Puede expandir experiencia en áreas clave",
+                "Espacio para crecimiento en habilidades de comunicación",
             ],
             "threats": [
-                "May require additional training",
-                "Competition from more experienced candidates",
-                "Some skill gaps need addressing",
-                "Limited evidence of specific requirements",
+                "Puede requerir capacitación adicional",
+                "Competencia de candidatos con más experiencia",
+                "Algunas brechas de habilidades necesitan atención",
+                "Evidencia limitada de requisitos específicos",
             ],
         }
 
@@ -298,10 +304,7 @@ Respond ONLY with the JSON structure, no additional text."""
     ) -> float:
         """
         Calculate quantitative score as percentage
-
-        Combines:
-        - Interview score (60%)
-        - SWOT balance (40%)
+        (Logic unchanged)
         """
         # Base score from interview
         if session.max_possible_score > 0:
@@ -323,61 +326,74 @@ Respond ONLY with the JSON structure, no additional text."""
         return round(total_score, 2)
 
     def _generate_cross_swot(self, swot: Dict[str, List[str]]) -> Dict[str, List[str]]:
-        """Generate Cross-SWOT strategies (SO, WO, ST, WT)"""
+        """Generate Cross-SWOT strategies (Translated to Spanish)"""
 
         strengths = swot.get("strengths", [])
         weaknesses = swot.get("weaknesses", [])
         opportunities = swot.get("opportunities", [])
         threats = swot.get("threats", [])
 
+        # Helpers for safe slicing strings
+        def safe_slice(lst, idx):
+            val = lst[idx] if idx < len(lst) else "este factor"
+            return val[:50] + "..." if len(val) > 50 else val
+
         return {
             "so_strategies": [
-                f"Leverage {s[:50]}... to capitalize on {o[:50]}..."
-                for s, o in zip(strengths[:3], opportunities[:3])
+                f"Aprovechar {safe_slice(strengths, i)} para capitalizar {
+                    safe_slice(opportunities, i)
+                }"
+                for i in range(min(3, len(strengths), len(opportunities)))
             ]
             if strengths and opportunities
-            else ["Build on strengths to pursue opportunities"],
+            else ["Basarse en fortalezas para perseguir oportunidades"],
             "wo_strategies": [
-                f"Address {w[:50]}... to take advantage of {o[:50]}..."
-                for w, o in zip(weaknesses[:3], opportunities[:3])
+                f"Abordar {safe_slice(weaknesses, i)} para tomar ventaja de {
+                    safe_slice(opportunities, i)
+                }"
+                for i in range(min(3, len(weaknesses), len(opportunities)))
             ]
             if weaknesses and opportunities
-            else ["Improve weaknesses to unlock opportunities"],
+            else ["Mejorar debilidades para desbloquear oportunidades"],
             "st_strategies": [
-                f"Use {s[:50]}... to mitigate {t[:50]}..."
-                for s, t in zip(strengths[:3], threats[:3])
+                f"Usar {safe_slice(strengths, i)} para mitigar {safe_slice(threats, i)}"
+                for i in range(min(3, len(strengths), len(threats)))
             ]
             if strengths and threats
-            else ["Apply strengths to minimize threats"],
+            else ["Aplicar fortalezas para minimizar amenazas"],
             "wt_strategies": [
-                f"Minimize {w[:50]}... to avoid {t[:50]}..."
-                for w, t in zip(weaknesses[:3], threats[:3])
+                f"Minimizar {safe_slice(weaknesses, i)} para evitar {
+                    safe_slice(threats, i)
+                }"
+                for i in range(min(3, len(weaknesses), len(threats)))
             ]
             if weaknesses and threats
-            else ["Reduce weaknesses to prevent threats"],
+            else ["Reducir debilidades para prevenir amenazas"],
         }
 
     def _generate_recommendations(
         self, swot: Dict[str, List[str]], score: float
     ) -> List[str]:
-        """Generate actionable recommendations"""
+        """Generate actionable recommendations (Translated to Spanish)"""
         recommendations = []
 
         # Score-based recommendations
         if score >= 80:
             recommendations.append(
-                "STRONGLY RECOMMEND: Candidate demonstrates excellent fit for the position"
+                "ALTAMENTE RECOMENDADO: El candidato demuestra un excelente ajuste para la posición"
             )
         elif score >= 60:
             recommendations.append(
-                "RECOMMEND: Candidate shows good potential with minor areas for development"
+                "RECOMENDADO: El candidato muestra buen potencial con áreas menores de desarrollo"
             )
         elif score >= 40:
             recommendations.append(
-                "CONDITIONAL: Consider for position with specific training plan"
+                "CONDICIONAL: Considerar para la posición con un plan de capacitación específico"
             )
         else:
-            recommendations.append("NOT RECOMMENDED: Significant gaps in requirements")
+            recommendations.append(
+                "NO RECOMENDADO: Brechas significativas en los requisitos"
+            )
 
         # SWOT-based recommendations
         strengths = swot.get("strengths", [])
@@ -385,30 +401,30 @@ Respond ONLY with the JSON structure, no additional text."""
 
         if strengths:
             recommendations.append(
-                f"Focus on candidate's key strength: {strengths[0][:100]}"
+                f"Enfocarse en la fortaleza clave del candidato: {strengths[0][:100]}"
             )
 
         if weaknesses:
             recommendations.append(
-                f"Development area to address: {weaknesses[0][:100]}"
+                f"Área de desarrollo a abordar: {weaknesses[0][:100]}"
             )
 
-        recommendations.append("Schedule follow-up technical assessment")
-        recommendations.append("Request portfolio or work samples")
-        recommendations.append("Verify references and previous experience")
+        recommendations.append("Programar evaluación técnica de seguimiento")
+        recommendations.append("Solicitar portafolio o muestras de trabajo")
+        recommendations.append("Verificar referencias y experiencia previa")
 
         return recommendations
 
     def _get_score_category(self, score: float) -> str:
-        """Get category label for score"""
+        """Get category label for score (Translated)"""
         if score >= 80:
-            return "Excellent"
+            return "Excelente"
         elif score >= 60:
-            return "Good"
+            return "Bueno"
         elif score >= 40:
-            return "Fair"
+            return "Regular"
         else:
-            return "Poor"
+            return "Pobre"
 
     def _calculate_duration(self, session: InterviewSession) -> int:
         """Calculate interview duration in minutes"""
@@ -420,11 +436,6 @@ Respond ONLY with the JSON structure, no additional text."""
     def generate_global_report(self, company_user) -> Dict[str, Any]:
         """
         Generate aggregated report for all company interviews
-
-        Includes:
-        - Overall service effectiveness
-        - Requirement fulfillment metrics
-        - Company-wide insights and trends
         """
         # Import models here to avoid circular imports
         from jobs.models import InterviewSession  # type: ignore
@@ -438,7 +449,7 @@ Respond ONLY with the JSON structure, no additional text."""
 
         if not sessions.exists():
             return {
-                "message": "No completed interviews available for analysis",
+                "message": "No hay entrevistas completadas disponibles para análisis",
                 "total_interviews": 0,
             }
 
@@ -458,11 +469,10 @@ Respond ONLY with the JSON structure, no additional text."""
         }
 
         for session in sessions:
-            score = (
-                session.analysis_report.get("quantitative_score", 0)
-                if session.analysis_report
-                else 0
-            )
+            report = session.analysis_report
+            # Manejamos compatibilidad con reportes viejos (keys en inglés o español)
+            score = report.get("quantitative_score", 0) if report else 0
+
             if score >= 80:
                 score_distribution["excellent"] += 1
             elif score >= 60:
@@ -514,10 +524,10 @@ Respond ONLY with the JSON structure, no additional text."""
                 "candidate_engagement": self._calculate_engagement_score(sessions),
             },
             "recommendations": [
-                "Continue leveraging AI-driven interviews for consistent evaluation",
-                "Focus on addressing common weakness areas in job requirements",
-                "Consider adjusting interview questions based on trends",
-                "Implement targeted training programs for identified skill gaps",
+                "Continúe aprovechando las entrevistas impulsadas por IA para una evaluación consistente",
+                "Enfóquese en abordar las áreas de debilidad comunes en los requisitos del puesto",
+                "Considere ajustar las preguntas de la entrevista según las tendencias",
+                "Implemente programas de capacitación específicos para las brechas de habilidades identificadas",
             ],
         }
 
@@ -525,9 +535,35 @@ Respond ONLY with the JSON structure, no additional text."""
         """Extract common themes from list of items"""
         # Simple keyword extraction (in production, use NLP)
         keywords = []
+        stop_words = {
+            "para",
+            "como",
+            "esta",
+            "pero",
+            "sobre",
+            "entre",
+            "tiene",
+            "falta",
+            "poco",
+            "buen",
+            "buena",
+            "el",
+            "la",
+            "los",
+            "las",
+            "un",
+            "una",
+            "que",
+            "del",
+            "con",
+            "por",
+        }
+
         for item in items:
-            words = item.lower().split()
-            keywords.extend([w for w in words if len(w) > 5])
+            # Basic cleanup
+            clean_item = re.sub(r"[^\w\s]", "", item.lower())
+            words = clean_item.split()
+            keywords.extend([w for w in words if len(w) > 4 and w not in stop_words])
 
         common = Counter(keywords).most_common(10)
         return [word for word, count in common if count > 1]

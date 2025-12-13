@@ -31,13 +31,11 @@ class InterviewService:
                 "vacancy_title": application.vacancy.puesto,
                 "company_name": application.vacancy.created_by.name,
             },
-            max_possible_score=sum(q.get("weight", 0)
-                                   for q in interview_questions),
+            max_possible_score=sum(q.get("weight", 0) for q in interview_questions),
         )
 
         logger.info(
-            f"Created interview session {
-                session.id} for application {application.id}"
+            f"Created interview session {session.id} for application {application.id}"
         )
         return session
 
@@ -74,8 +72,7 @@ class InterviewService:
             )
 
             logger.info(
-                f"Started AI session {
-                    ai_session_id} for interview {session.id}"
+                f"Started AI session {ai_session_id} for interview {session.id}"
             )
 
             return {
@@ -128,21 +125,22 @@ class InterviewService:
                 question_index=session.current_question_index,
             )
 
-            # Check if we should move to next question
-            total_questions = len(
-                session.interview_config.get("questions", []))
+            # CAMBIO: Solo avanzamos el índice si no estamos en la última pregunta,
+            # pero NUNCA completamos la entrevista automáticamente.
+            total_questions = len(session.interview_config.get("questions", []))
+
             if session.current_question_index < total_questions - 1:
                 session.current_question_index += 1
                 session.save()
-            else:
-                # Interview complete
-                self._complete_interview(session)
+
+            # Eliminamos el bloque 'else: self._complete_interview(session)'
+            # La entrevista se mantiene "active" indefinidamente.
 
             return {
                 "message": ai_response,
                 "current_question": session.current_question_index,
                 "total_questions": total_questions,
-                "is_complete": session.status == "completed",
+                "is_complete": False,  # Siempre enviamos False para que el front no bloquee
             }
 
         except Exception as e:
