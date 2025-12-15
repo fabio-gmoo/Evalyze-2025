@@ -244,12 +244,31 @@ export class Vacancies {
     return this.http.get<any[]>(`${this.base}/${vacancyId}/applications/`);
   }
 
-  getMyApplications(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.base}/my-applications`);
+  getMyAppliedVacancies(): Observable<Vacancy[]> {
+    return this.http.get<any[]>(`${this.base}/my-applications/`).pipe(
+      map((apps) => {
+        return apps.map((app) => {
+          // Extraemos la vacante del detalle
+          const vacancy = mapFromApi(app.vacancy_details);
+          // Le adjuntamos la info de la aplicación para mostrar el estado
+          return {
+            ...vacancy,
+            my_application: {
+              id: app.id,
+              status: app.status,
+              applied_at: app.applied_at,
+              interview_status: app.interview_session?.status,
+            },
+          };
+        });
+      }),
+    );
+  }
+  getRanking(id: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/${id}/ranking/`);
   }
 
   getAnalytics(vacancyId: number): Observable<any> {
     return this.http.get<any>(`${this.base}/${vacancyId}/analytics/`);
   }
 }
-

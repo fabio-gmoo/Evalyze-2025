@@ -512,6 +512,17 @@ class VacanteViewSet(viewsets.ModelViewSet):
                 status=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+    @action(detail=True, methods=["get"], url_path="ranking")
+    def ranking(self, request, pk=None):
+        vacancy = self.get_object()
+        if vacancy.created_by != request.user:
+            return Response({"detail": "No autorizado"}, status=403)
+        from .services.analysis_service import InterviewAnalysisService
+
+        service = InterviewAnalysisService()
+        data = service.get_vacancy_ranking(vacancy.id)
+        return Response(data)
+
     @action(detail=True, methods=["get"], url_path="analytics")
     def analytics(self, request, pk=None):
         vacancy = self.get_object()

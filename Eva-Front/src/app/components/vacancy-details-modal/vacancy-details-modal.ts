@@ -51,6 +51,9 @@ export class VacancyDetailsModal implements OnInit {
 
   sessionId = signal<number | null>(null);
 
+  rankingList: any[] = [];
+  loadingRanking: boolean = false;
+
   get tabs(): Tab[] {
     const baseTabs: Tab[] = [{ id: 'detalles', label: 'Detalles' }];
 
@@ -58,6 +61,7 @@ export class VacancyDetailsModal implements OnInit {
       baseTabs.push(
         { id: 'candidatos', label: `Candidatos (${this.vacancy.candidatos || 0})` },
         { id: 'ranking', label: 'Ranking' },
+        { id: 'reporte', label: 'Reporte' },
       );
     } else if (this.viewMode === 'candidate' && this.hasApplied) {
       baseTabs.push({ id: 'entrevista', label: 'Entrevista' });
@@ -158,17 +162,36 @@ export class VacancyDetailsModal implements OnInit {
   setActiveTab(tab: string) {
     this.activeTab = tab;
 
-    if (tab === 'ranking' && this.viewMode === 'company' && !this.analyticReport) {
+    if (tab === 'ranking' && this.viewMode === 'company' && this.rankingList.length === 0) {
+      this.loadRanking();
+    }
+
+    // Cargar Reporte si corresponde
+    if (tab === 'reporte' && this.viewMode === 'company' && !this.analyticReport) {
       this.loadAnalytics();
     }
   }
 
+  loadRanking() {
+    if (!this.vacancy.id) return;
+    this.loadingRanking = true;
+    this.vacanciesService.getRanking(this.vacancy.id).subscribe({
+      next: (data) => {
+        this.rankingList = data;
+        this.loadingRanking = false;
+        this.cd.markForCheck();
+      },
+      error: (err) => {
+        console.error(err);
+        this.loadingRanking = false;
+        this.cd.markForCheck();
+      },
+    });
+  }
+
   loadAnalytics() {
     if (!this.vacancy.id) return;
-
     this.loadingReport = true;
-
-    // Asumimos que agregaste getAnalytics(id) en tu servicio Vacancies
     this.vacanciesService.getAnalytics(this.vacancy.id).subscribe({
       next: (data) => {
         this.analyticReport = data;
@@ -176,13 +199,12 @@ export class VacancyDetailsModal implements OnInit {
         this.cd.markForCheck();
       },
       error: (err) => {
-        console.error('Error loading analytics:', err);
+        console.error(err);
         this.loadingReport = false;
         this.cd.markForCheck();
       },
     });
   }
-
   onClose() {
     this.close.emit();
   }

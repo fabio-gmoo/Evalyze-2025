@@ -433,6 +433,40 @@ Responde SOLAMENTE con la estructura JSON, sin texto adicional."""
             return int(delta.total_seconds() / 60)
         return 0
 
+    def get_vacancy_ranking(
+        self, vacancy_id: int, top_n: int = 20
+    ) -> List[Dict[str, Any]]:
+        """Obtiene los 20 mejores candidatos ordenados por puntaje"""
+        from jobs.models import InterviewSession
+
+        # Buscamos sesiones completadas
+        sessions = InterviewSession.objects.filter(
+            application__vacancy_id=vacancy_id, status="completed"
+        ).select_related("application", "application__candidate")
+
+        ranking_data = []
+        for session in sessions:
+            # Usamos el puntaje final calculado (que puede incluir balance SWOT)
+            score = session.get_score_percentage()
+
+            ranking_data.append(
+                {
+                    "candidate_id": session.application.candidate.id,
+                    "candidate_name": session.application.candidate.name,
+                    "candidate_email": session.application.candidate.email,
+                    "score": score,
+                    "category": self._get_score_category(score),
+                    "completed_at": session.completed_at,
+                    "session_id": session.id,
+                }
+            )
+
+        # Ordenamos por puntaje descendente en Python para asegurar consistencia
+        ranking_data.sort(key=lambda x: x["score"], reverse=True)
+
+        # Devolvemos solo los top N
+        return ranking_data[:top_n]
+
     def generate_vacancy_report(self, vacancy_id: int) -> Dict[str, Any]:
         """Genera un reporte consolidado solo para una vacante específica"""
         # Importación local para evitar ciclos

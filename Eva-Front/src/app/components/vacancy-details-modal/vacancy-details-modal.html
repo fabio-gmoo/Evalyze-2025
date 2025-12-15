@@ -138,72 +138,120 @@
       }
 
       @if (activeTab === 'ranking' && viewMode === 'company') {
-        <div class="tab-content ranking-tab">
+        <div class="tab-content ranking-list-tab">
+          <h3 class="section-title">Top 20 Candidatos Más Aptos</h3>
+
+          @if (loadingRanking) {
+            <div class="loading-state">
+              <span class="loading-spinner"></span> Cargando ranking...
+            </div>
+          } @else if (rankingList.length > 0) {
+            <div class="ranking-table-container">
+              <table class="ranking-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Candidato</th>
+                    <th>Score</th>
+                    <th>Categoría</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of rankingList; track item.candidate_id; let i = $index) {
+                    <tr [class.top-3]="i < 3">
+                      <td class="rank-num">
+                        @if (i === 0) {
+                          🥇
+                        } @else if (i === 1) {
+                          🥈
+                        } @else if (i === 2) {
+                          🥉
+                        } @else {
+                          {{ i + 1 }}
+                        }
+                      </td>
+                      <td>
+                        <div class="candidate-info">
+                          <span class="name">{{ item.candidate_name }}</span>
+                          <span class="email">{{ item.candidate_email }}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div
+                          class="score-badge"
+                          [ngClass]="{
+                            high: item.score >= 80,
+                            medium: item.score >= 60 && item.score < 80,
+                            low: item.score < 60,
+                          }"
+                        >
+                          {{ item.score }}%
+                        </div>
+                      </td>
+                      <td>{{ item.category }}</td>
+                      <td>
+                        <button
+                          class="btn-sm btn-outline"
+                          (click)="onViewCandidateReport(item.session_id)"
+                        >
+                          Ver Informe
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <div class="empty-state">
+              <p>No hay candidatos calificados todavía para generar el ranking.</p>
+            </div>
+          }
+        </div>
+      }
+
+      @if (activeTab === 'reporte' && viewMode === 'company') {
+        <div class="tab-content analytics-tab">
           @if (loadingReport) {
-            <div class="loading-container" style="text-align: center; padding: 2rem">
-              <p>Analizando datos de entrevistas...</p>
+            <div class="loading-state">
+              <span class="loading-spinner"></span> Generando reporte...
             </div>
           } @else if (analyticReport && !analyticReport.empty) {
             <div class="analytics-dashboard">
               <div class="stats-row" style="display: flex; gap: 1rem; margin-bottom: 2rem">
-                <div
-                  class="stat-card"
-                  style="
-                    flex: 1;
-                    padding: 1rem;
-                    background: #f8fafc;
-                    border-radius: 8px;
-                    text-align: center;
-                  "
-                >
-                  <h4 style="font-size: 0.9rem; color: #64748b; margin: 0">Promedio General</h4>
-                  <span style="font-size: 2rem; font-weight: bold; color: #3b82f6"
-                    >{{ analyticReport.summary.average_score }}%</span
-                  >
-                </div>
-                <div
-                  class="stat-card"
-                  style="
-                    flex: 1;
-                    padding: 1rem;
-                    background: #f8fafc;
-                    border-radius: 8px;
-                    text-align: center;
-                  "
-                >
-                  <h4 style="font-size: 0.9rem; color: #64748b; margin: 0">Entrevistas</h4>
-                  <span style="font-size: 2rem; font-weight: bold; color: #0f172a">{{
-                    analyticReport.summary.total_interviews
-                  }}</span>
+                <div class="stat-card">
+                  <h4>Puntaje Promedio</h4>
+                  <span class="score-text">
+                    {{ analyticReport.summary.average_score | number: '1.0-0' }}%
+                  </span>
                 </div>
               </div>
 
               <div
                 class="insights-grid"
-                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem"
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem"
               >
                 <div class="insight-col">
-                  <h4 style="color: #166534; margin-bottom: 1rem">Fortalezas Comunes</h4>
-                  <ul style="padding-left: 1.2rem">
-                    @for (item of analyticReport.insights.top_strengths; track $index) {
-                      <li style="margin-bottom: 0.5rem; color: #14532d">{{ item }}</li>
+                  <h4>Fortalezas Comunes</h4>
+                  <ul>
+                    @for (s of analyticReport.insights.top_strengths; track $index) {
+                      <li>{{ s }}</li>
                     }
                   </ul>
                 </div>
                 <div class="insight-col">
-                  <h4 style="color: #991b1b; margin-bottom: 1rem">Debilidades Frecuentes</h4>
-                  <ul style="padding-left: 1.2rem">
-                    @for (item of analyticReport.insights.common_weaknesses; track $index) {
-                      <li style="margin-bottom: 0.5rem; color: #7f1d1d">{{ item }}</li>
+                  <h4>Debilidades Comunes</h4>
+                  <ul>
+                    @for (w of analyticReport.insights.common_weaknesses; track $index) {
+                      <li>{{ w }}</li>
                     }
                   </ul>
                 </div>
               </div>
             </div>
           } @else {
-            <div class="empty-state" style="text-align: center; padding: 3rem; color: #64748b">
-              <p>Aún no hay suficientes entrevistas completadas para generar el ranking.</p>
-            </div>
+            <div class="empty-state"><p>Insuficientes datos para el reporte.</p></div>
           }
         </div>
       }
