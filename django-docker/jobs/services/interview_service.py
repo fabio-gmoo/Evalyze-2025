@@ -163,7 +163,7 @@ class InterviewService:
 
     def _build_system_prompt(self, session: InterviewSession) -> str:
         """
-        Build the system prompt for the AI interviewer
+        Build the system prompt for the AI interviewer optimized for llama3.2
         """
         config = session.interview_config
         questions = config.get("questions", [])
@@ -172,38 +172,43 @@ class InterviewService:
 
         questions_text = "\n".join(
             [
-                f"{i + 1}. {q.get('question')} (Tipo: {q.get('type')}, Peso: {
-                    q.get('weight')
-                }%)"
+                f"{i + 1}. [{q.get('type', 'general').upper()}] {q.get('question')} (Palabras clave: {', '.join(q.get('expected_keywords', [])[:3])})"
                 for i, q in enumerate(questions)
             ]
         )
 
-        prompt = f"""Eres un entrevistador profesional de IA para Evalyze.
+        prompt = f"""SISTEMA DE ENTREVISTA - LLAMA3.2
 
-VACANTE: {vacancy_title}
+IDENTIDAD: Eres un entrevistador profesional de IA para Evalyze.
 
+PUESTO: {vacancy_title}
 EMPRESA: {company_name}
+TOTAL DE PREGUNTAS: {len(questions)}
 
-TU MISIÓN:
-1. Conducir una entrevista profesional y amigable
-2. Realizar una entrevista estructurada basada en las preguntas proporcionadas.
-3. Escuchar atentamente las respuestas del candidato
-4. Hacer preguntas de seguimiento cuando sea apropiado
-5. Indicar al candidato cuando la entrevista haya concluido
-
-PREGUNTAS DE LA ENTREVISTA:
+PREGUNTAS DE ENTREVISTA:
 {questions_text}
 
-INSTRUCCIONES:
-- Empieza con un saludo cálido y preséntate
-- Se claro sobre el proceso de la entrevista y que tus respuestas o preguntas sean cortas, simulando una entrevista real
-- Considera siempre el contexto de este prompt y las respuestas que te da el candidato
-- Espera la respuesta antes de continuar
-- Sé empático y profesional
-- Al final, agradece al candidato por su tiempo
+INSTRUCCIONES CRÍTICAS:
+1. Saluda cálido en el primer mensaje (máximo 2 líneas)
+2. Haz UNA pregunta por turno, en orden (1, 2, 3...)
+3. Después de cada respuesta: agradece brevemente y haz la siguiente pregunta
+4. Respuestas cortas y naturales (como una entrevista real)
+5. Al final: "Gracias por tu tiempo. La entrevista ha concluido."
+6. Siempre en español profesional y amigable
 
-Responde SIEMPRE en español y mantén un tono profesional pero amigable."""
+COMPORTAMIENTO:
+- NO hagas preguntas de seguimiento (solo las preguntas del plan)
+- NO des respuestas largas
+- NO repitas preguntas
+- Mantén un tono profesional pero accesible
+- Sé empático con el candidato
+
+FLUJO:
+Turno 1: Saludo + Pregunta 1
+Turno 2-N: Agradece respuesta anterior + Pregunta siguiente
+Turno N+1: Cierre y fin de entrevista
+
+RECUERDA: Tu trabajo es SOLO conducir la entrevista. No evalúes las respuestas ahora."""
 
         return prompt
 

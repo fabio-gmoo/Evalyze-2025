@@ -1,0 +1,251 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║                🚀 EVALYZE-2025 - GUÍA VISUAL DE INICIO 🚀                    ║
+║                                                                              ║
+║                    ¡TODO ESTÁ LISTO PARA EJECUTAR!                          ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 📋 ARQUITECTURA DEL SISTEMA                                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+                         🌐 NAVEGADOR (Frontend)
+                              ↓
+                    http://localhost:4200
+                              ↓
+     ┌──────────────────────────────────────────────────────────┐
+     │    🎨 Angular Frontend                                  │
+     │    • Login / Register                                   │
+     │    • Crear Vacantes                                     │
+     │    • Entrevistas                                        │
+     │    • Reportes SWOT                                      │
+     └────────────────────┬─────────────────────────────────────┘
+                          │ REST API
+                          ↓
+     ┌──────────────────────────────────────────────────────────┐
+     │    🐍 Django Backend (8000)                             │
+     │    • Autenticación                                      │
+     │    • Gestión de vacantes                                │
+     │    • Entrevistas                                        │
+     │    • Base de datos                                      │
+     └────────┬──────────────────────────┬─────────────────────┘
+              │                          │
+              │ HTTP                     │ HTTP
+              ↓                          ↓
+    ┌──────────────────┐      ┌──────────────────┐
+    │ 🧠 AI Service    │      │ 🤖 Ollama        │
+    │    (8001)        │←────→│   (11434)        │
+    │                  │      │  llama3.2        │
+    │ • Generar pregs  │      │                  │
+    │ • Evaluar resps  │      └──────────────────┘
+    │ • Análisis SWOT  │
+    └──────────────────┘
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 🚀 INICIO RÁPIDO (4 PASOS)                                                 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+PASO 1️⃣ : INSTALAR OLLAMA
+────────────────────────────────────────────────────────────────────────────
+  1. Descargar: https://ollama.ai/
+  2. Instalar en tu computadora
+  3. Ejecutar: ollama serve
+  4. En otra terminal: ollama pull llama3.2
+  
+  ✅ Señal de éxito: Ver "Listening on 127.0.0.1:11434"
+
+
+PASO 2️⃣ : INICIAR 4 SERVICIOS (En 4 terminales diferentes)
+────────────────────────────────────────────────────────────────────────────
+
+  TERMINAL 1 - OLLAMA (PRIMERO)
+  ─────────────────────────────────
+  $ ollama serve
+  
+  Esperado: "Listening on 127.0.0.1:11434"
+  
+
+  TERMINAL 2 - AI SERVICE (Espera 5 seg después de Ollama)
+  ────────────────────────────────────────────────────────
+  $ cd Evalyze-2025\ai-service
+  $ python main.py
+  
+  Esperado: "Uvicorn running on http://0.0.0.0:8001"
+  
+
+  TERMINAL 3 - DJANGO BACKEND (Espera 3 seg después de AI Service)
+  ──────────────────────────────────────────────────────────────────
+  $ cd Evalyze-2025\django-docker
+  $ python manage.py migrate    (primera vez solo)
+  $ python manage.py runserver
+  
+  Esperado: "Starting development server at http://127.0.0.1:8000/"
+  
+
+  TERMINAL 4 - ANGULAR FRONTEND (Espera 3 seg después de Django)
+  ───────────────────────────────────────────────────────────────
+  $ cd Evalyze-2025\Eva-Front
+  $ npm start
+  
+  Esperado: "Application bundle generation complete"
+
+
+PASO 3️⃣ : VERIFICAR QUE TODO FUNCIONA
+────────────────────────────────────────────────────────────────────────────
+  
+  ✅ Frontend:     http://localhost:4200
+     → Debe mostrar login
+  
+  ✅ Backend API:  http://localhost:8000/api
+     → Debe mostrar JSON
+  
+  ✅ AI Service:   http://localhost:8001
+     → Debe mostrar estado
+  
+  ✅ Ollama:       http://localhost:11434/api/tags
+     → Debe mostrar modelos
+
+
+PASO 4️⃣ : USAR LA APLICACIÓN
+────────────────────────────────────────────────────────────────────────────
+  
+  1. Ir a: http://localhost:4200
+  
+  2. Registrarse como EMPRESA:
+     • Email: empresa@test.com
+     • Password: test123
+  
+  3. Crear VACANTE:
+     • Puesto: Backend Engineer
+     • Requisitos: Node.js, PostgreSQL, REST APIs
+  
+  4. Preguntas se generan AUTOMÁTICAMENTE ✨
+  
+  5. Registrarse como CANDIDATO
+  
+  6. Participar en ENTREVISTA
+  
+  7. Ver ANÁLISIS SWOT 🎯
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ ✅ QUÉ VAS A VER EN LA INTERFAZ                                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+GENERADOR DE PREGUNTAS (MEJORADO) 🎯
+───────────────────────────────────────
+  ✨ Ahora con prompts optimizados para llama3.2
+  ✨ Validación estricta de estructura
+  ✨ Reintentos automáticos
+  
+  Ejemplo de pregunta generada:
+  ┌─────────────────────────────────────────────────┐
+  │ Q1: ¿Cuál es tu experiencia con Node.js?       │
+  │     Tipo: Technical                             │
+  │     Palabras clave: async, event loop, npm      │
+  │     Peso: 25%                                   │
+  │     Rúbrica: Evaluación de experiencia backend  │
+  └─────────────────────────────────────────────────┘
+
+
+ANÁLISIS DE RESPUESTAS (NUEVO) 📊
+──────────────────────────────────
+  ✨ Evaluación objetiva con 5 criterios
+  ✨ Scores 0-100 respaldados por datos
+  
+  Ejemplo de evaluación:
+  ┌──────────────────────────────────────────────────┐
+  │ Puntuaciones:                                    │
+  │  • Relevancia: 85/100                            │
+  │  • Completitud: 80/100                           │
+  │  • Palabras clave: 4 encontradas                 │
+  │  • Claridad: 90/100                              │
+  │  • Profundidad: 75/100                           │
+  │  • OVERALL: 82/100                               │
+  └──────────────────────────────────────────────────┘
+
+
+ANÁLISIS SWOT (NUEVO) 🎊
+────────────────────────
+  ✨ Respaldado ÚNICAMENTE en datos numéricos
+  ✨ Sin invención de información
+  
+  Ejemplo de SWOT:
+  ┌──────────────────────────────────────────────────┐
+  │ 📈 FORTALEZAS (Score >= 75)                      │
+  │   • Experiencia técnica sólida (85/100)          │
+  │   • Buena comunicación (82/100)                  │
+  │                                                   │
+  │ ❌ DEBILIDADES (Score < 70)                     │
+  │   • Conocimiento limitado de Cloud (65/100)     │
+  │   • Poca experiencia en DevOps (60/100)         │
+  │                                                   │
+  │ 📈 OPORTUNIDADES                                │
+  │   • Capacitación en AWS                         │
+  │   • Certificación en Kubernetes                 │
+  │                                                   │
+  │ ⚠️ AMENAZAS                                      │
+  │   • Brecha significativa en DevOps              │
+  │   • Requiere capacitación intensiva             │
+  │                                                   │
+  │ 🎯 RECOMENDACIÓN: HIRE ✅                        │
+  └──────────────────────────────────────────────────┘
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 🆘 TROUBLESHOOTING RÁPIDO                                                  ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+❌ "ModuleNotFoundError"
+   ↳ Ejecutar: pip install -r requirements.txt
+
+❌ "Port already in use"
+   ↳ Ejecutar con puerto diferente: python manage.py runserver 0.0.0.0:8001
+
+❌ "Cannot connect to Ollama"
+   ↳ Verificar que ollama serve está corriendo en Terminal 1
+
+❌ "Cannot connect to AI Service"
+   ↳ Verificar que está corriendo en Terminal 2
+
+❌ "Django database locked"
+   ↳ Ejecutar: python manage.py migrate
+
+❌ "Frontend no carga"
+   ↳ Limpiar cache: Ctrl+Shift+Delete
+   ↳ Recargar: Ctrl+F5
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 📚 ARCHIVOS DE REFERENCIA                                                  ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+  📖 INICIO_RAPIDO.md             ← Comienza aquí (Detalles)
+  📖 GUIA_EJECUCION_LOCAL.md      ← Ejecución paso a paso
+  📖 README_MEJORAS_IA.md         ← Resumen de mejoras
+  📖 CAMBIOS_IA_RESUMEN.md        ← Detalles técnicos
+  📖 GUIA_INTEGRACION_DJANGO.md   ← Integración
+  📖 00_COMIENZA_AQUI.txt         ← Resumen visual
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ ⏱️ TIEMPOS ESTIMADOS                                                        ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+  ⌛ Ollama inicio:              5 seg
+  ⌛ AI Service inicio:         10 seg
+  ⌛ Django inicio:              5 seg
+  ⌛ Frontend init:             20 seg
+  ─────────────────────────────────────
+  ✅ TOTAL INICIAL:           ~40 seg
+  
+  ⌛ Primera consulta a IA:    5-10 seg
+  ⌛ Generar preguntas:       5-10 seg
+  ⌛ Generar SWOT:           10-15 seg
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║              🎉 ¡LISTO! TU SISTEMA ESTÁ COMPLETAMENTE OPTIMIZADO           ║
+║                                                                              ║
+║  Próximo paso: Abre un terminal y sigue los 4 PASOS anteriores              ║
+║                                                                              ║
+║                    Presiona Enter para continuar...                          ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝

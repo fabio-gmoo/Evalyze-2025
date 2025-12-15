@@ -9,15 +9,31 @@ logger = logging.getLogger(__name__)
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama:11434/api/generate")
 
 
-def chat_once(prompt: str, model: str = "llama3.2") -> str:
-    """Send prompt to Ollama and get response"""
-    logger.info(f"Sending prompt to Ollama (model: {model})")
+def chat_once(prompt: str, model: str = "llama3.2", temperature: float = 0.2) -> str:
+    """
+    Send prompt to Ollama and get response.
+    Optimized for llama3.2 with strict output formatting.
+    
+    Args:
+        prompt: The prompt to send
+        model: The model to use (default: llama3.2)
+        temperature: Temperature for response generation (0.0-1.0, lower = more deterministic)
+    
+    Returns:
+        The response text from Ollama
+    """
+    logger.info(f"Sending prompt to Ollama (model: {model}, temperature: {temperature})")
 
     payload = {
         "model": model,
         "prompt": prompt,
         "stream": False,
-        "options": {"temperature": 0.2},
+        "options": {
+            "temperature": temperature,
+            "top_k": 40,
+            "top_p": 0.9,
+            "num_predict": 1024,  # Maximum response length
+        },
     }
 
     try:
