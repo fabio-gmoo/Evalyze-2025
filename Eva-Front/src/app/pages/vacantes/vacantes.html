@@ -46,6 +46,7 @@
     <app-vacancy-details-modal
       [vacancy]="detailsVacancy()!"
       [viewMode]="viewMode()"
+      [loading]="loading()"
       (close)="closeDetails()"
       (apply)="onDetailsApply($event)"
       (edit)="onDetailsEdit($event)"
