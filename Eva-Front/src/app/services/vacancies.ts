@@ -247,4 +247,9 @@ export class Vacancies {
   getMyApplications(): Observable<any[]> {
     return this.http.get<any[]>(`${this.base}/my-applications`);
   }
+
+  getAnalytics(vacancyId: number): Observable<any> {
+    return this.http.get<any>(`${this.base}/${vacancyId}/analytics/`);
+  }
 }
+

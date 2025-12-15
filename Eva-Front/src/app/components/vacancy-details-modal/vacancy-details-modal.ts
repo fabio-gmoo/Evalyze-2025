@@ -39,6 +39,9 @@ export class VacancyDetailsModal implements OnInit {
   @Output() edit = new EventEmitter<VacanteUI>();
   @Output() generateInterview = new EventEmitter<number>();
 
+  analyticReport: any = null;
+  loadingReport: boolean = false;
+
   activeTab = 'detalles';
   isApplying = false;
   hasApplied = false;
@@ -154,6 +157,30 @@ export class VacancyDetailsModal implements OnInit {
 
   setActiveTab(tab: string) {
     this.activeTab = tab;
+
+    if (tab === 'ranking' && this.viewMode === 'company' && !this.analyticReport) {
+      this.loadAnalytics();
+    }
+  }
+
+  loadAnalytics() {
+    if (!this.vacancy.id) return;
+
+    this.loadingReport = true;
+
+    // Asumimos que agregaste getAnalytics(id) en tu servicio Vacancies
+    this.vacanciesService.getAnalytics(this.vacancy.id).subscribe({
+      next: (data) => {
+        this.analyticReport = data;
+        this.loadingReport = false;
+        this.cd.markForCheck();
+      },
+      error: (err) => {
+        console.error('Error loading analytics:', err);
+        this.loadingReport = false;
+        this.cd.markForCheck();
+      },
+    });
   }
 
   onClose() {

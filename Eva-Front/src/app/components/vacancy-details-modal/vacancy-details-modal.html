@@ -136,6 +136,77 @@
           <app-interview-report [sessionId]="sessionId()"></app-interview-report>
         </div>
       }
+
+      @if (activeTab === 'ranking' && viewMode === 'company') {
+        <div class="tab-content ranking-tab">
+          @if (loadingReport) {
+            <div class="loading-container" style="text-align: center; padding: 2rem">
+              <p>Analizando datos de entrevistas...</p>
+            </div>
+          } @else if (analyticReport && !analyticReport.empty) {
+            <div class="analytics-dashboard">
+              <div class="stats-row" style="display: flex; gap: 1rem; margin-bottom: 2rem">
+                <div
+                  class="stat-card"
+                  style="
+                    flex: 1;
+                    padding: 1rem;
+                    background: #f8fafc;
+                    border-radius: 8px;
+                    text-align: center;
+                  "
+                >
+                  <h4 style="font-size: 0.9rem; color: #64748b; margin: 0">Promedio General</h4>
+                  <span style="font-size: 2rem; font-weight: bold; color: #3b82f6"
+                    >{{ analyticReport.summary.average_score }}%</span
+                  >
+                </div>
+                <div
+                  class="stat-card"
+                  style="
+                    flex: 1;
+                    padding: 1rem;
+                    background: #f8fafc;
+                    border-radius: 8px;
+                    text-align: center;
+                  "
+                >
+                  <h4 style="font-size: 0.9rem; color: #64748b; margin: 0">Entrevistas</h4>
+                  <span style="font-size: 2rem; font-weight: bold; color: #0f172a">{{
+                    analyticReport.summary.total_interviews
+                  }}</span>
+                </div>
+              </div>
+
+              <div
+                class="insights-grid"
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem"
+              >
+                <div class="insight-col">
+                  <h4 style="color: #166534; margin-bottom: 1rem">Fortalezas Comunes</h4>
+                  <ul style="padding-left: 1.2rem">
+                    @for (item of analyticReport.insights.top_strengths; track $index) {
+                      <li style="margin-bottom: 0.5rem; color: #14532d">{{ item }}</li>
+                    }
+                  </ul>
+                </div>
+                <div class="insight-col">
+                  <h4 style="color: #991b1b; margin-bottom: 1rem">Debilidades Frecuentes</h4>
+                  <ul style="padding-left: 1.2rem">
+                    @for (item of analyticReport.insights.common_weaknesses; track $index) {
+                      <li style="margin-bottom: 0.5rem; color: #7f1d1d">{{ item }}</li>
+                    }
+                  </ul>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="empty-state" style="text-align: center; padding: 3rem; color: #64748b">
+              <p>Aún no hay suficientes entrevistas completadas para generar el ranking.</p>
+            </div>
+          }
+        </div>
+      }
     </div>
 
     @if (activeTab !== 'entrevista' && activeTab !== 'resultados') {
@@ -175,4 +246,3 @@
     }
   </div>
 </div>
-

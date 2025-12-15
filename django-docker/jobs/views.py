@@ -511,3 +511,16 @@ class VacanteViewSet(viewsets.ModelViewSet):
                 {"detail": f"Error interno inesperado: {str(e)}"},
                 status=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+    @action(detail=True, methods=["get"], url_path="analytics")
+    def analytics(self, request, pk=None):
+        vacancy = self.get_object()
+        # Seguridad básica
+        if vacancy.created_by != request.user:
+            return Response({"detail": "No autorizado"}, status=403)
+
+        from .services.analysis_service import InterviewAnalysisService
+
+        service = InterviewAnalysisService()
+        report = service.generate_vacancy_report(vacancy.id)
+        return Response(report)

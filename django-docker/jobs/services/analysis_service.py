@@ -433,102 +433,85 @@ Responde SOLAMENTE con la estructura JSON, sin texto adicional."""
             return int(delta.total_seconds() / 60)
         return 0
 
-    def generate_global_report(self, company_user) -> Dict[str, Any]:
-        """
-        Generate aggregated report for all company interviews
-        """
-        # Import models here to avoid circular imports
-        from jobs.models import InterviewSession  # type: ignore
+    def generate_vacancy_report(self, vacancy_id: int) -> Dict[str, Any]:
+        """Genera un reporte consolidado solo para una vacante específica"""
+        # Importación local para evitar ciclos
+        from jobs.models import InterviewSession, Vacante
 
-        # Get all completed sessions for this company
+        # Validar existencia
+        try:
+            vacancy = Vacante.objects.get(id=vacancy_id)
+        except Vacante.DoesNotExist:
+            return {"error": "Vacante no encontrada"}
+
+        # Filtrar solo sesiones de esta vacante
         sessions = InterviewSession.objects.filter(
-            application__vacancy__created_by=company_user,
+            application__vacancy_id=vacancy_id,
             status="completed",
             analysis_report__isnull=False,
         )
 
+        # Reutilizamos la lógica de agregación (extraeremos esto a un método común si es necesario,
+        # o copiamos la lógica de generate_global_report pero usando 'sessions' filtradas)
+        return self._generate_aggregated_report(
+            sessions, title=f"Ranking: {vacancy.puesto}"
+        )
+
+    def _generate_aggregated_report(self, sessions, title="") -> Dict[str, Any]:
+        """Método auxiliar para calcular estadísticas de un grupo de sesiones"""
         if not sessions.exists():
             return {
-                "message": "No hay entrevistas completadas disponibles para análisis",
+                "message": "No hay suficientes datos para generar el ranking.",
                 "total_interviews": 0,
+                "empty": True,
             }
 
-        # Aggregate statistics
         total_interviews = sessions.count()
-
-        # Calculate average score manually
-        total_score = sum(s.total_score for s in sessions)
-        avg_score = total_score / total_interviews if total_interviews > 0 else 0
-
-        # Score distribution - count manually
-        score_distribution = {
-            "excellent": 0,
-            "good": 0,
-            "fair": 0,
-            "poor": 0,
-        }
-
-        for session in sessions:
-            report = session.analysis_report
-            # Manejamos compatibilidad con reportes viejos (keys en inglés o español)
-            score = report.get("quantitative_score", 0) if report else 0
-
-            if score >= 80:
-                score_distribution["excellent"] += 1
-            elif score >= 60:
-                score_distribution["good"] += 1
-            elif score >= 40:
-                score_distribution["fair"] += 1
+        # Calcular promedios usando el método del modelo get_score_percentage() si es posible,
+        # o accediendo al reporte JSON guardado
+        scores = []
+        for s in sessions:
+            if s.analysis_report and "quantitative_score" in s.analysis_report:
+                scores.append(float(s.analysis_report["quantitative_score"]))
             else:
-                score_distribution["poor"] += 1
+                scores.append(0)
 
-        # Common strengths/weaknesses across all candidates
+        avg_score = sum(scores) / len(scores) if scores else 0
+
+        # Distribución
+        dist = {"excellent": 0, "good": 0, "fair": 0, "poor": 0}
+        for s in scores:
+            if s >= 80:
+                dist["excellent"] += 1
+            elif s >= 60:
+                dist["good"] += 1
+            elif s >= 40:
+                dist["fair"] += 1
+            else:
+                dist["poor"] += 1
+
+        # Extraer temas comunes (Fortalezas/Debilidades)
         all_strengths = []
         all_weaknesses = []
-        all_recommendations = []
-
-        for session in sessions:
-            report = session.analysis_report
-            if report:
-                swot = report.get("swot_analysis", {})
+        for s in sessions:
+            if s.analysis_report:
+                swot = s.analysis_report.get("swot_analysis", {})
                 all_strengths.extend(swot.get("strengths", []))
                 all_weaknesses.extend(swot.get("weaknesses", []))
-                all_recommendations.extend(report.get("recommendations", []))
-
-        # Find most common themes
-        strength_themes = self._extract_themes(all_strengths)
-        weakness_themes = self._extract_themes(all_weaknesses)
 
         return {
-            "company_name": company_user.name,
+            "title": title,
             "report_date": timezone.now().isoformat(),
             "summary": {
                 "total_interviews": total_interviews,
                 "average_score": round(avg_score, 2),
-                # Simplified
-                "completion_rate": round(
-                    total_interviews / (total_interviews + 10) * 100, 2
-                ),
-                "score_distribution": score_distribution,
+                "score_distribution": dist,
             },
             "insights": {
-                "top_strengths": strength_themes[:5],
-                "common_weaknesses": weakness_themes[:5],
-                "recommendation_trends": Counter(all_recommendations).most_common(5),
+                "top_strengths": self._extract_themes(all_strengths)[:5],
+                "common_weaknesses": self._extract_themes(all_weaknesses)[:5],
             },
-            "effectiveness": {
-                "interview_quality": self._calculate_interview_quality(sessions),
-                "requirement_fulfillment": self._calculate_requirement_fulfillment(
-                    sessions
-                ),
-                "candidate_engagement": self._calculate_engagement_score(sessions),
-            },
-            "recommendations": [
-                "Continúe aprovechando las entrevistas impulsadas por IA para una evaluación consistente",
-                "Enfóquese en abordar las áreas de debilidad comunes en los requisitos del puesto",
-                "Considere ajustar las preguntas de la entrevista según las tendencias",
-                "Implemente programas de capacitación específicos para las brechas de habilidades identificadas",
-            ],
+            "empty": False,
         }
 
     def _extract_themes(self, items: List[str]) -> List[str]:
