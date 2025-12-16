@@ -65,7 +65,7 @@ SECRET_KEY = "django-insecure-$j$giv2eqwqm!6*rrhx*&8v0a_0vd+)g9irhir+a2hyr2-nsza
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "evalyze-production.up.railway.app"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "https://evalyze2.netlify.app/"]
 
 AUTH_USER_MODEL = "users.User"
 
