@@ -8,12 +8,13 @@ import {
 } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { RouterLink } from '@angular/router';
 
 type AccountType = 'company' | 'candidate';
 
 @Component({
   selector: 'app-registerform',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './registerform.html',
   styleUrl: './registerform.scss',
 })

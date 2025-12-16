@@ -32,7 +32,10 @@ export interface InterviewSession {
   max_possible_score: number;
   candidate_name: string;
   vacancy_title: string;
+  vacancy_id?: number;
   message_count: number;
+  company_name?: string;
+  analysis_report?: any;
 }
 
 export interface ChatMessage {

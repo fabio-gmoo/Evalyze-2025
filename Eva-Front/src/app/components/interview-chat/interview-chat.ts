@@ -8,14 +8,18 @@ import {
   ViewChild,
   ElementRef,
   AfterViewChecked,
+  numberAttribute,
+  Output,      // <--- IMPORTANTE
+  EventEmitter // <--- IMPORTANTE
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
 import { interval, Subscription } from 'rxjs';
-import { environment } from '@environment';
 import { VacanteUI } from '@interfaces/vacante-model';
 import { Interview, InterviewSession, ChatMessage } from '@services/interview';
+import { Analysis } from '@services/analysis';
+// Router ya no es necesario para navegar, pero lo dejamos por si acaso
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-interview-chat',
@@ -24,13 +28,17 @@ import { Interview, InterviewSession, ChatMessage } from '@services/interview';
   styleUrl: './interview-chat.scss',
 })
 export class InterviewChat implements OnInit, OnDestroy, AfterViewChecked {
-  @Input() sessionId: number | null = null;
+  @Input({ transform: numberAttribute }) sessionId: number | null = null;
   @Input() vacancy: VacanteUI | null = null;
+
+  // EVENTO PARA AVISAR AL PADRE (EL MODAL)
+  @Output() finished = new EventEmitter<void>();
 
   @ViewChild('messagesContainer') messagesContainer?: ElementRef<HTMLDivElement>;
 
-  // Inyectamos el servicio para gestionar la comunicación
   private interviewService = inject(Interview);
+  private analysisService = inject(Analysis);
+  public router = inject(Router);
 
   // Signals
   session = signal<InterviewSession | null>(null);
@@ -40,7 +48,10 @@ export class InterviewChat implements OnInit, OnDestroy, AfterViewChecked {
   loading = signal(false);
   totalQuestions = signal(0);
 
-  // Subscriptions
+  // Finalization state
+  isFinalizing = signal(false);
+  showFinalizeConfirm = signal(false);
+
   private pollSubscription?: Subscription;
   private shouldScroll = false;
 
@@ -65,8 +76,6 @@ export class InterviewChat implements OnInit, OnDestroy, AfterViewChecked {
 
   loadSession() {
     if (!this.sessionId) return;
-
-    // Usamos el servicio de entrevista
     this.interviewService.getSession(this.sessionId).subscribe({
       next: (data) => {
         this.session.set(data);
@@ -77,8 +86,6 @@ export class InterviewChat implements OnInit, OnDestroy, AfterViewChecked {
 
   loadMessages() {
     if (!this.sessionId) return;
-
-    // Usamos el servicio de entrevista (que ya apunta a la ruta /chat-messages/ o /chat-history/)
     this.interviewService.getMessages(this.sessionId).subscribe({
       next: (data) => {
         this.messages.set(data.messages || []);
@@ -91,15 +98,11 @@ export class InterviewChat implements OnInit, OnDestroy, AfterViewChecked {
 
   startInterview() {
     if (!this.sessionId) return;
-
     this.loading.set(true);
 
-    // Usamos el servicio de entrevista
     this.interviewService.startSession(this.sessionId).subscribe({
       next: (data) => {
         this.loading.set(false);
-
-        // Add first message
         if (data.first_message) {
           const firstMsg: ChatMessage = {
             sender: 'ai',
@@ -108,16 +111,12 @@ export class InterviewChat implements OnInit, OnDestroy, AfterViewChecked {
           };
           this.messages.update((msgs) => [...msgs, firstMsg]);
         }
-
-        // Update session status
         this.session.update((s) => (s ? { ...s, status: 'active' } : null));
-
         this.shouldScroll = true;
       },
       error: (err) => {
         this.loading.set(false);
         console.error('Error starting interview:', err);
-        // alert('Error al iniciar la entrevista. Por favor intenta de nuevo.');
       },
     });
   }
@@ -126,7 +125,6 @@ export class InterviewChat implements OnInit, OnDestroy, AfterViewChecked {
     const message = this.draft().trim();
     if (!message || !this.sessionId) return;
 
-    // Add candidate message immediately
     const candidateMsg: ChatMessage = {
       sender: 'candidate',
       content: message,
@@ -137,12 +135,9 @@ export class InterviewChat implements OnInit, OnDestroy, AfterViewChecked {
     this.isTyping.set(true);
     this.shouldScroll = true;
 
-    // Usamos el servicio de entrevista
     this.interviewService.sendMessage(this.sessionId, message).subscribe({
       next: (data) => {
         this.isTyping.set(false);
-
-        // Add AI response
         const aiMsg: ChatMessage = {
           sender: 'ai',
           content: data.message,
@@ -150,27 +145,52 @@ export class InterviewChat implements OnInit, OnDestroy, AfterViewChecked {
         };
         this.messages.update((msgs) => [...msgs, aiMsg]);
 
-        // Update session
         if (data.is_complete) {
           this.session.update((s) => (s ? { ...s, status: 'completed' } : null));
           this.stopPolling();
         } else {
           this.session.update((s) =>
-            s
-              ? {
-                  ...s,
-                  current_question_index: data.current_question,
-                }
-              : null,
+            s ? { ...s, current_question_index: data.current_question } : null,
           );
         }
-
         this.shouldScroll = true;
       },
       error: (err) => {
         this.isTyping.set(false);
         console.error('Error sending message:', err);
-        // alert('Error al enviar el mensaje. Por favor intenta de nuevo.');
+      },
+    });
+  }
+
+  showFinalizeDialog() {
+    this.showFinalizeConfirm.set(true);
+  }
+
+  cancelFinalize() {
+    this.showFinalizeConfirm.set(false);
+  }
+
+  finalizeInterview() {
+    if (!this.sessionId) return;
+
+    this.isFinalizing.set(true);
+    this.showFinalizeConfirm.set(false);
+
+    this.analysisService.finalizeInterview(this.sessionId).subscribe({
+      next: (response) => {
+        this.isFinalizing.set(false);
+
+        // Update session status
+        this.session.update((s) => (s ? { ...s, status: 'completed' } : null));
+
+        // CAMBIO CLAVE: Ya no usamos alert ni router.navigate
+        // Emitimos el evento y dejamos que el modal muestre el reporte
+        this.finished.emit();
+      },
+      error: (err) => {
+        this.isFinalizing.set(false);
+        console.error('Error finalizing interview:', err);
+        alert('Error al finalizar la entrevista. Por favor intenta de nuevo.');
       },
     });
   }
@@ -205,7 +225,6 @@ export class InterviewChat implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   private startPolling() {
-    // Poll every 5 seconds for updates
     this.pollSubscription = interval(5000).subscribe(() => {
       if (this.session()?.status === 'active') {
         this.loadMessages();

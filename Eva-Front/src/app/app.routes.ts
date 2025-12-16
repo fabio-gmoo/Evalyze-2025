@@ -1,12 +1,33 @@
 import { Routes } from '@angular/router';
 import { Home } from '@pages/home/home';
 import { Auth } from '@pages/auth/auth';
+import { Register } from '@components/register/register';
 import { authGuard } from './auth-guard';
 import { Vacantes } from '@pages/vacantes/vacantes';
+import { CompanyDashboard } from '@components/company-dashboard/company-dashboard';
+import { InterviewChat } from '@components/interview-chat/interview-chat';
 
 export const routes: Routes = [
   { path: 'home', component: Home },
   { path: '', pathMatch: 'full', redirectTo: '/home' },
   { path: 'auth', component: Auth },
+  { path: 'register', component: Register },
   { path: 'vacantes', component: Vacantes, canActivate: [authGuard] },
+  {
+    path: 'company-dashboard',
+    component: CompanyDashboard,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'interview-session/:sessionId',
+    component: InterviewChat,
+    canActivate: [authGuard],
+  },
+
+  {
+    path: 'interview-results/:sessionId',
+    loadComponent: () =>
+      import('@components/interview-report/interview-report').then((m) => m.InterviewReportC),
+    canActivate: [authGuard],
+  },
 ];

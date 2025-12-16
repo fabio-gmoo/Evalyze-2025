@@ -1,0 +1,412 @@
+<!-- Eva-Front/src/app/pages/company-dashboard/company-dashboard.html -->
+
+<div class="dashboard-container">
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="header-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path
+            d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"
+          />
+        </svg>
+      </div>
+      <div>
+        <h1>Panel de Análisis</h1>
+        <p>Gestión de candidatos y reportes de entrevistas</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="dashboard-tabs">
+    <button
+      class="tab-button"
+      [class.active]="activeTab() === 'candidates'"
+      (click)="setTab('candidates')"
+    >
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+      Candidatos
+      @if (candidates().length > 0) {
+        <span class="badge">{{ candidates().length }}</span>
+      }
+    </button>
+
+    <button
+      class="tab-button"
+      [class.active]="activeTab() === 'ranking'"
+      (click)="setTab('ranking')"
+    >
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
+        <path d="M12 2l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1 3-6z" />
+      </svg>
+      Ranking
+    </button>
+
+    <button class="tab-button" [class.active]="activeTab() === 'global'" (click)="setTab('global')">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor">
+        <line x1="12" y1="1" x2="12" y2="23" />
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+      </svg>
+      Reporte Global
+    </button>
+  </nav>
+
+  <!-- Content -->
+  <div class="dashboard-content">
+    <!-- Candidates Tab -->
+    @if (activeTab() === 'candidates') {
+      @if (loading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando candidatos...</p>
+        </div>
+      } @else if (candidates().length === 0) {
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24">
+            <path fill="currentColor" d="M12 2a10 10 0 100 20 10 10 0 000-20zM7 11h10v2H7z" />
+          </svg>
+          <h3>No hay candidatos</h3>
+          <p>Los candidatos que se postulen aparecerán aquí</p>
+        </div>
+      } @else {
+        <div class="candidates-grid">
+          @for (candidate of candidates(); track candidate.id) {
+            <div class="candidate-card">
+              <div class="candidate-header">
+                <div class="candidate-avatar">
+                  {{ candidate.name.charAt(0).toUpperCase() }}
+                </div>
+                <div class="candidate-info">
+                  <h3>{{ candidate.name }}</h3>
+                  <p class="email">{{ candidate.email }}</p>
+                  <p class="vacancy">{{ candidate.vacancy_title }}</p>
+                </div>
+              </div>
+
+              <div class="candidate-meta">
+                <div class="meta-row">
+                  <span class="label">Estado:</span>
+                  <span class="badge" [ngClass]="getStatusBadgeClass(candidate.status)">
+                    {{ candidate.status }}
+                  </span>
+                </div>
+                <div class="meta-row">
+                  <span class="label">Postulación:</span>
+                  <span>{{ formatDate(candidate.applied_at) }}</span>
+                </div>
+              </div>
+
+              @if (candidate.interview) {
+                <div class="interview-info">
+                  <div class="info-row">
+                    <span class="label">Entrevista:</span>
+                    <span class="badge" [ngClass]="getStatusBadgeClass(candidate.interview.status)">
+                      {{ candidate.interview.status }}
+                    </span>
+                  </div>
+                  @if (candidate.interview.has_analysis && candidate.interview.score) {
+                    <div class="info-row">
+                      <span class="label">Puntuación:</span>
+                      <span class="score">{{ candidate.interview.score }}%</span>
+                    </div>
+                  }
+                </div>
+
+                @if (candidate.interview.has_analysis) {
+                  <button
+                    class="btn-view-report"
+                    (click)="viewReport(candidate.interview.session_id)"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                      <line x1="16" y1="17" x2="8" y2="17" />
+                      <polyline points="10 9 9 9 8 9" />
+                    </svg>
+                    Ver Reporte
+                  </button>
+                }
+              } @else {
+                <p class="no-interview">Sin entrevista iniciada</p>
+              }
+            </div>
+          }
+        </div>
+      }
+    }
+
+    <!-- Ranking Tab -->
+    @if (activeTab() === 'ranking') {
+      @if (loading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Cargando ranking...</p>
+        </div>
+      } @else if (ranking().length === 0) {
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24">
+            <path fill="currentColor" d="M12 2l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1 3-6z" />
+          </svg>
+          <h3>No hay candidatos evaluados</h3>
+          <p>Los candidatos con entrevistas completadas aparecerán aquí</p>
+        </div>
+      } @else {
+        <div class="ranking-list">
+          @for (item of ranking(); track item.session_id) {
+            <div class="ranking-item" [class]="'rank-' + item.rank">
+              <div class="rank-badge">
+                @if (item.rank === 1) {
+                  <svg viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M12 2l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1 3-6z" />
+                  </svg>
+                } @else {
+                  {{ item.rank }}
+                }
+              </div>
+
+              <div class="ranking-content">
+                <div class="ranking-header">
+                  <div>
+                    <h3>{{ item.candidate.name }}</h3>
+                    <p class="email">{{ item.candidate.email }}</p>
+                    <p class="vacancy">{{ item.vacancy_title }}</p>
+                  </div>
+                  <div class="score-display" [ngClass]="getScoreBadgeClass(item.score_category)">
+                    <div class="score-value">{{ item.score }}%</div>
+                    <div class="score-label">{{ item.score_category }}</div>
+                  </div>
+                </div>
+
+                <div class="ranking-meta">
+                  <div class="meta-chip">
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    {{ item.summary.strengths_count }} Fortalezas
+                  </div>
+                  <div class="meta-chip">
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="15" y1="9" x2="9" y2="15" />
+                      <line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                    {{ item.summary.weaknesses_count }} Debilidades
+                  </div>
+                  <div class="meta-chip">
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    {{ formatDate(item.completed_at) }}
+                  </div>
+                </div>
+
+                @if (item.summary.top_recommendation) {
+                  <p class="top-recommendation">💡 {{ item.summary.top_recommendation }}</p>
+                }
+
+                <button class="btn-view-report" (click)="viewReport(item.session_id)">
+                  Ver Reporte Completo
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+
+    <!-- Global Report Tab -->
+    @if (activeTab() === 'global') {
+      @if (loading()) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Generando reporte global...</p>
+        </div>
+      } @else if (globalReport()) {
+        <div class="global-report">
+          <!-- Summary Cards -->
+          <div class="summary-grid">
+            <div class="summary-card">
+              <div class="card-icon">📊</div>
+              <div class="card-value">{{ globalReport()!.summary.total_interviews }}</div>
+              <div class="card-label">Entrevistas Totales</div>
+            </div>
+
+            <div class="summary-card">
+              <div class="card-icon">⭐</div>
+              <div class="card-value">{{ globalReport()!.summary.average_score }}%</div>
+              <div class="card-label">Puntuación Promedio</div>
+            </div>
+
+            <div class="summary-card">
+              <div class="card-icon">✓</div>
+              <div class="card-value">{{ globalReport()!.summary.completion_rate }}%</div>
+              <div class="card-label">Tasa de Completitud</div>
+            </div>
+
+            <div class="summary-card">
+              <div class="card-icon">🎯</div>
+              <div class="card-value">
+                {{ globalReport()!.effectiveness.requirement_fulfillment }}%
+              </div>
+              <div class="card-label">Cumplimiento de Requisitos</div>
+            </div>
+          </div>
+
+          <!-- Score Distribution -->
+          <div class="report-section">
+            <h3>Distribución de Puntuaciones</h3>
+            <div class="distribution-bars">
+              <div class="bar-group">
+                <div class="bar-label">Excelente</div>
+                <div class="bar-container">
+                  <div
+                    class="bar excellent"
+                    [style.width.%]="
+                      (globalReport()!.summary.score_distribution.excellent /
+                        globalReport()!.summary.total_interviews) *
+                      100
+                    "
+                  ></div>
+                  <span class="bar-value">{{
+                    globalReport()!.summary.score_distribution.excellent
+                  }}</span>
+                </div>
+              </div>
+
+              <div class="bar-group">
+                <div class="bar-label">Bueno</div>
+                <div class="bar-container">
+                  <div
+                    class="bar good"
+                    [style.width.%]="
+                      (globalReport()!.summary.score_distribution.good /
+                        globalReport()!.summary.total_interviews) *
+                      100
+                    "
+                  ></div>
+                  <span class="bar-value">{{
+                    globalReport()!.summary.score_distribution.good
+                  }}</span>
+                </div>
+              </div>
+
+              <div class="bar-group">
+                <div class="bar-label">Regular</div>
+                <div class="bar-container">
+                  <div
+                    class="bar fair"
+                    [style.width.%]="
+                      (globalReport()!.summary.score_distribution.fair /
+                        globalReport()!.summary.total_interviews) *
+                      100
+                    "
+                  ></div>
+                  <span class="bar-value">{{
+                    globalReport()!.summary.score_distribution.fair
+                  }}</span>
+                </div>
+              </div>
+
+              <div class="bar-group">
+                <div class="bar-label">Pobre</div>
+                <div class="bar-container">
+                  <div
+                    class="bar poor"
+                    [style.width.%]="
+                      (globalReport()!.summary.score_distribution.poor /
+                        globalReport()!.summary.total_interviews) *
+                      100
+                    "
+                  ></div>
+                  <span class="bar-value">{{
+                    globalReport()!.summary.score_distribution.poor
+                  }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Insights -->
+          <div class="insights-grid">
+            <div class="insight-card">
+              <h3>Principales Fortalezas</h3>
+              <ul>
+                @for (strength of globalReport()!.insights.top_strengths; track $index) {
+                  <li>✓ {{ strength }}</li>
+                }
+              </ul>
+            </div>
+
+            <div class="insight-card">
+              <h3>Debilidades Comunes</h3>
+              <ul>
+                @for (weakness of globalReport()!.insights.common_weaknesses; track $index) {
+                  <li>⚠ {{ weakness }}</li>
+                }
+              </ul>
+            </div>
+          </div>
+
+          <!-- Recommendations -->
+          <div class="report-section">
+            <h3>Recomendaciones</h3>
+            <ul class="recommendations">
+              @for (rec of globalReport()!.recommendations; track $index) {
+                <li>{{ rec }}</li>
+              }
+            </ul>
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<!-- Report Modal -->
+@if (showReportModal() && selectedReport()) {
+  <div class="modal-backdrop" (click)="closeReportModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeReportModal()">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      <app-interview-report [sessionId]="selectedReport()" />
+    </div>
+  </div>
+}

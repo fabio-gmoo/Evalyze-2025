@@ -245,6 +245,13 @@ export class Vacancies {
   }
 
   getMyApplications(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.base}/my-applications`);
+    return this.http.get<any[]>(`${this.base}/my-applications/`);
+  }
+  getRanking(id: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/${id}/ranking/`);
+  }
+
+  getAnalytics(vacancyId: number): Observable<any> {
+    return this.http.get<any>(`${this.base}/${vacancyId}/analytics/`);
   }
 }

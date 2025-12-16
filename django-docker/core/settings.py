@@ -12,16 +12,39 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
 
 
-def _read(path: str) -> bytes:
-    with open(path, "rb") as f:
-        return f.read()
+def get_key(file_path, env_var_name):
+    """
+    1. Intenta leer el archivo (Para Docker Local).
+    2. Si falla, lee la variable de entorno (Para Railway).
+    """
+    try:
+        # Intento Local: Busca el archivo físico
+        with open(file_path, "rb") as f:
+            return f.read()
+    except FileNotFoundError:
+        # Intento Producción: El archivo no existe, buscamos la variable en Railway
+        key_content = os.environ.get(env_var_name)
+        if key_content:
+            # Railway a veces da problemas con los saltos de línea, esto lo arregla:
+            return key_content.replace("\\n", "\n").encode("utf-8")
+
+        # Si no está en ninguno de los dos lados, lanzamos error
+        raise ValueError(
+            f"FATAL: No se encontró la clave {
+                env_var_name
+            } ni como archivo ni como variable."
+        )
 
 
-PRIVATE_KEY = _read("/run/secrets/jwt_private.pem")
-PUBLIC_KEY = _read("/run/secrets/jwt_public.pem")
+# --- CAMBIA ESTAS LÍNEAS ---
+# Ahora la función pide dos cosas: ("ruta del archivo", "NOMBRE_VARIABLE_RAILWAY")
 
+
+PRIVATE_KEY = get_key("/run/secrets/jwt_private.pem", "JWT_PRIVATE_KEY")
+PUBLIC_KEY = get_key("/run/secrets/jwt_public.pem", "JWT_PUBLIC_KEY")
 SIMPLE_JWT = {
     "ALGORITHM": "RS256",
     "SIGNING_KEY": PRIVATE_KEY,
@@ -37,14 +60,10 @@ SIMPLE_JWT = {
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-$j$giv2eqwqm!6*rrhx*&8v0a_0vd+)g9irhir+a2hyr2-nsza"
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+
+DEBUG = True
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "evalyze-production.up.railway.app"]
 
@@ -59,10 +78,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "jobs",
     "django_extensions",
     "users",
-    "corsheaders",
     "rest_framework",
 ]
 
@@ -79,15 +98,38 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "core.urls"
 
-CORS_ALLOW_ALL_ORIGINS = True
-
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://loacalhost:4200",
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200",
     "http://127.0.0.1:4200",
 ]
 
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+# CSRF Configuration
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
+# Session Configuration
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = False  # True in production with HTTPS
+CSRF_COOKIE_SECURE = False
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -177,5 +219,4 @@ STATIC_URL = "static/"
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

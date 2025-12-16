@@ -1,13 +1,12 @@
 services:
   # --- Django ---
   web:
-    build: .
+    image: davidzemap/evalyzebackend:web
     volumes:
       - .:/app
     ports:
       - '8000:8000'
     environment:
-      # Para que Django sepa a dónde llamar a la IA dentro de la red del compose
       AI_SERVICE_URL: http://ai-service:8001
     secrets:
       - source: jwt_key_private
@@ -21,6 +20,7 @@ services:
 
   # --- Entrevistas (ya lo tenías) ---
   interview:
+    image: davidzemap/evalyzebackend:interview
     build:
       context: ./interview-svc
       dockerfile: Dockerfile
@@ -55,6 +55,7 @@ services:
       - app_network
 
   ai-service:
+    image: davidzemap/evalyzebackend:ai
     build:
       context: ../ai-service/
       dockerfile: Dockerfile

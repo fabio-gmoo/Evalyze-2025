@@ -4,17 +4,20 @@ from ollama_client import chat_once
 from fastapi import FastAPI, HTTPException  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware  # type: ignore
 from pydantic import BaseModel  # type: ignore
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Any
 from uuid import uuid4
 import subprocess
 import sys
 import json
 import logging
+import re
+import os
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+OLLAMA_BASE_URL = os.getenv("OLLAMA_HOST", "http://ollama:11434")
 
 try:
     from rag_retrieve import Retriever
@@ -193,7 +196,7 @@ def ollama_status():
     try:
         import requests
 
-        ollama_url = "http://ollama:11434/api/tags"
+        ollama_url = f"{OLLAMA_BASE_URL}/api/tags"
         response = requests.get(ollama_url, timeout=5)
 
         if response.status_code == 200:
@@ -225,8 +228,7 @@ def chat_start(req: StartReq):
         )
     except Exception as e:
         logger.error(f"Error in chat_start: {e}")
-        raise HTTPException(
-            status_code=502, detail=f"Ollama error (start): {e}")
+        raise HTTPException(status_code=502, detail=f"Ollama error (start): {e}")
     SESSIONS[sid]["history"].append(("[start]", first))
     return {"session_id": sid, "message": first}
 
@@ -251,8 +253,7 @@ def chat_message(req: MsgReq):
         reply = chat_once("\n".join(prompt), model=req.model)
     except Exception as e:
         logger.error(f"Error in chat_message: {e}")
-        raise HTTPException(
-            status_code=502, detail=f"Ollama error (message): {e}")
+        raise HTTPException(status_code=502, detail=f"Ollama error (message): {e}")
 
     history.append((req.text, reply))
     return {"message": reply, "turns": len(history)}
@@ -269,6 +270,32 @@ def reindex(_: Empty):
     global retriever
     retriever = Retriever()
     return {"stdout": out.stdout, "stderr": out.stderr}
+
+
+def clean_and_parse_json(text: str):
+    """
+    Strips markdown code blocks (```json ... ```) from the LLM response
+    and parses it into a valid Python dictionary.
+    """
+    try:
+        # 1. Regex to find content inside ```json ... ``` or just ``` ... ```
+        pattern = r"```(?:json)?\s*(.*?)\s*```"
+        match = re.search(pattern, text, re.DOTALL)
+
+        if match:
+            clean_text = match.group(1)
+        else:
+            # If no code blocks, assume the whole text is JSON but strip whitespace
+            clean_text = text.strip()
+
+        # 2. Parse the cleaned string
+        return json.loads(clean_text)
+
+    except json.JSONDecodeError as e:
+        print(f"JSON Parsing Error: {e}")
+        print(f"Raw Text received: {text}")
+        # Return a structure indicating failure, or re-raise
+        return {"error": "Failed to parse report format", "raw_content": text}
 
 
 @app.post("/generate_exam")
@@ -305,9 +332,6 @@ def generate_exam(req: GenerateExamReq):
 
 @app.post("/generate_interview")
 def generate_interview(req: GenerateInterviewReq):
-    """
-    Genera preguntas de entrevista basadas en los requisitos de la vacante.
-    """
     logger.info(f"Generating interview for: {req.vacancy_title}")
 
     prompt = build_interview_prompt(
@@ -318,72 +342,67 @@ def generate_interview(req: GenerateInterviewReq):
     )
 
     try:
-        response = chat_once(prompt, model=req.model)
+        response_text = chat_once(prompt, model=req.model)
 
-        try:
-            start = response.find("{")
-            end = response.rfind("}") + 1
-            if start >= 0 and end > start:
-                json_str = response[start:end]
-                data = json.loads(json_str)
-            else:
-                raise ValueError("No JSON found in response")
+        # 1. Capture Raw Output as 'Any' (Because it could be a List or Dict)
+        raw_data: Any = clean_and_parse_json(response_text)
 
-            if not isinstance(data.get("questions"), list):
-                raise ValueError("'questions' must be a list")
+        # 2. Normalize to Dictionary
+        # We create a new variable 'data' that is guaranteed to be a Dict
+        data: Dict[str, Any] = {}
 
-            if len(data["questions"]) < req.n_questions:
-                raise ValueError(
-                    # fmt:off
-                    f"Expected {req.n_questions} questions, got {len(data['questions'])}"
-                    # fmt:on
+        if isinstance(raw_data, dict):
+            data = raw_data
+        elif isinstance(raw_data, list):
+            # Fix the "List at Root" issue by wrapping it
+            data = {"questions": raw_data}
+        else:
+            raise ValueError(f"Invalid root format: {type(raw_data)}")
+
+        # 3. Validate 'questions' existence
+        questions_raw = data.get("questions")
+        if not isinstance(questions_raw, list):
+            raise ValueError("Missing 'questions' list")
+
+        # 4. Clean and Validate Individual Questions
+        valid_questions: List[Dict[str, Any]] = []
+
+        for i, q in enumerate(questions_raw, 1):
+            if isinstance(q, str):
+                # Auto-fix string questions
+                valid_questions.append(
+                    {
+                        "id": f"Q{i}",
+                        "question": q,
+                        "type": "technical",
+                        "expected_keywords": [],
+                        "rubric": "Technical accuracy",
+                        "weight": 10,
+                    }
+                )
+            elif isinstance(q, dict):
+                # Copy valid dict questions
+                valid_questions.append(
+                    {
+                        "id": q.get("id", f"Q{i}"),
+                        "question": q.get("question", "Pregunta sin texto"),
+                        "type": q.get("type", "technical"),
+                        "expected_keywords": q.get("expected_keywords", []),
+                        "rubric": q.get("rubric", "Standard evaluation"),
+                        "weight": q.get("weight", 10),
+                    }
                 )
 
-            for i, q in enumerate(data["questions"], 1):
-                if not q.get("question"):
-                    raise ValueError(f"Question {i} missing 'question' field")
-                if not q.get("type"):
-                    raise ValueError(f"Question {i} missing 'type' field")
-                if not isinstance(q.get("expected_keywords"), list):
-                    raise ValueError(
-                        f"Question {i} missing 'expected_keywords' list")
+        if len(valid_questions) < req.n_questions:
+            logger.warning(
+                f"Got {len(valid_questions)} questions, expected {req.n_questions}"
+            )
 
-            logger.info(f"✅ Interview generated successfully")
-            return {"ok": True, "interview": data, "raw_response": response}
+        # Final assignment
+        data["questions"] = valid_questions
 
-        except Exception as parse_error:
-            logger.warning(f"Parse error, attempting fix: {parse_error}")
-            fix_prompt = f"""
-                El siguiente JSON tiene errores. Corrígelo para que sea válido:
-
-                {response}
-
-                Devuelve ÚNICAMENTE el JSON corregido, sin texto adicional.
-            """
-            try:
-                fixed = chat_once(fix_prompt, model=req.model)
-                start = fixed.find("{")
-                end = fixed.rfind("}") + 1
-                json_str = fixed[start:end]
-                data = json.loads(json_str)
-
-                return {
-                    "ok": True,
-                    "interview": data,
-                    "raw_response": fixed,
-                    "was_fixed": True,
-                }
-            except Exception as fix_error:
-                logger.error(f"Failed to fix JSON: {fix_error}")
-                raise HTTPException(
-                    status_code=500,
-                    # fmt:off
-                    detail=f"Failed to parse interview response:{parse_error}",
-                    # fmt:on
-                )
+        return {"ok": True, "interview": data, "raw_response": response_text}
 
     except Exception as e:
         logger.error(f"Error in generate_interview: {e}")
-        raise HTTPException(
-            status_code=502, detail=f"Ollama error (generate_interview): {str(e)}"
-        )
+        raise HTTPException(status_code=502, detail=f"AI Service Error: {str(e)}")

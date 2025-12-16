@@ -125,20 +125,22 @@ class InterviewService:
                 question_index=session.current_question_index,
             )
 
-            # Check if we should move to next question
+            # CAMBIO: Solo avanzamos el índice si no estamos en la última pregunta,
+            # pero NUNCA completamos la entrevista automáticamente.
             total_questions = len(session.interview_config.get("questions", []))
+
             if session.current_question_index < total_questions - 1:
                 session.current_question_index += 1
                 session.save()
-            else:
-                # Interview complete
-                self._complete_interview(session)
+
+            # Eliminamos el bloque 'else: self._complete_interview(session)'
+            # La entrevista se mantiene "active" indefinidamente.
 
             return {
                 "message": ai_response,
                 "current_question": session.current_question_index,
                 "total_questions": total_questions,
-                "is_complete": session.status == "completed",
+                "is_complete": False,  # Siempre enviamos False para que el front no bloquee
             }
 
         except Exception as e:
@@ -179,11 +181,11 @@ class InterviewService:
             ]
         )
 
-        prompt = f"""Eres un entrevistador profesional de IA para Evalyze.
+        prompt = f"""Eres un entrevistador profesional de IA para Evalyze y te llamas Ariana.
 
-VACANTE: {vacancy_title}
+NOMBRE DE VACANTE: {vacancy_title}
 
-EMPRESA: {company_name}
+NOMBRE DE EMPRESA QUE CREO LA VACANTE: {company_name}
 
 TU MISIÓN:
 1. Conducir una entrevista profesional y amigable
