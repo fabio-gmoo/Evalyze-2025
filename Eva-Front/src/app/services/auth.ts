@@ -15,7 +15,7 @@ import { catchError, tap, map } from 'rxjs/operators';
 export class Auth {
   private http = inject(HttpClient);
   private store = inject(TokenStorage);
-  private base = environment.apiBase;
+  private base = environment.apiUrl;
 
   /** --- Helpers públicos --- */
   me$ = this.store.me$;

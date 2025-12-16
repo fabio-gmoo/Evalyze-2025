@@ -88,8 +88,8 @@ export interface GenerateInterviewResponse {
 })
 export class Interview {
   private http = inject(HttpClient);
-  private sessionsUrl = `${environment.apiBase}/interview-sessions`;
-  private jobsUrl = `${environment.apiBase}/jobs`;
+  private sessionsUrl = `${environment.interviewUrl}/interview-sessions`;
+  private jobsUrl = `${environment.apiUrl}/jobs`;
 
   // Active session state
   private activeSessionSubject = new BehaviorSubject<InterviewSession | null>(null);

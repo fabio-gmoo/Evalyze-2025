@@ -141,7 +141,7 @@ function mapToApi(
 @Injectable({ providedIn: 'root' })
 export class Vacancies {
   private http = inject(HttpClient);
-  private base = `${environment.apiBase}/jobs`;
+  private base = `${environment.apiUrl}/jobs`;
 
   getAllVacancies(): Observable<Vacancy[]> {
     return this.http

@@ -1,4 +1,7 @@
 export const environment = {
   production: false,
-  apiBase: 'http://localhost:8000/api', // proxy en dev
+  // En local, todo apunta al mismo sitio (el proxy o tu backend local)
+  apiUrl: 'http://localhost:8000/api',
+  interviewUrl: 'http://localhost:8000/api',
+  aiUrl: 'http://localhost:8000/api',
 } as const;

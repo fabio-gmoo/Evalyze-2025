@@ -104,7 +104,7 @@ export interface GlobalReport {
 })
 export class Analysis {
   private http = inject(HttpClient);
-  private baseUrl = `${environment.apiBase}/interview-sessions`;
+  private baseUrl = `${environment.interviewUrl}/interview-sessions`;
   finalizeInterview(sessionId: number): Observable<any> {
     return this.http.post(`${this.baseUrl}/${sessionId}/finalize/`, {});
   }

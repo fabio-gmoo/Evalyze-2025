@@ -23,7 +23,7 @@ export interface ChatMessageResponse {
 })
 export class Chat {
   private http = inject(HttpClient);
-  private base = `${environment.apiBase}/ai`;
+  private base = `${environment.aiUrl}/ai`;
 
   startSession(initialPrompt: string, model: string = 'llama3.2'): Observable<ChatStartResponse> {
     return this.http.post<ChatStartResponse>(`${this.base}/chat/start`, {
